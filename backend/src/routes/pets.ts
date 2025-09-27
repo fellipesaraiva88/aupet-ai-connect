@@ -41,7 +41,7 @@ const updatePetSchema = createPetSchema.partial().omit({ customer_id: true });
 // GET /pets - List all pets with filtering
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -143,7 +143,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // POST /pets - Create new pet profile
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const validatedData = createPetSchema.parse(req.body);
@@ -197,7 +197,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // GET /pets/:id - Get specific pet details
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -247,7 +247,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 // PUT /pets/:id - Update pet information
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -295,7 +295,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 // DELETE /pets/:id - Soft delete pet
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -350,7 +350,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 // POST /pets/:id/photo - Upload pet photo
 router.post('/:id/photo', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
   const { photo_url } = req.body;
 
@@ -399,7 +399,7 @@ router.post('/:id/photo', asyncHandler(async (req: Request, res: Response) => {
 // GET /pets/:id/health-records - Get pet's health history
 router.get('/:id/health-records', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -444,7 +444,7 @@ router.get('/:id/health-records', asyncHandler(async (req: Request, res: Respons
 // POST /pets/:id/health-records - Add health record
 router.post('/:id/health-records', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   const healthRecordSchema = z.object({
@@ -514,7 +514,7 @@ router.post('/:id/health-records', asyncHandler(async (req: Request, res: Respon
 // GET /pets/:id/appointments - Get pet's appointments
 router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {

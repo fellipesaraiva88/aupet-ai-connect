@@ -9,7 +9,7 @@ import {
 } from '../types';
 
 export class SupabaseService {
-  private supabase: SupabaseClient;
+  public supabase: SupabaseClient;
 
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -20,6 +20,14 @@ export class SupabaseService {
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Supabase URL and Service Key are required');
     }
+
+    logger.info('Supabase initialization:', {
+      url: supabaseUrl,
+      hasServiceKey: !!serviceKey,
+      hasAnonKey: !!anonKey,
+      usingKey: serviceKey ? 'service' : 'anon',
+      keyLength: supabaseKey.length
+    });
 
     this.supabase = createClient(supabaseUrl, supabaseKey, {
       auth: {
@@ -477,6 +485,11 @@ export class SupabaseService {
       logger.error('Error getting conversation analytics:', error);
       throw error;
     }
+  }
+
+  // Get Supabase client for direct access (used in auth routes)
+  getClient(): SupabaseClient {
+    return this.supabase;
   }
 
   // Health check

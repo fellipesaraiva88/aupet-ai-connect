@@ -44,7 +44,7 @@ import {
   useCreateCustomer,
   useUpdateCustomer,
   useOrganizationId,
-} from "@/hooks/useSupabaseData";
+} from "@/hooks/useApiData";
 import {
   Users,
   Search,

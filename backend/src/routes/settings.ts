@@ -17,7 +17,7 @@ const getSupabaseService = () => {
 
 // Get business settings
 router.get('/business', asyncHandler(async (req: Request, res: Response) => {
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const config = await getSupabaseService().getBusinessConfig(organizationId);
@@ -38,7 +38,7 @@ router.get('/business', asyncHandler(async (req: Request, res: Response) => {
 
 // Save business settings
 router.put('/business', asyncHandler(async (req: Request, res: Response) => {
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const configData = { ...req.body, organization_id: organizationId };
 
   try {
@@ -60,7 +60,7 @@ router.put('/business', asyncHandler(async (req: Request, res: Response) => {
 
 // Get AI settings
 router.get('/ai', asyncHandler(async (req: Request, res: Response) => {
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const config = await getSupabaseService().getAIConfig(organizationId);
@@ -81,7 +81,7 @@ router.get('/ai', asyncHandler(async (req: Request, res: Response) => {
 
 // Save AI settings
 router.put('/ai', asyncHandler(async (req: Request, res: Response) => {
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const aiConfig = { ...req.body, organization_id: organizationId };
 
   try {

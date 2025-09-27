@@ -17,7 +17,7 @@ const getSupabaseService = () => {
 
 // Get dashboard stats
 router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const stats = await getSupabaseService().getDashboardStats(organizationId);
@@ -38,7 +38,7 @@ router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
 
 // Get conversation analytics
 router.get('/analytics/conversations', asyncHandler(async (req: Request, res: Response) => {
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const days = parseInt(req.query.days as string) || 7;
 
   try {

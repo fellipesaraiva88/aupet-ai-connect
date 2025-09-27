@@ -19,13 +19,11 @@ const getSupabaseService = () => {
 const createAppointmentSchema = z.object({
   customer_id: z.string().uuid('Customer ID inválido'),
   pet_id: z.string().uuid('Pet ID inválido'),
-  assigned_to: z.string().uuid('Staff ID inválido').optional(),
-  title: z.string().min(1, 'Título é obrigatório'),
-  description: z.string().optional(),
-  appointment_type: z.string().min(1, 'Tipo de agendamento é obrigatório'),
+  veterinarian_id: z.string().uuid('Veterinarian ID inválido').optional(),
+  service_type: z.string().min(1, 'Tipo de serviço é obrigatório'),
   appointment_date: z.string().datetime('Data/hora inválida'),
-  estimated_duration_minutes: z.number().positive().default(60),
-  estimated_cost: z.number().positive().optional(),
+  duration_minutes: z.number().positive().default(60),
+  price: z.number().positive().optional(),
   notes: z.string().optional(),
   status: z.enum(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled']).default('scheduled')
 });
@@ -35,14 +33,14 @@ const updateAppointmentSchema = createAppointmentSchema.partial().omit({ custome
 // GET /appointments - List appointments with filtering
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
   const date = req.query.date as string;
   const date_range = req.query.date_range as string;
   const status = req.query.status as string;
-  const assigned_to = req.query.assigned_to as string;
+  const veterinarian_id = req.query.veterinarian_id as string;
   const customer_id = req.query.customer_id as string;
   const pet_id = req.query.pet_id as string;
   const type = req.query.type as string;
@@ -55,7 +53,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         *,
         customers (id, name, phone),
         pets (id, name, species, breed),
-        staff:assigned_to (id, name)
+        veterinarian:veterinarian_id (id, full_name)
       `, { count: 'exact' })
       .eq('organization_id', organizationId);
 
@@ -76,8 +74,8 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       query = query.eq('status', status);
     }
 
-    if (assigned_to) {
-      query = query.eq('assigned_to', assigned_to);
+    if (veterinarian_id) {
+      query = query.eq('veterinarian_id', veterinarian_id);
     }
 
     if (customer_id) {
@@ -89,7 +87,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     }
 
     if (type && type !== 'all') {
-      query = query.eq('appointment_type', type);
+      query = query.eq('service_type', type);
     }
 
     // Apply pagination and sorting
@@ -126,7 +124,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // POST /appointments - Create new appointment
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const validatedData = createAppointmentSchema.parse(req.body);
@@ -157,15 +155,15 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
       throw createError('Pet não encontrado', 404);
     }
 
-    // Check for appointment conflicts if assigned_to is provided
-    if (validatedData.assigned_to) {
+    // Check for appointment conflicts if veterinarian_id is provided
+    if (validatedData.veterinarian_id) {
       const appointmentStart = new Date(validatedData.appointment_date);
-      const appointmentEnd = new Date(appointmentStart.getTime() + (validatedData.estimated_duration_minutes * 60000));
+      const appointmentEnd = new Date(appointmentStart.getTime() + (validatedData.duration_minutes * 60000));
 
       const { data: conflicts } = await supabase.supabase
         .from('appointments')
         .select('id')
-        .eq('assigned_to', validatedData.assigned_to)
+        .eq('veterinarian_id', validatedData.veterinarian_id)
         .eq('organization_id', organizationId)
         .in('status', ['scheduled', 'confirmed', 'in_progress'])
         .gte('appointment_date', appointmentStart.toISOString())
@@ -188,7 +186,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
         *,
         customers (id, name, phone),
         pets (id, name, species, breed),
-        staff:assigned_to (id, name)
+        veterinarian:veterinarian_id (id, full_name)
       `)
       .single();
 
@@ -213,7 +211,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // GET /appointments/:id - Get appointment details
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -224,7 +222,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
         *,
         customers (id, name, phone, email),
         pets (id, name, species, breed, color, weight),
-        staff:assigned_to (id, name, email),
+        veterinarian:veterinarian_id (id, full_name, email),
         appointment_notes (*),
         appointment_files (*)
       `)
@@ -256,19 +254,19 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 // PUT /appointments/:id - Update appointment
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
     const validatedData = updateAppointmentSchema.parse(req.body);
     const supabase = getSupabaseService();
 
-    // Check for appointment conflicts if changing assigned_to or appointment_date
-    if (validatedData.assigned_to || validatedData.appointment_date) {
+    // Check for appointment conflicts if changing veterinarian_id or appointment_date
+    if (validatedData.veterinarian_id || validatedData.appointment_date) {
       // Get current appointment data
       const { data: currentAppointment } = await supabase.supabase
         .from('appointments')
-        .select('appointment_date, estimated_duration_minutes, assigned_to')
+        .select('appointment_date, duration_minutes, veterinarian_id')
         .eq('id', id)
         .eq('organization_id', organizationId)
         .single();
@@ -278,8 +276,8 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
       }
 
       const appointmentDate = validatedData.appointment_date || currentAppointment.appointment_date;
-      const assignedTo = validatedData.assigned_to || currentAppointment.assigned_to;
-      const duration = validatedData.estimated_duration_minutes || currentAppointment.estimated_duration_minutes;
+      const assignedTo = validatedData.veterinarian_id || currentAppointment.veterinarian_id;
+      const duration = validatedData.duration_minutes || currentAppointment.duration_minutes;
 
       if (assignedTo) {
         const appointmentStart = new Date(appointmentDate);
@@ -288,7 +286,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
         const { data: conflicts } = await supabase.supabase
           .from('appointments')
           .select('id')
-          .eq('assigned_to', assignedTo)
+          .eq('veterinarian_id', assignedTo)
           .eq('organization_id', organizationId)
           .neq('id', id) // Exclude current appointment
           .in('status', ['scheduled', 'confirmed', 'in_progress'])
@@ -313,7 +311,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
         *,
         customers (id, name, phone),
         pets (id, name, species, breed),
-        staff:assigned_to (id, name)
+        veterinarian:veterinarian_id (id, full_name)
       `)
       .single();
 
@@ -343,7 +341,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 // DELETE /appointments/:id - Cancel appointment
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -386,7 +384,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 // POST /appointments/:id/confirm - Confirm appointment
 router.post('/:id/confirm', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -430,7 +428,7 @@ router.post('/:id/confirm', asyncHandler(async (req: Request, res: Response) => 
 // POST /appointments/:id/start - Start appointment
 router.post('/:id/start', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -475,7 +473,7 @@ router.post('/:id/start', asyncHandler(async (req: Request, res: Response) => {
 // POST /appointments/:id/complete - Complete appointment
 router.post('/:id/complete', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   const completeSchema = z.object({
@@ -539,7 +537,7 @@ router.post('/:id/complete', asyncHandler(async (req: Request, res: Response) =>
 // GET /appointments/calendar - Calendar view data
 router.get('/calendar/view', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const start_date = req.query.start_date as string;
   const end_date = req.query.end_date as string;
@@ -554,14 +552,14 @@ router.get('/calendar/view', asyncHandler(async (req: Request, res: Response) =>
       .from('appointments')
       .select(`
         id,
-        title,
+        service_type,
         appointment_date,
-        estimated_duration_minutes,
+        duration_minutes,
         status,
-        appointment_type,
+        service_type,
         customers (id, name),
         pets (id, name, species),
-        staff:assigned_to (id, name)
+        veterinarian:veterinarian_id (id, full_name)
       `)
       .eq('organization_id', organizationId)
       .gte('appointment_date', `${start_date}T00:00:00.000Z`)
@@ -573,15 +571,15 @@ router.get('/calendar/view', asyncHandler(async (req: Request, res: Response) =>
     // Transform appointments for calendar format
     const calendarEvents = (appointments || []).map(apt => ({
       id: apt.id,
-      title: `${apt.title} - ${apt.customers.name}`,
+      title: `${apt.service_type} - ${(apt.customers as any)?.name || 'Cliente'}`,
       start: apt.appointment_date,
-      end: new Date(new Date(apt.appointment_date).getTime() + (apt.estimated_duration_minutes * 60000)).toISOString(),
+      end: new Date(new Date(apt.appointment_date).getTime() + (apt.duration_minutes * 60000)).toISOString(),
       extendedProps: {
         customer: apt.customers,
         pet: apt.pets,
-        staff: apt.staff,
+        veterinarian: apt.veterinarian,
         status: apt.status,
-        type: apt.appointment_type
+        type: apt.service_type
       }
     }));
 
@@ -602,10 +600,10 @@ router.get('/calendar/view', asyncHandler(async (req: Request, res: Response) =>
 // GET /appointments/availability - Check staff/resource availability
 router.get('/availability/check', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const date = req.query.date as string;
-  const staff_id = req.query.staff_id as string;
+  const vet_id = req.query.veterinarian_id as string;
   const duration = parseInt(req.query.duration as string) || 60;
 
   if (!date) {
@@ -618,14 +616,14 @@ router.get('/availability/check', asyncHandler(async (req: Request, res: Respons
     // Get existing appointments for the date
     let query = supabase.supabase
       .from('appointments')
-      .select('appointment_date, estimated_duration_minutes, assigned_to')
+      .select('appointment_date, duration_minutes, veterinarian_id')
       .eq('organization_id', organizationId)
       .gte('appointment_date', `${date}T00:00:00.000Z`)
       .lte('appointment_date', `${date}T23:59:59.999Z`)
       .in('status', ['scheduled', 'confirmed', 'in_progress']);
 
-    if (staff_id) {
-      query = query.eq('assigned_to', staff_id);
+    if (vet_id) {
+      query = query.eq('veterinarian_id', vet_id);
     }
 
     const { data: appointments, error } = await query;
@@ -646,7 +644,7 @@ router.get('/availability/check', asyncHandler(async (req: Request, res: Respons
         // Check if slot conflicts with existing appointments
         const hasConflict = appointments?.some(apt => {
           const aptStart = new Date(apt.appointment_date);
-          const aptEnd = new Date(aptStart.getTime() + (apt.estimated_duration_minutes * 60000));
+          const aptEnd = new Date(aptStart.getTime() + (apt.duration_minutes * 60000));
 
           return (slotStart < aptEnd && slotEnd > aptStart);
         });
@@ -678,7 +676,7 @@ router.get('/availability/check', asyncHandler(async (req: Request, res: Respons
 // POST /appointments/:id/reschedule - Reschedule appointment
 router.post('/:id/reschedule', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   const rescheduleSchema = z.object({
@@ -707,14 +705,14 @@ router.post('/:id/reschedule', asyncHandler(async (req: Request, res: Response) 
     }
 
     // Check for conflicts at new time
-    if (currentAppointment.assigned_to) {
+    if (currentAppointment.veterinarian_id) {
       const appointmentStart = new Date(validatedData.new_appointment_date);
-      const appointmentEnd = new Date(appointmentStart.getTime() + (currentAppointment.estimated_duration_minutes * 60000));
+      const appointmentEnd = new Date(appointmentStart.getTime() + (currentAppointment.duration_minutes * 60000));
 
       const { data: conflicts } = await supabase.supabase
         .from('appointments')
         .select('id')
-        .eq('assigned_to', currentAppointment.assigned_to)
+        .eq('veterinarian_id', currentAppointment.veterinarian_id)
         .eq('organization_id', organizationId)
         .neq('id', id)
         .in('status', ['scheduled', 'confirmed', 'in_progress'])
@@ -741,7 +739,7 @@ router.post('/:id/reschedule', asyncHandler(async (req: Request, res: Response) 
         *,
         customers (id, name, phone),
         pets (id, name, species),
-        staff:assigned_to (id, name)
+        veterinarian:veterinarian_id (id, full_name)
       `)
       .single();
 

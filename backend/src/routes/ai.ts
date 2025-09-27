@@ -29,7 +29,7 @@ const getSupabaseService = () => {
 // Analyze message
 router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
   const { message, customerContext } = req.body;
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   if (!message) {
     throw createError('Message is required', 400);
@@ -61,7 +61,7 @@ router.post('/analyze', asyncHandler(async (req: Request, res: Response) => {
 // Generate response
 router.post('/generate-response', asyncHandler(async (req: Request, res: Response) => {
   const { intent, customerContext, previousMessages } = req.body;
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   if (!intent) {
     throw createError('Intent is required', 400);
@@ -98,7 +98,7 @@ router.post('/generate-response', asyncHandler(async (req: Request, res: Respons
 // GET /ai/configurations - List AI configurations
 router.get('/configurations', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -144,7 +144,7 @@ router.get('/configurations', asyncHandler(async (req: Request, res: Response) =
 // POST /ai/configurations - Create AI configuration
 router.post('/configurations', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const configSchema = z.object({
     name: z.string().min(1, 'Nome é obrigatório'),
@@ -203,7 +203,7 @@ router.post('/configurations', asyncHandler(async (req: Request, res: Response) 
 // GET /ai/configurations/:id - Get AI configuration
 router.get('/configurations/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -239,7 +239,7 @@ router.get('/configurations/:id', asyncHandler(async (req: Request, res: Respons
 // PUT /ai/configurations/:id - Update AI configuration
 router.put('/configurations/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   const updateSchema = z.object({
@@ -305,7 +305,7 @@ router.put('/configurations/:id', asyncHandler(async (req: Request, res: Respons
 // DELETE /ai/configurations/:id - Delete AI configuration
 router.delete('/configurations/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -354,7 +354,7 @@ router.delete('/configurations/:id', asyncHandler(async (req: Request, res: Resp
 // POST /ai/configurations/:id/test - Test AI configuration
 router.post('/configurations/:id/test', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   const testSchema = z.object({
@@ -394,7 +394,19 @@ router.post('/configurations/:id/test', asyncHandler(async (req: Request, res: R
       response_delay_seconds: configuration.response_delay_seconds,
       escalation_keywords: configuration.escalation_keywords,
       auto_reply: configuration.auto_reply_enabled,
-      business_hours: { enabled: !configuration.business_hours_only }
+      business_hours: {
+        enabled: !configuration.business_hours_only,
+        timezone: 'America/Sao_Paulo',
+        schedule: {
+          monday: { start: '08:00', end: '18:00', enabled: true },
+          tuesday: { start: '08:00', end: '18:00', enabled: true },
+          wednesday: { start: '08:00', end: '18:00', enabled: true },
+          thursday: { start: '08:00', end: '18:00', enabled: true },
+          friday: { start: '08:00', end: '18:00', enabled: true },
+          saturday: { start: '08:00', end: '16:00', enabled: true },
+          sunday: { start: '08:00', end: '12:00', enabled: false }
+        }
+      }
     };
 
     const analysis = await aiService.analyzeMessage(
@@ -441,7 +453,7 @@ router.post('/configurations/:id/test', asyncHandler(async (req: Request, res: R
 // GET /ai/configurations/:id/metrics - AI performance metrics
 router.get('/configurations/:id/metrics', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
   const days = parseInt(req.query.days as string) || 7;
 
@@ -560,7 +572,7 @@ router.get('/configurations/:id/metrics', asyncHandler(async (req: Request, res:
 // POST /ai/configurations/:id/activate - Activate AI configuration
 router.post('/configurations/:id/activate', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {

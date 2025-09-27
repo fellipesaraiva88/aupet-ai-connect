@@ -33,7 +33,7 @@ const getEvolutionService = () => {
 // Create new WhatsApp instance
 router.post('/instance/create', asyncHandler(async (req: Request, res: Response) => {
   const { businessId } = req.body;
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   if (!businessId) {
     throw createError('Business ID é obrigatório', 400);
@@ -91,7 +91,7 @@ router.post('/instance/:instanceName/connect', asyncHandler(async (req: Request,
   const { instanceName } = req.params;
 
   if (!instanceName) throw createError('Instance name é obrigatório', 400);
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     // Connect instance
@@ -190,7 +190,7 @@ router.get('/instance/:instanceName/status', asyncHandler(async (req: Request, r
 
 // List all instances
 router.get('/instances', asyncHandler(async (req: Request, res: Response) => {
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     // Get instances from Evolution API
@@ -225,7 +225,7 @@ router.delete('/instance/:instanceName', asyncHandler(async (req: Request, res: 
   const { instanceName } = req.params;
 
   if (!instanceName) throw createError('Instance name é obrigatório', 400);
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     // Delete from Evolution API
@@ -271,7 +271,7 @@ router.delete('/instance/:instanceName', asyncHandler(async (req: Request, res: 
 router.post('/instance/:instanceName/restart', asyncHandler(async (req: Request, res: Response) => {
   const { instanceName } = req.params;
   if (!instanceName) throw createError('Instance name é obrigatório', 400);
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const restarted = await getEvolutionService().restartInstance(instanceName);
@@ -307,7 +307,7 @@ router.post('/instance/:instanceName/restart', asyncHandler(async (req: Request,
 // Send text message
 router.post('/message/send', asyncHandler(async (req: Request, res: Response) => {
   const { instanceName, to, message, messageType = 'text' }: SendMessageRequest = req.body;
-  const organizationId = req.user?.organizationId || 'default-org';
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   if (!instanceName || !to || !message) {
     throw createError('instanceName, to e message são obrigatórios', 400);

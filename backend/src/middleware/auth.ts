@@ -52,7 +52,7 @@ export const authMiddleware = async (
         req.user = {
           id: 'default-user',
           email: 'dev@auzap.ai',
-          organizationId: 'default-org',
+          organizationId: '51cff6e5-0bd2-47bd-8840-ec65d5df265a',
           role: 'admin'
         };
         return next();

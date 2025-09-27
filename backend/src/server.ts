@@ -17,6 +17,11 @@ import webhookRoutes from './routes/webhook';
 import dashboardRoutes from './routes/dashboard';
 import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
+import customersRoutes from './routes/customers';
+import petsRoutes from './routes/pets';
+import appointmentsRoutes from './routes/appointments';
+import conversationsRoutes from './routes/conversations';
+import catalogRoutes from './routes/catalog';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -26,6 +31,7 @@ import { rateLimitAPI, rateLimitAuth, rateLimitWebhook } from './middleware/rate
 import { securityHeaders, corsConfig } from './middleware/security-headers';
 import { auditLogger } from './middleware/audit-logger';
 import { sanitizeInput } from './middleware/input-validator';
+import { tenantIsolationMiddleware } from './middleware/tenant-isolation';
 
 // Import services
 import { WebSocketService } from './services/websocket';
@@ -124,11 +130,16 @@ class AuzapServer {
     this.app.use('/api/auth', rateLimitAuth, authRoutes); // Auth routes with stricter rate limiting
     this.app.use('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
-    // Protected routes (auth required)
-    this.app.use('/api/evolution', authMiddleware, evolutionRoutes);
-    this.app.use('/api/ai', authMiddleware, aiRoutes);
-    this.app.use('/api/dashboard', authMiddleware, dashboardRoutes);
-    this.app.use('/api/settings', authMiddleware, settingsRoutes);
+    // Protected routes (auth + tenant isolation required)
+    this.app.use('/api/evolution', authMiddleware, tenantIsolationMiddleware, evolutionRoutes);
+    this.app.use('/api/ai', authMiddleware, tenantIsolationMiddleware, aiRoutes);
+    this.app.use('/api/dashboard', authMiddleware, tenantIsolationMiddleware, dashboardRoutes);
+    this.app.use('/api/settings', authMiddleware, tenantIsolationMiddleware, settingsRoutes);
+    this.app.use('/api/customers', authMiddleware, tenantIsolationMiddleware, customersRoutes);
+    this.app.use('/api/pets', authMiddleware, tenantIsolationMiddleware, petsRoutes);
+    this.app.use('/api/appointments', authMiddleware, tenantIsolationMiddleware, appointmentsRoutes);
+    this.app.use('/api/conversations', authMiddleware, tenantIsolationMiddleware, conversationsRoutes);
+    this.app.use('/api/catalog', authMiddleware, tenantIsolationMiddleware, catalogRoutes);
 
     // Serve static files
     this.app.use('/public', express.static('public'));

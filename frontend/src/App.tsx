@@ -14,6 +14,7 @@ import Appointments from "./pages/Appointments";
 import Catalog from "./pages/Catalog";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,26 +26,34 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <ProtectedRoute>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/conversations" element={<Conversations />} />
-              <Route path="/conversations/:id/history" element={<Conversations />} />
-              <Route path="/ai-config" element={<AIConfig />} />
-              <Route path="/pets" element={<Pets />} />
-              <Route path="/pets/new" element={<Pets />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/customers/new" element={<Customers />} />
-              <Route path="/appointments" element={<Appointments />} />
-              <Route path="/appointments/new" element={<Appointments />} />
-              <Route path="/catalog" element={<Catalog />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/analytics/history" element={<Analytics />} />
-              <Route path="/settings" element={<Settings />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </ProtectedRoute>
+          <Routes>
+            {/* Rotas públicas */}
+            <Route path="/signup" element={<Signup />} />
+
+            {/* Rotas protegidas */}
+            <Route path="/*" element={
+              <ProtectedRoute>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/conversations" element={<Conversations />} />
+                  <Route path="/conversations/:id/history" element={<Conversations />} />
+                  <Route path="/ai-config" element={<AIConfig />} />
+                  <Route path="/pets" element={<Pets />} />
+                  <Route path="/pets/new" element={<Pets />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/customers/new" element={<Customers />} />
+                  <Route path="/appointments" element={<Appointments />} />
+                  <Route path="/appointments/new" element={<Appointments />} />
+                  <Route path="/catalog" element={<Catalog />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/analytics/history" element={<Analytics />} />
+                  <Route path="/settings" element={<Settings />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ProtectedRoute>
+            } />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

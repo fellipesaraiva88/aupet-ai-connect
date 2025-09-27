@@ -31,7 +31,7 @@ import {
   useUpdatePet,
   useOrganizationId,
   useCustomers,
-} from "@/hooks/useSupabaseData";
+} from "@/hooks/useApiData";
 import {
   Heart,
   Search,

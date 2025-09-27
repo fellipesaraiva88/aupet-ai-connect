@@ -38,7 +38,7 @@ const updateCustomerSchema = createCustomerSchema.partial();
 // GET /customers - List all customers with filtering and pagination
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -107,7 +107,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // POST /customers - Create new customer
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const validatedData = createCustomerSchema.parse(req.body);
@@ -118,7 +118,6 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
       .insert({
         ...validatedData,
         organization_id: organizationId,
-        status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -149,7 +148,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/:id - Get specific customer details
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -201,7 +200,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 // PUT /customers/:id - Update customer information
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -245,7 +244,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 // DELETE /customers/:id - Soft delete customer
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -300,7 +299,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/:id/pets - Get all pets for a customer
 router.get('/:id/pets', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -332,7 +331,7 @@ router.get('/:id/pets', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/:id/appointments - Get all appointments for a customer
 router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -367,7 +366,7 @@ router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response)
 // GET /customers/:id/conversations - Get all conversations for a customer
 router.get('/:id/conversations', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -408,7 +407,7 @@ router.get('/:id/conversations', asyncHandler(async (req: Request, res: Response
 // POST /customers/:id/notes - Add note to customer
 router.post('/:id/notes', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
   const { note } = req.body;
 
@@ -469,7 +468,7 @@ router.post('/:id/notes', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/search - Advanced customer search
 router.get('/search/advanced', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const {
     query: searchQuery,

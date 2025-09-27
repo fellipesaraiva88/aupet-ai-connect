@@ -23,6 +23,9 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Development mode bypass
+  const isDevelopment = import.meta.env.VITE_DEV_MODE === 'true';
+
   // Fetch user profile data including organization
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     try {
@@ -76,40 +79,74 @@ export function useAuth() {
   };
 
   useEffect(() => {
-    // Get initial session
+    // Development mode bypass - skip real auth in dev mode
+    if (isDevelopment) {
+      const mockUser = {
+        id: 'dev-user-id',
+        email: 'dev@auzap.com',
+        full_name: 'Desenvolvedor Auzap',
+        role: 'admin' as const,
+        organization_id: 'dev-org-id',
+        organization: {
+          id: 'dev-org-id',
+          name: 'Auzap Development',
+          subscription_tier: 'pro',
+        },
+        avatar_url: null,
+        permissions: ['all'],
+      };
+
+      setUserProfile(mockUser);
+      setUser({ id: 'dev-user-id', email: 'dev@auzap.com' } as User);
+      setSession({ user: { id: 'dev-user-id', email: 'dev@auzap.com' } } as Session);
+      setLoading(false);
+      return;
+    }
+
+    // Get initial session - PRODUCTION READY
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setUserProfile(profile);
+        try {
+          const profile = await fetchUserProfile(session.user.id);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error loading profile:', error);
+          setUserProfile(null);
+        }
       } else {
         setUserProfile(null);
       }
 
       setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
-      }
-
+    }).catch(error => {
+      console.error('Auth error:', error);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Listen for auth changes only in production
+    if (!isDevelopment) {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          setUserProfile(profile);
+        } else {
+          setUserProfile(null);
+        }
+
+        setLoading(false);
+      });
+
+      return () => subscription.unsubscribe();
+    }
+  }, [isDevelopment]);
 
   const signIn = async (email: string, password: string, rememberMe?: boolean) => {
     const { data, error } = await supabase.auth.signInWithPassword({

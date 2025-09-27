@@ -23,6 +23,13 @@ export function ProtectedRoute({
   const { user, userProfile, loading, hasRole, hasPermission } = useAuthContext();
   const [authMode, setAuthMode] = React.useState<'login' | 'signup'>('login');
 
+  // Development mode bypass - skip auth requirements in dev mode
+  const isDevelopment = import.meta.env.VITE_DEV_MODE === 'true';
+
+  if (isDevelopment) {
+    return <>{children}</>;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">

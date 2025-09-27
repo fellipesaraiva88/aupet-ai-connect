@@ -39,7 +39,7 @@ import {
   useOrganizationId,
   useCustomers,
   usePets,
-} from "@/hooks/useSupabaseData";
+} from "@/hooks/useApiData";
 import {
   Calendar as CalendarIcon,
   Search,

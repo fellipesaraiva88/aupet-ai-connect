@@ -1,7 +1,7 @@
 import React from "react";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardStats, useOrganizationId } from "@/hooks/useSupabaseData";
+import { useDashboardStats, useOrganizationId } from "@/hooks/useApiData";
 import {
   MessageSquare,
   Users,

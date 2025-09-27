@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { useConversations, useOrganizationId } from "@/hooks/useSupabaseData";
+import { useConversations, useOrganizationId } from "@/hooks/useApiData";
 import { useRealTimeSubscriptions, useMessageRealTime } from "@/hooks/useRealTime";
 import { supabase } from "@/integrations/supabase/client";
 import {

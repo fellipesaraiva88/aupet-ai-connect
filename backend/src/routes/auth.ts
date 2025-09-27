@@ -5,6 +5,7 @@ import { createError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { AuthenticatedRequest } from '../types/index';
 import { authMiddleware } from '../middleware/auth';
+import { SupabaseService } from '../services/supabase';
 
 // ===================================================================
 // ROTAS DE AUTENTICAÇÃO JWT AVANÇADA
@@ -13,14 +14,24 @@ import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
+// Instanciar serviço Supabase
+const supabaseService = new SupabaseService();
+
 // ===================================================================
 // SCHEMAS DE VALIDAÇÃO
 // ===================================================================
 
-const loginSchema = z.object({
+const signupSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
-  organizationId: z.string().uuid('Organization ID inválido').optional()
+  fullName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  organizationName: z.string().min(2, 'Nome da organização deve ter pelo menos 2 caracteres'),
+  subscriptionTier: z.enum(['free', 'pro', 'enterprise']).default('free')
+});
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres')
 });
 
 const refreshTokenSchema = z.object({
@@ -37,40 +48,174 @@ const revokeTokenSchema = z.object({
 // ===================================================================
 
 /**
+ * POST /auth/signup
+ * Cria nova conta de usuário e organização
+ */
+router.post('/signup', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password, fullName, organizationName, subscriptionTier } = signupSchema.parse(req.body);
+
+    // Criar usuário no Supabase Auth com metadata
+    const { data: authData, error: authError } = await supabaseService.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          organization_name: organizationName,
+          subscription_tier: subscriptionTier
+        }
+      }
+    });
+
+    if (authError) {
+      throw createError(`Erro ao criar conta: ${authError.message}`, 400);
+    }
+
+    if (!authData.user) {
+      throw createError('Erro ao criar usuário', 500);
+    }
+
+    // Buscar dados completos do usuário criado (profile + organization)
+    const { data: profile, error: profileError } = await supabaseService.supabase
+      .from('profiles')
+      .select(`
+        id,
+        email,
+        full_name,
+        role,
+        organization_id,
+        organizations (
+          id,
+          name,
+          slug,
+          subscription_tier
+        )
+      `)
+      .eq('user_id', authData.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      logger.error('Erro ao buscar profile após signup:', profileError);
+      throw createError('Erro ao configurar conta', 500);
+    }
+
+    // Gerar tokens JWT
+    const tokenPair = jwtService.generateTokenPair({
+      id: authData.user.id,
+      email: authData.user.email!,
+      organizationId: profile.organization_id,
+      role: profile.role
+    });
+
+    logger.info('User signed up successfully', {
+      email,
+      userId: authData.user.id,
+      organizationId: profile.organization_id
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          fullName: profile.full_name,
+          role: profile.role,
+          organizationId: profile.organization_id,
+          organization: profile.organizations
+        },
+        tokens: tokenPair,
+        needsEmailVerification: !authData.user.email_confirmed_at
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * POST /auth/login
  * Autentica usuário e retorna par de tokens
  */
 router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password, organizationId } = loginSchema.parse(req.body);
+    const { email, password } = loginSchema.parse(req.body);
 
-    // TODO: Implementar validação real com Supabase/banco de dados
-    // Por agora, usar validação simples para demonstração
-    if (email === 'admin@auzap.ai' && password === 'admin123') {
-      const tokenPair = jwtService.generateTokenPair({
-        id: 'admin-user-id',
-        email: email,
-        organizationId: organizationId || 'default-org',
-        role: 'admin'
-      });
+    // Autenticar com Supabase Auth
+    const { data: authData, error: authError } = await supabaseService.supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-      logger.info('User logged in successfully', { email, organizationId });
-
-      res.json({
-        success: true,
-        data: {
-          user: {
-            id: 'admin-user-id',
-            email: email,
-            organizationId: organizationId || 'default-org',
-            role: 'admin'
-          },
-          tokens: tokenPair
-        }
-      });
-    } else {
-      throw createError('Credenciais inválidas', 401);
+    if (authError) {
+      throw createError(`Credenciais inválidas: ${authError.message}`, 401);
     }
+
+    if (!authData.user) {
+      throw createError('Erro ao autenticar usuário', 500);
+    }
+
+    // Buscar dados completos do usuário (profile + organization)
+    const { data: profile, error: profileError } = await supabaseService.supabase
+      .from('profiles')
+      .select(`
+        id,
+        email,
+        full_name,
+        role,
+        organization_id,
+        is_active,
+        organizations (
+          id,
+          name,
+          slug,
+          subscription_tier,
+          is_active
+        )
+      `)
+      .eq('user_id', authData.user.id)
+      .eq('is_active', true)
+      .single();
+
+    if (profileError || !profile) {
+      logger.error('Erro ao buscar profile no login:', profileError);
+      throw createError('Usuário não encontrado ou inativo', 404);
+    }
+
+    if (!(profile.organizations as any)?.is_active) {
+      throw createError('Organização inativa', 403);
+    }
+
+    // Gerar tokens JWT
+    const tokenPair = jwtService.generateTokenPair({
+      id: authData.user.id,
+      email: authData.user.email!,
+      organizationId: profile.organization_id,
+      role: profile.role
+    });
+
+    logger.info('User logged in successfully', {
+      email,
+      userId: authData.user.id,
+      organizationId: profile.organization_id
+    });
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          fullName: profile.full_name,
+          role: profile.role,
+          organizationId: profile.organization_id,
+          organization: profile.organizations
+        },
+        tokens: tokenPair
+      }
+    });
 
   } catch (error) {
     next(error);

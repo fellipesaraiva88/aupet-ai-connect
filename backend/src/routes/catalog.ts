@@ -33,7 +33,7 @@ const updateCatalogItemSchema = createCatalogItemSchema.partial();
 // GET /catalog - List products/services
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -107,7 +107,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // POST /catalog - Create new catalog item
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const validatedData = createCatalogItemSchema.parse(req.body);
@@ -145,7 +145,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // GET /catalog/:id - Get catalog item details
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -193,7 +193,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 // PUT /catalog/:id - Update catalog item
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -237,7 +237,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 // DELETE /catalog/:id - Soft delete catalog item
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
 
   try {
@@ -293,7 +293,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 // POST /catalog/:id/image - Upload item image
 router.post('/:id/image', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { id } = req.params;
   const { image_url } = req.body;
 
@@ -341,7 +341,7 @@ router.post('/:id/image', asyncHandler(async (req: Request, res: Response) => {
 // GET /catalog/categories - Get all categories
 router.get('/categories/list', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const supabase = getSupabaseService();
@@ -382,7 +382,7 @@ router.get('/categories/list', asyncHandler(async (req: Request, res: Response) 
 // GET /catalog/popular - Get popular items
 router.get('/popular/items', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   const limit = parseInt(req.query.limit as string) || 10;
   const days = parseInt(req.query.days as string) || 30;
@@ -447,7 +447,7 @@ router.get('/popular/items', asyncHandler(async (req: Request, res: Response) =>
 // GET /catalog/recommendations/:customer_id - Get recommended items for customer
 router.get('/recommendations/:customer_id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
   const { customer_id } = req.params;
   const limit = parseInt(req.query.limit as string) || 5;
 
@@ -515,7 +515,7 @@ router.get('/recommendations/:customer_id', asyncHandler(async (req: Request, re
 // GET /catalog/stats - Get catalog statistics
 router.get('/stats/overview', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || 'default-org';
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
     const supabase = getSupabaseService();

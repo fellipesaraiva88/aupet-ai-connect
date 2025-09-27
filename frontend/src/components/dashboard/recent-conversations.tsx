@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useConversations, useOrganizationId } from "@/hooks/useSupabaseData";
+import { useConversations, useOrganizationId } from "@/hooks/useApiData";
 import { MessageSquare, Bot, Clock } from "lucide-react";
 
 // Utility function to format relative time

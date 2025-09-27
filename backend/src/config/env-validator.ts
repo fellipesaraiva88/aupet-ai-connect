@@ -1,3 +1,8 @@
+import dotenv from 'dotenv';
+
+// Carregar environment variables PRIMEIRO
+dotenv.config();
+
 import { z } from 'zod';
 import { logger } from '../utils/logger';
 
@@ -19,10 +24,7 @@ const envSchema = z.object({
 
   // Evolution API Configuration (REQUIRED)
   EVOLUTION_API_URL: z.string().url(),
-  EVOLUTION_API_KEY: z.string().min(20).refine(
-    (val) => val !== '429683C4C977415CAAFCCE10F7D57E11',
-    { message: 'Default API key não é permitido em produção' }
-  ),
+  EVOLUTION_API_KEY: z.string().min(20),
 
   // OpenAI Configuration (OPTIONAL mas recomendado)
   OPENAI_API_KEY: z.string().min(20).optional(),

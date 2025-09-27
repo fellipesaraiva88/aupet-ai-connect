@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardStats, useOrganizationId } from "@/hooks/useSupabaseData";
+import { useDashboardStats, useOrganizationId } from "@/hooks/useApiData";
 import { useRealTimeSubscriptions } from "@/hooks/useRealTime";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
 import { Zap, MessageSquare, Calendar, TrendingUp, Users, ArrowRight, Play, Bot, Heart } from "lucide-react";
