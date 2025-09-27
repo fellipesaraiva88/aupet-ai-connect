@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -30,6 +33,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  useCustomers,
+  useCreateCustomer,
+  useUpdateCustomer,
+  useOrganizationId,
+} from "@/hooks/useSupabaseData";
+import {
   Users,
   Search,
   Filter,
@@ -41,82 +56,42 @@ import {
   TrendingUp,
   User,
   MapPin,
+  MoreHorizontal,
+  Edit,
+  Trash,
+  Loader2,
 } from "lucide-react";
 
-const customers = [
-  {
-    id: "1",
-    name: "Maria Silva",
-    email: "maria.silva@email.com",
-    phone: "+55 11 99999-1234",
-    address: "Rua das Flores, 123 - São Paulo, SP",
-    registeredAt: "2024-01-15",
-    lastVisit: "2024-09-20",
-    totalSpent: 1250.00,
-    pets: [
-      { name: "Luna", type: "Cachorro", breed: "Golden Retriever" },
-      { name: "Milo", type: "Gato", breed: "Persa" }
-    ],
-    status: "active" as const,
-    visits: 12,
-  },
-  {
-    id: "2",
-    name: "João Santos",
-    email: "joao.santos@email.com",
-    phone: "+55 11 99999-5678",
-    address: "Av. Paulista, 456 - São Paulo, SP",
-    registeredAt: "2024-02-10",
-    lastVisit: "2024-09-18",
-    totalSpent: 890.50,
-    pets: [
-      { name: "Buddy", type: "Cachorro", breed: "Labrador" }
-    ],
-    status: "active" as const,
-    visits: 8,
-  },
-  {
-    id: "3",
-    name: "Ana Costa",
-    email: "ana.costa@email.com",
-    phone: "+55 11 99999-9012",
-    address: "Rua do Comércio, 789 - São Paulo, SP",
-    registeredAt: "2024-03-05",
-    lastVisit: "2024-08-25",
-    totalSpent: 450.00,
-    pets: [
-      { name: "Mimi", type: "Gato", breed: "Siamês" }
-    ],
-    status: "inactive" as const,
-    visits: 3,
-  },
-  {
-    id: "4",
-    name: "Carlos Lima",
-    email: "carlos.lima@email.com",
-    phone: "+55 11 99999-3456",
-    address: "Rua Central, 321 - São Paulo, SP",
-    registeredAt: "2024-01-20",
-    lastVisit: "2024-09-25",
-    totalSpent: 2100.75,
-    pets: [
-      { name: "Rex", type: "Cachorro", breed: "Pastor Alemão" },
-      { name: "Nina", type: "Cachorro", breed: "Bulldog" }
-    ],
-    status: "vip" as const,
-    visits: 18,
-  },
-];
+type CustomerFormData = {
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+};
 
 const Customers = () => {
   const [activeMenuItem] = useState("customers");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [formData, setFormData] = useState<CustomerFormData>({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+
+  const organizationId = useOrganizationId();
+  const { data: customers = [], isLoading, error } = useCustomers(organizationId);
+  const createCustomerMutation = useCreateCustomer();
+  const updateCustomerMutation = useUpdateCustomer();
+  const { toast } = useToast();
 
   const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         customer.phone.includes(searchTerm);
+    const matchesSearch = customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         customer.phone?.includes(searchTerm);
     const matchesStatus = filterStatus === "all" || customer.status === filterStatus;
 
     return matchesSearch && matchesStatus;
@@ -126,7 +101,66 @@ const Customers = () => {
     total: customers.length,
     active: customers.filter(c => c.status === "active").length,
     vip: customers.filter(c => c.status === "vip").length,
-    totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0),
+    totalRevenue: customers.reduce((sum, c) => sum + (c.total_spent || 0), 0),
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingCustomer) {
+        await updateCustomerMutation.mutateAsync({
+          id: editingCustomer.id,
+          updates: {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+          },
+        });
+        toast({
+          title: "Cliente atualizado",
+          description: "Os dados do cliente foram atualizados com sucesso.",
+        });
+      } else {
+        await createCustomerMutation.mutateAsync({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          organization_id: organizationId,
+        });
+        toast({
+          title: "Cliente cadastrado",
+          description: "O cliente foi cadastrado com sucesso.",
+        });
+      }
+      setIsDialogOpen(false);
+      setEditingCustomer(null);
+      setFormData({ name: "", email: "", phone: "", address: "" });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar o cliente. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (customer: any) => {
+    setEditingCustomer(customer);
+    setFormData({
+      name: customer.name || "",
+      email: customer.email || "",
+      phone: customer.phone || "",
+      address: customer.address || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleCancel = () => {
+    setIsDialogOpen(false);
+    setEditingCustomer(null);
+    setFormData({ name: "", email: "", phone: "", address: "" });
   };
 
   const getStatusBadge = (status: string) => {
@@ -166,7 +200,7 @@ const Customers = () => {
                 </p>
               </div>
 
-              <Dialog>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
@@ -175,35 +209,73 @@ const Customers = () => {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
+                    <DialogTitle>
+                      {editingCustomer ? "Editar Cliente" : "Cadastrar Novo Cliente"}
+                    </DialogTitle>
                     <DialogDescription>
-                      Adicione um novo cliente ao sistema
+                      {editingCustomer ? "Atualize os dados do cliente" : "Adicione um novo cliente ao sistema"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Nome completo</label>
-                      <Input placeholder="Ex: Maria Silva" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 py-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Email</label>
-                        <Input type="email" placeholder="maria@email.com" />
+                        <Label htmlFor="name">Nome completo</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="Ex: Maria Silva"
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="maria@email.com"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Telefone</Label>
+                          <Input
+                            id="phone"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            placeholder="(11) 99999-9999"
+                            required
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Telefone</label>
-                        <Input placeholder="(11) 99999-9999" />
+                        <Label htmlFor="address">Endereço</Label>
+                        <Input
+                          id="address"
+                          value={formData.address}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                          placeholder="Rua, número - Cidade, Estado"
+                        />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Endereço</label>
-                      <Input placeholder="Rua, número - Cidade, Estado" />
+                    <div className="flex justify-end gap-3">
+                      <Button type="button" variant="outline" onClick={handleCancel}>
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
+                      >
+                        {(createCustomerMutation.isPending || updateCustomerMutation.isPending) && (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        )}
+                        {editingCustomer ? "Atualizar" : "Cadastrar"} Cliente
+                      </Button>
                     </div>
-                  </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline">Cancelar</Button>
-                    <Button variant="default">Cadastrar Cliente</Button>
-                  </div>
+                  </form>
                 </DialogContent>
               </Dialog>
             </div>
@@ -217,7 +289,11 @@ const Customers = () => {
                       <Users className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats.total}</p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold">{stats.total}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">Total Clientes</p>
                     </div>
                   </div>
@@ -231,7 +307,11 @@ const Customers = () => {
                       <TrendingUp className="h-6 w-6 text-success" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats.active}</p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold">{stats.active}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">Clientes Ativos</p>
                     </div>
                   </div>
@@ -245,7 +325,11 @@ const Customers = () => {
                       <User className="h-6 w-6 text-secondary" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats.vip}</p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold">{stats.vip}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">Clientes VIP</p>
                     </div>
                   </div>
@@ -259,9 +343,13 @@ const Customers = () => {
                       <TrendingUp className="h-6 w-6 text-warning" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold font-secondary">
-                        R$ {stats.totalRevenue.toLocaleString('pt-BR')}
-                      </p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-20 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold font-secondary">
+                          R$ {stats.totalRevenue.toLocaleString('pt-BR')}
+                        </p>
+                      )}
                       <p className="text-sm text-muted-foreground">Receita Total</p>
                     </div>
                   </div>
@@ -310,91 +398,120 @@ const Customers = () => {
                   <div>
                     <CardTitle>Lista de Clientes</CardTitle>
                     <CardDescription>
-                      Mostrando {filteredCustomers.length} de {customers.length} clientes
+                      {isLoading ? (
+                        <Skeleton className="h-4 w-48" />
+                      ) : (
+                        `Mostrando ${filteredCustomers.length} de ${customers.length} clientes`
+                      )}
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Contato</TableHead>
-                      <TableHead>Pets</TableHead>
-                      <TableHead>Visitas</TableHead>
-                      <TableHead>Gasto Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.map((customer) => (
-                      <TableRow key={customer.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarFallback className="bg-primary text-white">
-                                {customer.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{customer.name}</p>
-                              <div className="flex items-center text-sm text-muted-foreground">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                Cliente desde {new Date(customer.registeredAt).toLocaleDateString('pt-BR')}
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div key={index} className="flex items-center space-x-4 p-4 border rounded-lg">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-48" />
+                        </div>
+                        <Skeleton className="h-8 w-16" />
+                      </div>
+                    ))}
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Erro ao carregar clientes</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Contato</TableHead>
+                        <TableHead>Pets</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCustomers.map((customer) => (
+                        <TableRow key={customer.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarFallback className="bg-primary text-white">
+                                  {customer.name?.charAt(0) || '?'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{customer.name || 'Nome não informado'}</p>
+                                <div className="flex items-center text-sm text-muted-foreground">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  Cliente desde {new Date(customer.created_at).toLocaleDateString('pt-BR')}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="text-sm">{customer.email}</p>
-                            <p className="text-sm text-muted-foreground">{customer.phone}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            {customer.pets.map((pet, idx) => (
-                              <div key={idx} className="flex items-center text-sm">
-                                <Heart className="h-3 w-3 mr-1 text-primary" />
-                                {pet.name} ({pet.type})
-                              </div>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium">{customer.visits}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-secondary font-bold text-primary">
-                            R$ {customer.totalSpent.toLocaleString('pt-BR')}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(customer.status)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Phone className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Calendar className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="text-sm">{customer.email || 'Não informado'}</p>
+                              <p className="text-sm text-muted-foreground">{customer.phone || 'Não informado'}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {customer.pets && customer.pets.length > 0 ? (
+                                customer.pets.map((pet: any, idx: number) => (
+                                  <div key={idx} className="flex items-center text-sm">
+                                    <Heart className="h-3 w-3 mr-1 text-primary" />
+                                    {pet.name} ({pet.species})
+                                  </div>
+                                ))
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Nenhum pet</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(customer.status || 'active')}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEdit(customer)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Conversar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Calendar className="h-4 w-4 mr-2" />
+                                    Agendar
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
 
-            {filteredCustomers.length === 0 && (
+            {!isLoading && !error && filteredCustomers.length === 0 && (
               <div className="text-center py-12">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">Nenhum cliente encontrado</h3>
@@ -403,7 +520,7 @@ const Customers = () => {
                     ? "Tente ajustar os filtros para encontrar clientes."
                     : "Comece cadastrando seu primeiro cliente."}
                 </p>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Cadastrar Primeiro Cliente
                 </Button>

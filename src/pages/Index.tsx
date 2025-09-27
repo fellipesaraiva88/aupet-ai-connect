@@ -7,11 +7,15 @@ import { AIPerformance } from "@/components/dashboard/ai-performance";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardStats, useOrganizationId } from "@/hooks/useSupabaseData";
 import { Zap, MessageSquare, Calendar, TrendingUp, Users, ArrowRight, Play, Bot, Heart } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
 import dashboardPreview from "@/assets/dashboard-preview.jpg";
 const Index = () => {
   const [activeMenuItem, setActiveMenuItem] = useState("dashboard");
+  const organizationId = useOrganizationId();
+  const { data: dashboardStats, isLoading, error } = useDashboardStats(organizationId);
   return <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -98,42 +102,79 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              {/* System Status */}
+              {/* Real-time Stats */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Sistema Ativo</CardTitle>
+                  <CardTitle>Métricas de Hoje</CardTitle>
                   <CardDescription>
-                    Atendimento 24/7 funcionando
+                    Performance em tempo real
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-                      <span className="text-sm font-medium">WhatsApp API</span>
+                  {isLoading ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-6 w-16" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-6 w-12" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-6 w-20" />
+                      </div>
+                    </>
+                  ) : error ? (
+                    <div className="text-center text-muted-foreground py-4">
+                      <p className="text-sm">Erro ao carregar métricas</p>
+                      <p className="text-xs">Usando dados de exemplo</p>
                     </div>
-                    <Badge variant="secondary" className="text-success">
-                      Conectado
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-                      <span className="text-sm font-medium">Auzap.ai</span>
-                    </div>
-                    <Badge variant="secondary" className="text-success">
-                      Ativo
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-                      <span className="text-sm font-medium">Base de Dados</span>
-                    </div>
-                    <Badge variant="secondary" className="text-success">
-                      Online
-                    </Badge>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium">Conversas hoje</span>
+                        </div>
+                        <Badge variant="secondary" className="text-primary font-bold">
+                          {dashboardStats?.conversations_today || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-secondary" />
+                          <span className="text-sm font-medium">Agendamentos</span>
+                        </div>
+                        <Badge variant="secondary" className="text-secondary font-bold">
+                          {dashboardStats?.daily_appointments || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Bot className="h-4 w-4 text-success" />
+                          <span className="text-sm font-medium">Taxa automação</span>
+                        </div>
+                        <Badge variant="secondary" className="text-success font-bold">
+                          {dashboardStats?.response_rate_percent
+                            ? `${dashboardStats.response_rate_percent.toFixed(1)}%`
+                            : '87.5%'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-warning" />
+                          <span className="text-sm font-medium">Receita hoje</span>
+                        </div>
+                        <Badge variant="secondary" className="text-warning font-bold font-secondary">
+                          R$ {dashboardStats?.daily_revenue
+                            ? dashboardStats.daily_revenue.toLocaleString('pt-BR')
+                            : '1.240'}
+                        </Badge>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>

@@ -10,6 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import {
   Bell,
   Settings,
@@ -20,18 +22,35 @@ import {
 } from "lucide-react";
 
 interface NavbarProps {
-  userName?: string;
-  userEmail?: string;
   unreadNotifications?: number;
   organizationName?: string;
 }
 
 export function Navbar({
-  userName = "Dr. Ana Silva",
-  userEmail = "ana@meupetvip.com",
   unreadNotifications = 3,
   organizationName = "Meu Pet VIP",
 }: NavbarProps) {
+  const { user, signOut } = useAuthContext();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso.",
+      });
+    }
+  };
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
+  const userEmail = user?.email || 'usuario@exemplo.com';
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-6">
@@ -115,7 +134,7 @@ export function Navbar({
                 <span>Configurações</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sair</span>
               </DropdownMenuItem>

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -22,6 +25,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  usePets,
+  useCreatePet,
+  useUpdatePet,
+  useOrganizationId,
+  useCustomers,
+} from "@/hooks/useSupabaseData";
+import {
   Heart,
   Search,
   Filter,
@@ -30,110 +40,122 @@ import {
   TrendingUp,
   Calendar,
   Stethoscope,
+  Loader2,
 } from "lucide-react";
 
-const pets = [
-  {
-    id: "1",
-    name: "Luna",
-    species: "dog",
-    breed: "Golden Retriever",
-    age: "3 anos",
-    weight: "28kg",
-    owner: "Maria Silva",
-    ownerPhone: "+55 11 99999-1234",
-    lastVisit: "15 dias atrás",
-    nextAppointment: "Amanhã, 14:00",
-    status: "active" as const,
-    vaccinated: true,
-  },
-  {
-    id: "2",
-    name: "Buddy",
-    species: "dog",
-    breed: "Labrador",
-    age: "5 anos",
-    weight: "32kg",
-    owner: "João Santos",
-    ownerPhone: "+55 11 99999-5678",
-    lastVisit: "1 semana atrás",
-    status: "active" as const,
-    vaccinated: true,
-  },
-  {
-    id: "3",
-    name: "Mimi",
-    species: "cat",
-    breed: "Persa",
-    age: "2 anos",
-    weight: "4kg",
-    owner: "Ana Costa",
-    ownerPhone: "+55 11 99999-9012",
-    lastVisit: "3 semanas atrás",
-    status: "needs_attention" as const,
-    vaccinated: false,
-  },
-  {
-    id: "4",
-    name: "Rex",
-    species: "dog",
-    breed: "Pastor Alemão",
-    age: "4 anos",
-    weight: "35kg",
-    owner: "Carlos Lima",
-    ownerPhone: "+55 11 99999-3456",
-    lastVisit: "2 dias atrás",
-    status: "active" as const,
-    vaccinated: true,
-  },
-  {
-    id: "5",
-    name: "Nala",
-    species: "cat",
-    breed: "Siamês",
-    age: "1 ano",
-    weight: "3kg",
-    owner: "Fernanda Rocha",
-    ownerPhone: "+55 11 99999-7890",
-    lastVisit: "1 mês atrás",
-    status: "active" as const,
-    vaccinated: true,
-  },
-  {
-    id: "6",
-    name: "Thor",
-    species: "dog",
-    breed: "Rottweiler",
-    age: "6 anos",
-    weight: "45kg",
-    owner: "Ricardo Mendes",
-    ownerPhone: "+55 11 99999-2468",
-    lastVisit: "4 meses atrás",
-    status: "inactive" as const,
-    vaccinated: true,
-  },
-];
+type PetFormData = {
+  name: string;
+  species: string;
+  breed: string;
+  age: string;
+  weight: string;
+  owner_id: string;
+};
 
 const Pets = () => {
   const [activeMenuItem] = useState("pets");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSpecies, setFilterSpecies] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPet, setEditingPet] = useState<any>(null);
+  const [formData, setFormData] = useState<PetFormData>({
+    name: "",
+    species: "",
+    breed: "",
+    age: "",
+    weight: "",
+    owner_id: "",
+  });
+
+  const organizationId = useOrganizationId();
+  const { data: pets = [], isLoading, error } = usePets(organizationId);
+  const { data: customers = [] } = useCustomers(organizationId);
+  const createPetMutation = useCreatePet();
+  const updatePetMutation = useUpdatePet();
+  const { toast } = useToast();
 
   const filteredPets = pets.filter((pet) => {
-    const matchesSearch = pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         pet.owner.toLowerCase().includes(searchTerm.toLowerCase());
+    const ownerName = pet.whatsapp_contacts?.name || '';
+    const matchesSearch = pet.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ownerName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSpecies = filterSpecies === "all" || pet.species === filterSpecies;
     const matchesStatus = filterStatus === "all" || pet.status === filterStatus;
-    
+
     return matchesSearch && matchesSpecies && matchesStatus;
   });
 
   const stats = {
     total: pets.length,
-    active: pets.filter(p => p.status === "active").length,
-    needsAttention: pets.filter(p => p.status === "needs_attention").length,
-    vaccinated: pets.filter(p => p.vaccinated).length,
+    active: pets.filter(p => p.is_active).length,
+    needsAttention: pets.filter(p => !p.is_active).length,
+    vaccinated: pets.filter(p => p.vaccination_status === 'up_to_date').length,
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingPet) {
+        await updatePetMutation.mutateAsync({
+          id: editingPet.id,
+          updates: {
+            name: formData.name,
+            species: formData.species,
+            breed: formData.breed,
+            age: formData.age,
+            weight: formData.weight,
+            owner_id: formData.owner_id,
+          },
+        });
+        toast({
+          title: "Pet atualizado",
+          description: "Os dados do pet foram atualizados com sucesso.",
+        });
+      } else {
+        await createPetMutation.mutateAsync({
+          name: formData.name,
+          species: formData.species,
+          breed: formData.breed,
+          age: formData.age,
+          weight: formData.weight,
+          owner_id: formData.owner_id,
+          organization_id: organizationId,
+          is_active: true,
+        });
+        toast({
+          title: "Pet cadastrado",
+          description: "O pet foi cadastrado com sucesso.",
+        });
+      }
+      setIsDialogOpen(false);
+      setEditingPet(null);
+      setFormData({ name: "", species: "", breed: "", age: "", weight: "", owner_id: "" });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar o pet. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (pet: any) => {
+    setEditingPet(pet);
+    setFormData({
+      name: pet.name || "",
+      species: pet.species || "",
+      breed: pet.breed || "",
+      age: pet.age || "",
+      weight: pet.weight || "",
+      owner_id: pet.owner_id || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleCancel = () => {
+    setIsDialogOpen(false);
+    setEditingPet(null);
+    setFormData({ name: "", species: "", breed: "", age: "", weight: "", owner_id: "" });
   };
 
   return (
@@ -160,7 +182,7 @@ const Pets = () => {
                 </p>
               </div>
               
-              <Dialog>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="hero" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
@@ -169,56 +191,102 @@ const Pets = () => {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Bem-vindo, novo amiguinho! 🐾</DialogTitle>
+                    <DialogTitle>
+                      {editingPet ? "Editar Amiguinho 🐾" : "Bem-vindo, novo amiguinho! 🐾"}
+                    </DialogTitle>
                     <DialogDescription>
-                      Vamos conhecer melhor esse novo membro da família
+                      {editingPet ? "Atualize os dados do pet" : "Vamos conhecer melhor esse novo membro da família"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Nome do Pet</label>
-                      <Input placeholder="Ex: Luna, Buddy..." />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 py-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Espécie</label>
-                        <Select>
+                        <Label htmlFor="name">Nome do Pet</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="Ex: Luna, Buddy..."
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="species">Espécie</Label>
+                          <Select value={formData.species} onValueChange={(value) => setFormData({ ...formData, species: value })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="dog">Cachorro</SelectItem>
+                              <SelectItem value="cat">Gato</SelectItem>
+                              <SelectItem value="bird">Pássaro</SelectItem>
+                              <SelectItem value="rabbit">Coelho</SelectItem>
+                              <SelectItem value="other">Outro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="breed">Raça</Label>
+                          <Input
+                            id="breed"
+                            value={formData.breed}
+                            onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
+                            placeholder="Ex: Golden Retriever"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="age">Idade</Label>
+                          <Input
+                            id="age"
+                            value={formData.age}
+                            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                            placeholder="Ex: 3 anos"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="weight">Peso</Label>
+                          <Input
+                            id="weight"
+                            value={formData.weight}
+                            onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                            placeholder="Ex: 28kg"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="owner">Proprietário</Label>
+                        <Select value={formData.owner_id} onValueChange={(value) => setFormData({ ...formData, owner_id: value })}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
+                            <SelectValue placeholder="Selecione o proprietário" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="dog">Cachorro</SelectItem>
-                            <SelectItem value="cat">Gato</SelectItem>
-                            <SelectItem value="bird">Pássaro</SelectItem>
-                            <SelectItem value="rabbit">Coelho</SelectItem>
-                            <SelectItem value="other">Outro</SelectItem>
+                            {customers.map((customer: any) => (
+                              <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Raça</label>
-                        <Input placeholder="Ex: Golden Retriever" />
-                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Idade</label>
-                        <Input placeholder="Ex: 3 anos" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Peso</label>
-                        <Input placeholder="Ex: 28kg" />
-                      </div>
+                    <div className="flex justify-end gap-3">
+                      <Button type="button" variant="outline" onClick={handleCancel}>
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createPetMutation.isPending || updatePetMutation.isPending}
+                      >
+                        {(createPetMutation.isPending || updatePetMutation.isPending) && (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        )}
+                        {editingPet ? "Atualizar" : "Cadastrar"} com Carinho
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Dono</label>
-                      <Input placeholder="Nome do proprietário" />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline">Cancelar</Button>
-                    <Button variant="default">Cadastrar com Carinho</Button>
-                  </div>
+                  </form>
                 </DialogContent>
               </Dialog>
             </div>
@@ -232,7 +300,11 @@ const Pets = () => {
                       <Heart className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats.total}</p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold">{stats.total}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">Total de Pets</p>
                     </div>
                   </div>
@@ -246,7 +318,11 @@ const Pets = () => {
                       <TrendingUp className="h-6 w-6 text-success" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats.active}</p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold">{stats.active}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">Pets Ativos</p>
                     </div>
                   </div>
@@ -260,7 +336,11 @@ const Pets = () => {
                       <Calendar className="h-6 w-6 text-warning" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats.needsAttention}</p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold">{stats.needsAttention}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">Precisam de Carinho</p>
                     </div>
                   </div>
@@ -274,7 +354,11 @@ const Pets = () => {
                       <Stethoscope className="h-6 w-6 text-secondary" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats.vaccinated}</p>
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-16 mb-1" />
+                      ) : (
+                        <p className="text-2xl font-bold">{stats.vaccinated}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">Vacinados</p>
                     </div>
                   </div>
@@ -333,16 +417,20 @@ const Pets = () => {
             {/* Results Info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Mostrando {filteredPets.length} de {pets.length} pets
-                </span>
+                {isLoading ? (
+                  <Skeleton className="h-4 w-48" />
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    Mostrando {filteredPets.length} de {pets.length} pets
+                  </span>
+                )}
                 {(searchTerm || filterSpecies !== "all" || filterStatus !== "all") && (
                   <Badge variant="secondary">
                     Filtrando resultados
                   </Badge>
                 )}
               </div>
-              
+
               <Select defaultValue="recent">
                 <SelectTrigger className="w-[200px]">
                   <SelectValue />
@@ -357,19 +445,50 @@ const Pets = () => {
             </div>
 
             {/* Pets Grid */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredPets.map((pet) => (
-                <PetCard
-                  key={pet.id}
-                  pet={pet}
-                  onEdit={(pet) => console.log("Edit pet:", pet)}
-                  onSchedule={(pet) => console.log("Schedule for pet:", pet)}
-                  onContact={(pet) => console.log("Contact owner of pet:", pet)}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Card key={index} className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-32" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-20 w-full" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-20" />
+                        <Skeleton className="h-8 w-20" />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Erro ao carregar pets</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredPets.map((pet) => (
+                  <PetCard
+                    key={pet.id}
+                    pet={{
+                      ...pet,
+                      owner: pet.whatsapp_contacts?.name || 'Proprietário não informado',
+                      ownerPhone: pet.whatsapp_contacts?.phone || '',
+                    }}
+                    onEdit={handleEdit}
+                    onSchedule={(pet) => console.log("Schedule for pet:", pet)}
+                    onContact={(pet) => console.log("Contact owner of pet:", pet)}
+                  />
+                ))}
+              </div>
+            )}
 
-            {filteredPets.length === 0 && (
+            {!isLoading && !error && filteredPets.length === 0 && (
               <div className="text-center py-12">
                 <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">Ainda não há pets aqui</h3>
@@ -378,7 +497,7 @@ const Pets = () => {
                     ? "Tente ajustar os filtros para encontrar seus amiguinhos."
                     : "Que tal começar cadastrando o primeiro pet que conquistou seu coração?"}
                 </p>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Cadastrar Primeiro Amiguinho
                 </Button>
