@@ -1,10 +1,14 @@
+import dotenv from 'dotenv';
+
+// Load environment variables FIRST
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import dotenv from 'dotenv';
 
 // Import routes
 import evolutionRoutes from './routes/evolution';
@@ -23,8 +27,7 @@ import { WebSocketService } from './services/websocket';
 import { SupabaseService } from './services/supabase';
 import { logger } from './utils/logger';
 
-// Load environment variables
-dotenv.config();
+// Environment variables already loaded above
 
 class AuzapServer {
   private app: express.Application;
