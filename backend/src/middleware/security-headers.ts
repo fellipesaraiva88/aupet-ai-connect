@@ -1,0 +1,95 @@
+import { Request, Response, NextFunction } from 'express';
+import { envValidator } from '../config/env-validator';
+
+// ===================================================================
+// SECURITY HEADERS MIDDLEWARE
+// OBJETIVO: Headers de segurança robustos para proteção completa
+// ===================================================================
+
+export const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {
+  const isProduction = envValidator.isProduction();
+  const frontendUrl = envValidator.get('FRONTEND_URL');
+
+  // Content Security Policy
+  const cspDirectives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: https: blob:",
+    "connect-src 'self' https://api.supabase.co https://*.supabase.co wss://*.supabase.co",
+    "media-src 'self' blob:",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ];
+
+  // Apply security headers
+  res.setHeader('Content-Security-Policy', cspDirectives.join('; '));
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+
+  if (isProduction) {
+    // HSTS (only in production)
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+
+    // Expect-CT (Certificate Transparency)
+    res.setHeader('Expect-CT', 'max-age=86400, enforce');
+  }
+
+  // Remove server information
+  res.removeHeader('X-Powered-By');
+  res.setHeader('Server', 'Auzap-Server');
+
+  // Cache control for sensitive endpoints
+  if (req.path.includes('/api/auth') || req.path.includes('/api/user')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+
+  next();
+};
+
+// ===================================================================
+// CORS CONFIGURATION
+// ===================================================================
+export const corsConfig = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const frontendUrl = envValidator.get('FRONTEND_URL');
+    const allowedOrigins = [
+      frontendUrl,
+      'http://localhost:8083',
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
+
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'x-api-key'
+  ],
+  exposedHeaders: [
+    'X-RateLimit-Limit',
+    'X-RateLimit-Remaining',
+    'X-RateLimit-Reset'
+  ]
+};

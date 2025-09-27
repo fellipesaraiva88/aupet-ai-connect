@@ -1,3 +1,5 @@
+import { Request } from 'express';
+
 // Base Types
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -189,7 +191,7 @@ export interface ValidationError {
 }
 
 // Request/Response Types
-export interface AuthenticatedRequest {
+export interface AuthenticatedRequest extends Request {
   user: {
     id: string;
     email: string;

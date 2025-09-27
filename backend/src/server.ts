@@ -16,11 +16,16 @@ import aiRoutes from './routes/ai';
 import webhookRoutes from './routes/webhook';
 import dashboardRoutes from './routes/dashboard';
 import settingsRoutes from './routes/settings';
+import authRoutes from './routes/auth';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 import { authMiddleware } from './middleware/auth';
+import { rateLimitAPI, rateLimitAuth, rateLimitWebhook } from './middleware/rate-limiter';
+import { securityHeaders, corsConfig } from './middleware/security-headers';
+import { auditLogger } from './middleware/audit-logger';
+import { sanitizeInput } from './middleware/input-validator';
 
 // Import services
 import { WebSocketService } from './services/websocket';
@@ -59,54 +64,24 @@ class AuzapServer {
   private setupMiddleware(): void {
     // Security middleware
     this.app.use(helmet({
-      crossOriginEmbedderPolicy: false,
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
-          imgSrc: ["'self'", "data:", "https:"],
-        },
-      },
+      contentSecurityPolicy: false,  // We'll handle CSP manually
+      crossOriginEmbedderPolicy: false
     }));
 
-    // CORS configuration
-    this.app.use(cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:8083',
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
-    }));
+    // Custom security headers
+    this.app.use(securityHeaders);
 
-    // Rate limiting - basic implementation without external library
-    const requestCounts = new Map<string, { count: number; resetTime: number }>();
+    // CORS with enhanced configuration
+    this.app.use(cors(corsConfig));
 
-    this.app.use('/api/', (req, res, next) => {
-      const ip = req.ip || 'unknown';
-      const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'); // 15 minutes
-      const max = parseInt(process.env.RATE_LIMIT_MAX || '100');
-      const now = Date.now();
+    // Input sanitization
+    this.app.use(sanitizeInput);
 
-      const clientData = requestCounts.get(ip) || { count: 0, resetTime: now + windowMs };
+    // Audit logging
+    this.app.use(auditLogger);
 
-      if (now > clientData.resetTime) {
-        clientData.count = 0;
-        clientData.resetTime = now + windowMs;
-      }
-
-      clientData.count++;
-      requestCounts.set(ip, clientData);
-
-      if (clientData.count > max) {
-        return res.status(429).json({
-          success: false,
-          error: 'Too many requests from this IP, please try again later.',
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      return next();
-    });
+    // Advanced rate limiting
+    this.app.use('/api/', rateLimitAPI);
 
     // Logging
     this.app.use(morgan('combined', {
@@ -145,7 +120,8 @@ class AuzapServer {
 
   private setupRoutes(): void {
     // Public routes (no auth required)
-    this.app.use('/api/webhook', webhookRoutes);
+    this.app.use('/api/webhook', rateLimitWebhook, webhookRoutes);
+    this.app.use('/api/auth', rateLimitAuth, authRoutes); // Auth routes with stricter rate limiting
     this.app.use('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
     // Protected routes (auth required)

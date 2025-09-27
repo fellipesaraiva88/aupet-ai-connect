@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import crypto from 'crypto';
 import { createError } from './errorHandler';
-import { AuthenticatedRequest } from '../types';
+import { AuthenticatedRequest } from '../types/index';
 import { logger } from '../utils/logger';
+import { envValidator } from '../config/env-validator';
+import { encryption } from '../utils/encryption';
+import { jwtService, validateToken } from '../services/jwt-service';
 
 interface JWTPayload {
   id: string;
@@ -41,9 +45,10 @@ export const authMiddleware = async (
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
     } else if (apiKey) {
-      // For now, we'll use a simple API key approach for development
-      // In production, this should be replaced with proper JWT validation
-      if (apiKey === process.env.API_KEY || apiKey === 'dev-api-key') {
+      // Validate API key using secure environment configuration
+      const validApiKey = envValidator.get('API_KEY');
+
+      if (apiKey && apiKey === validApiKey) {
         req.user = {
           id: 'default-user',
           email: 'dev@auzap.ai',
@@ -60,19 +65,37 @@ export const authMiddleware = async (
       throw createError('Token de autenticação necessário', 401);
     }
 
-    // Verify JWT token
-    const jwtSecret = process.env.JWT_SECRET || 'default-secret';
-    const decoded = jwt.verify(token, jwtSecret) as JWTPayload;
+    // Validate JWT token using advanced JWT service
+    const validation = validateToken(token, 'access');
+
+    if (!validation.valid || !validation.payload) {
+      if (validation.needsRefresh) {
+        throw createError('Token expirado - refresh necessário', 401);
+      }
+      throw createError(validation.error || 'Token inválido', 401);
+    }
 
     // Add user info to request
     req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      organizationId: decoded.organizationId,
-      role: decoded.role
+      id: validation.payload.id,
+      email: validation.payload.email,
+      organizationId: validation.payload.organizationId,
+      role: validation.payload.role
     };
 
-    logger.debug('User authenticated', { userId: decoded.id, organizationId: decoded.organizationId });
+    // Log warning if token needs refresh soon
+    if (validation.needsRefresh) {
+      logger.warn('Token expires soon - client should refresh', {
+        userId: validation.payload.id,
+        jti: validation.payload.jti
+      });
+    }
+
+    logger.debug('User authenticated with advanced JWT', {
+      userId: validation.payload.id,
+      organizationId: validation.payload.organizationId,
+      jti: validation.payload.jti
+    });
     next();
 
   } catch (error) {
@@ -116,11 +139,14 @@ export const requireOrganization = (req: Request, res: Response, next: NextFunct
   next();
 };
 
-// Generate JWT token
+// Generate JWT token pair using advanced service
 export const generateToken = (payload: Omit<JWTPayload, 'iat' | 'exp'>): string => {
-  const jwtSecret = process.env.JWT_SECRET || 'default-secret';
-  const expiresIn = process.env.JWT_EXPIRE_TIME || '24h';
+  // Para compatibilidade, retorna apenas o access token
+  const tokenPair = jwtService.generateTokenPair(payload);
+  return tokenPair.accessToken;
+};
 
-  const options: SignOptions = { expiresIn: expiresIn as any };
-  return jwt.sign(payload as any, jwtSecret, options);
+// Generate complete token pair (recommended)
+export const generateTokenPair = (payload: Omit<JWTPayload, 'iat' | 'exp' | 'jti' | 'type'>) => {
+  return jwtService.generateTokenPair(payload);
 };
