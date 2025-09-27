@@ -2,41 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Auzap Design System - Pet care meets modern technology */
 
 @layer base {
   :root {
+    /* Brand Colors - Pet care and technology harmony */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 25% 26.7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 26.7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 26.7%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Pet care green */
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 142 76% 46%;
+    --primary-dark: 142 76% 26%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Trust blue */
+    --secondary: 213 94% 68%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-light: 213 94% 78%;
+    --secondary-dark: 213 94% 58%;
 
+    /* Accent - Warm orange for calls-to-action */
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 98%;
+    --accent-light: 25 95% 63%;
+
+    /* Muted tones */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 142 76% 36%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Custom Design Tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.8), hsl(0 0% 100% / 0.4));
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 6px -1px hsl(var(--primary) / 0.1), 0 2px 4px -1px hsl(var(--primary) / 0.06);
+    --shadow-medium: 0 10px 15px -3px hsl(var(--primary) / 0.1), 0 4px 6px -2px hsl(var(--primary) / 0.05);
+    --shadow-large: 0 20px 25px -5px hsl(var(--primary) / 0.1), 0 10px 10px -5px hsl(var(--primary) / 0.04);
+    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.3);
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* WhatsApp Colors */
+    --whatsapp-green: 142 70% 49%;
+    --whatsapp-light: 142 70% 96%;
+    --whatsapp-dark: 142 70% 39%;
+
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --warning: 45 93% 58%;
+    --error: 0 84% 60%;
+    --info: 213 94% 68%;
 
     --sidebar-background: 0 0% 98%;
 
