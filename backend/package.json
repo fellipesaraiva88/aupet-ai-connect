@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node src/debug-env.js && node dist/server.js",
     "start:dev": "tsx watch src/server.ts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "debug": "node src/debug-env.js"
   },
   "dependencies": {
     "express": "^4.21.1",
