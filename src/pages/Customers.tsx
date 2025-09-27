@@ -118,8 +118,8 @@ const Customers = () => {
           },
         });
         toast({
-          title: "Cliente atualizado",
-          description: "Os dados do cliente foram atualizados com sucesso.",
+          title: "Família cuidada com sucesso! 💝",
+          description: "As informações foram atualizadas para continuarmos cuidando ainda melhor.",
         });
       } else {
         await createCustomerMutation.mutateAsync({
@@ -130,8 +130,8 @@ const Customers = () => {
           organization_id: organizationId,
         });
         toast({
-          title: "Cliente cadastrado",
-          description: "O cliente foi cadastrado com sucesso.",
+          title: "Nova família acolhida! 🏠",
+          description: "Que alegria ter vocês conosco! Estamos prontos para cuidar com muito carinho.",
         });
       }
       setIsDialogOpen(false);
@@ -139,8 +139,8 @@ const Customers = () => {
       setFormData({ name: "", email: "", phone: "", address: "" });
     } catch (error) {
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar o cliente. Tente novamente.",
+        title: "Ops, algo não saiu como esperado",
+        description: "Não se preocupe, vamos resolver isso juntos. Tente novamente em um momentinho.",
         variant: "destructive",
       });
     }
@@ -193,10 +193,10 @@ const Customers = () => {
               <div>
                 <h1 className="text-3xl font-primary font-bold tracking-tight text-primary flex items-center gap-3">
                   <Users className="h-8 w-8" />
-                  Clientes
+                  Famílias que Confiaram em Você
                 </h1>
                 <p className="text-muted-foreground font-secondary">
-                  Gerencie sua base de clientes com eficiência
+                  Cada cliente é uma família que escolheu cuidar dos seus pets conosco. Vamos honrar essa confiança juntos.
                 </p>
               </div>
 
@@ -204,16 +204,16 @@ const Customers = () => {
                 <DialogTrigger asChild>
                   <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
-                    Novo Cliente
+                    Acolher Nova Família
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>
-                      {editingCustomer ? "Editar Cliente" : "Cadastrar Novo Cliente"}
+                      {editingCustomer ? "Atualizar Informações da Família" : "Conhecer Nova Família"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingCustomer ? "Atualize os dados do cliente" : "Adicione um novo cliente ao sistema"}
+                      {editingCustomer ? "Vamos manter as informações sempre atualizadas para cuidar melhor" : "Conte-nos sobre esta nova família para que possamos cuidar com todo carinho"}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleSubmit}>
@@ -272,7 +272,7 @@ const Customers = () => {
                         {(createCustomerMutation.isPending || updateCustomerMutation.isPending) && (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         )}
-                        {editingCustomer ? "Atualizar" : "Cadastrar"} Cliente
+                        {editingCustomer ? "Salvar com Carinho" : "Acolher Família"}
                       </Button>
                     </div>
                   </form>
@@ -294,7 +294,7 @@ const Customers = () => {
                       ) : (
                         <p className="text-2xl font-bold">{stats.total}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Total Clientes</p>
+                      <p className="text-sm text-muted-foreground">Famílias Cuidadas</p>
                     </div>
                   </div>
                 </CardContent>
@@ -312,7 +312,7 @@ const Customers = () => {
                       ) : (
                         <p className="text-2xl font-bold">{stats.active}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Clientes Ativos</p>
+                      <p className="text-sm text-muted-foreground">Sempre Presentes</p>
                     </div>
                   </div>
                 </CardContent>
@@ -330,7 +330,7 @@ const Customers = () => {
                       ) : (
                         <p className="text-2xl font-bold">{stats.vip}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Clientes VIP</p>
+                      <p className="text-sm text-muted-foreground">Famílias Especiais</p>
                     </div>
                   </div>
                 </CardContent>
@@ -350,7 +350,7 @@ const Customers = () => {
                           R$ {stats.totalRevenue.toLocaleString('pt-BR')}
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground">Receita Total</p>
+                      <p className="text-sm text-muted-foreground">Confiança Investida</p>
                     </div>
                   </div>
                 </CardContent>

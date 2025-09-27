@@ -165,8 +165,8 @@ const Appointments = () => {
           },
         });
         toast({
-          title: "Agendamento atualizado",
-          description: "O agendamento foi atualizado com sucesso.",
+          title: "Momento de cuidado ajustado! ⏰",
+          description: "Perfeito! Agora tudo está organizado para oferecer o melhor cuidado neste momento especial.",
         });
       } else {
         await createAppointmentMutation.mutateAsync({
@@ -180,8 +180,8 @@ const Appointments = () => {
           status: 'pending',
         });
         toast({
-          title: "Agendamento criado",
-          description: "O agendamento foi criado com sucesso.",
+          title: "Momento especial agendado! 💖",
+          description: "Que maravilha! Este amiguinho terá um momento especial de cuidado reservado só para ele.",
         });
       }
       setIsDialogOpen(false);
@@ -198,8 +198,8 @@ const Appointments = () => {
       setSelectedCustomer("");
     } catch (error) {
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar o agendamento. Tente novamente.",
+        title: "Ops, um pequeno contratempo",
+        description: "Não conseguimos agendar agora, mas não desista! Vamos tentar novamente juntos.",
         variant: "destructive",
       });
     }
@@ -298,10 +298,10 @@ const Appointments = () => {
               <div>
                 <h1 className="text-3xl font-primary font-bold tracking-tight text-primary flex items-center gap-3">
                   <CalendarIcon className="h-8 w-8" />
-                  Agendamentos
+                  Momentos de Cuidado Agendados
                 </h1>
                 <p className="text-muted-foreground font-secondary">
-                  Organize sua agenda de forma eficiente
+                  Cada agendamento é uma promessa de cuidado. Vamos garantir que todos os amiguinhos tenham sua atenção especial.
                 </p>
               </div>
 
@@ -309,16 +309,16 @@ const Appointments = () => {
                 <DialogTrigger asChild>
                   <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
-                    Novo Agendamento
+                    Agendar Momento de Cuidado
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>
-                      {editingAppointment ? "Editar Agendamento" : "Novo Agendamento"}
+                      {editingAppointment ? "Ajustar Momento de Cuidado" : "Criar Momento Especial"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingAppointment ? "Atualize os dados do agendamento" : "Agende um novo serviço para o cliente"}
+                      {editingAppointment ? "Vamos ajustar todos os detalhes para garantir o melhor cuidado" : "Vamos planejar um momento especial de cuidado para este amiguinho"}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleSubmit}>
@@ -432,7 +432,7 @@ const Appointments = () => {
                         {(createAppointmentMutation.isPending || updateAppointmentMutation.isPending) && (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         )}
-                        {editingAppointment ? "Atualizar" : "Agendar"}
+                        {editingAppointment ? "Salvar com Carinho" : "Confirmar Cuidado"}
                       </Button>
                     </div>
                   </form>

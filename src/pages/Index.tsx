@@ -40,19 +40,19 @@ const Index = () => {
             {/* Page Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary">Dashboard</h1>
+                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary">Seu Pet Shop Conectado</h1>
                 <p className="text-muted-foreground font-secondary">
-                  Você faz o que ama, nós cuidamos do seu atendimento
+                  Enquanto você cuida dos pets, nós cuidamos de nunca perder um cliente. Cada conversa, cada agendamento, cada oportunidade é nossa responsabilidade.
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <Button variant="outline">
                   <Calendar className="h-4 w-4 mr-2" />
-                  Últimos 30 dias
+                  Ver histórico completo
                 </Button>
                 <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  Relatórios
+                  Como estou crescendo?
                 </Button>
               </div>
             </div>
@@ -76,28 +76,28 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-primary" />
-                    Ações Rápidas
+                    Resolver Agora
                   </CardTitle>
                   <CardDescription>
-                    Atendimento ágil e eficiente para seus clientes
+                    Transforme cada necessidade em solução imediata
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <MessageSquare className="h-6 w-6" />
-                    <span className="text-sm">Atender</span>
+                    <span className="text-sm">Conversar</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Calendar className="h-6 w-6" />
-                    <span className="text-sm">Agendar</span>
+                    <span className="text-sm">Agendar Cuidado</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Users className="h-6 w-6" />
-                    <span className="text-sm">Cliente</span>
+                    <span className="text-sm">Novo Cliente</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Heart className="h-6 w-6" />
-                    <span className="text-sm">Pet</span>
+                    <span className="text-sm">Novo Amiguinho</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -105,9 +105,9 @@ const Index = () => {
               {/* Real-time Stats */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Métricas de Hoje</CardTitle>
+                  <CardTitle>Hoje Você Está Brilhando</CardTitle>
                   <CardDescription>
-                    Performance em tempo real
+                    Acompanhe como cada momento se transforma em sucesso
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -136,7 +136,7 @@ const Index = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <MessageSquare className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-medium">Conversas hoje</span>
+                          <span className="text-sm font-medium">Clientes cuidados hoje</span>
                         </div>
                         <Badge variant="secondary" className="text-primary font-bold">
                           {dashboardStats?.conversations_today || 0}
@@ -145,7 +145,7 @@ const Index = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-secondary" />
-                          <span className="text-sm font-medium">Agendamentos</span>
+                          <span className="text-sm font-medium">Cuidados agendados</span>
                         </div>
                         <Badge variant="secondary" className="text-secondary font-bold">
                           {dashboardStats?.daily_appointments || 0}
@@ -154,7 +154,7 @@ const Index = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Bot className="h-4 w-4 text-success" />
-                          <span className="text-sm font-medium">Taxa automação</span>
+                          <span className="text-sm font-medium">Proteção total</span>
                         </div>
                         <Badge variant="secondary" className="text-success font-bold">
                           {dashboardStats?.response_rate_percent
@@ -165,7 +165,7 @@ const Index = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <TrendingUp className="h-4 w-4 text-warning" />
-                          <span className="text-sm font-medium">Receita hoje</span>
+                          <span className="text-sm font-medium">Prosperidade hoje</span>
                         </div>
                         <Badge variant="secondary" className="text-warning font-bold font-secondary">
                           R$ {dashboardStats?.daily_revenue

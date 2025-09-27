@@ -43,8 +43,8 @@ export function Navbar({
       });
     } else {
       toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
+        title: "Até logo! 👋",
+        description: "Obrigado por cuidar de tantas famílias hoje. Estamos aqui quando precisar!",
       });
     }
   };

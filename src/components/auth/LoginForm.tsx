@@ -35,8 +35,8 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
           setError(error.message);
         } else {
           toast({
-            title: 'Login realizado com sucesso!',
-            description: 'Bem-vindo ao Auzap.ai',
+            title: 'Que alegria te ver! 😊',
+            description: 'Bem-vindo de volta! Estamos prontos para cuidar juntos de mais famílias.',
           });
         }
       } else {
@@ -45,8 +45,8 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
           setError(error.message);
         } else {
           toast({
-            title: 'Conta criada com sucesso!',
-            description: 'Verifique seu email para confirmar a conta.',
+            title: 'Bem-vindo à família Auzap! 🎉',
+            description: 'Que alegria ter você conosco! Verifique seu email para confirmar e começarmos juntos.',
           });
         }
       }

@@ -108,8 +108,8 @@ const Pets = () => {
           },
         });
         toast({
-          title: "Pet atualizado",
-          description: "Os dados do pet foram atualizados com sucesso.",
+          title: "Amiguinho cuidado! 🐾",
+          description: "As informações do pet foram atualizadas para garantir o melhor cuidado possível.",
         });
       } else {
         await createPetMutation.mutateAsync({
@@ -123,8 +123,8 @@ const Pets = () => {
           is_active: true,
         });
         toast({
-          title: "Pet cadastrado",
-          description: "O pet foi cadastrado com sucesso.",
+          title: "Novo amiguinho na família! 🎉",
+          description: "Que alegria conhecer este novo amiguinho! Estamos ansiosos para cuidar dele com muito amor.",
         });
       }
       setIsDialogOpen(false);
@@ -132,8 +132,8 @@ const Pets = () => {
       setFormData({ name: "", species: "", breed: "", age: "", weight: "", owner_id: "" });
     } catch (error) {
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar o pet. Tente novamente.",
+        title: "Opa, precisamos de um minutinho",
+        description: "Algo não saiu conforme esperado, mas não se preocupe! Vamos resolver juntos.",
         variant: "destructive",
       });
     }
@@ -175,10 +175,10 @@ const Pets = () => {
               <div>
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                   <Heart className="h-8 w-8 text-primary" />
-                  Pets Cadastrados
+                  Nossos Amiguinhos Especiais
                 </h1>
                 <p className="text-muted-foreground font-secondary">
-                  Gerencie todos os pets dos seus clientes
+                  Cada pet é único e merece cuidado personalizado. Aqui está toda a família peluda que confia em nós.
                 </p>
               </div>
               
@@ -186,7 +186,7 @@ const Pets = () => {
                 <DialogTrigger asChild>
                   <Button variant="hero" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
-                    Cadastrar Pet
+                    Conhecer Novo Amiguinho
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -305,7 +305,7 @@ const Pets = () => {
                       ) : (
                         <p className="text-2xl font-bold">{stats.total}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Total de Pets</p>
+                      <p className="text-sm text-muted-foreground">Amiguinhos Queridos</p>
                     </div>
                   </div>
                 </CardContent>
@@ -323,7 +323,7 @@ const Pets = () => {
                       ) : (
                         <p className="text-2xl font-bold">{stats.active}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Pets Ativos</p>
+                      <p className="text-sm text-muted-foreground">Cheios de Vida</p>
                     </div>
                   </div>
                 </CardContent>
@@ -341,7 +341,7 @@ const Pets = () => {
                       ) : (
                         <p className="text-2xl font-bold">{stats.needsAttention}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Precisam de Carinho</p>
+                      <p className="text-sm text-muted-foreground">Precisam de Atenção Extra</p>
                     </div>
                   </div>
                 </CardContent>
@@ -359,7 +359,7 @@ const Pets = () => {
                       ) : (
                         <p className="text-2xl font-bold">{stats.vaccinated}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Vacinados</p>
+                      <p className="text-sm text-muted-foreground">Protegidos com Amor</p>
                     </div>
                   </div>
                 </CardContent>
