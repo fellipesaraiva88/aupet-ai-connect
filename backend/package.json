@@ -2,11 +2,11 @@
   "name": "auzap-backend",
   "version": "1.0.0",
   "description": "Backend para sistema Auzap.ai - Integração WhatsApp e IA",
-  "main": "dist/server.js",
+  "main": "dist/simple-server.js",
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "tsc",
-    "start": "node src/debug-env.js && node dist/server.js",
+    "start": "node dist/simple-server.js",
     "start:dev": "tsx watch src/server.ts",
     "clean": "rm -rf dist",
     "debug": "node src/debug-env.js"
