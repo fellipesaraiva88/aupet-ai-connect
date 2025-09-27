@@ -38,31 +38,31 @@ const menuItems = [
   },
   {
     id: "customers",
-    label: "Clientes",
+    label: "Nossos Amigos",
     icon: Users,
     href: "/customers",
   },
   {
     id: "pets",
-    label: "Pets",
+    label: "Pets Queridos",
     icon: Heart,
     href: "/pets",
   },
   {
     id: "appointments",
-    label: "Agendamentos",
+    label: "Visitas Marcadas",
     icon: Calendar,
     href: "/appointments",
   },
   {
     id: "catalog",
-    label: "Catálogo",
+    label: "Nossos Produtos",
     icon: Package,
     href: "/catalog",
   },
   {
     id: "ai-config",
-    label: "IA Config",
+    label: "Assistente IA",
     icon: Bot,
     href: "/ai-config",
   },
@@ -107,7 +107,7 @@ export function Sidebar({
             <Zap className="h-4 w-4 text-white" />
           </div>
           <span className="font-bold text-lg bg-gradient-hero bg-clip-text text-transparent">
-            Auzap
+            Auzap.Ai
           </span>
         </div>
       </div>
@@ -149,9 +149,9 @@ export function Sidebar({
           <div className="flex items-center justify-center w-10 h-10 bg-gradient-primary rounded-full mx-auto mb-2">
             <Bot className="h-5 w-5 text-white" />
           </div>
-          <p className="text-sm font-medium mb-1">IA Ativa</p>
+          <p className="text-sm font-medium mb-1">💙 Cuidando</p>
           <p className="text-xs text-muted-foreground">
-            Respondendo automaticamente
+            Sempre atenta aos seus clientes
           </p>
         </div>
       </div>

@@ -28,9 +28,9 @@ interface NavbarProps {
 
 export function Navbar({
   userName = "Dr. Ana Silva",
-  userEmail = "ana@petcare.com",
+  userEmail = "ana@meupetvip.com",
   unreadNotifications = 3,
-  organizationName = "Pet Care Center",
+  organizationName = "Meu Pet VIP",
 }: NavbarProps) {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -42,7 +42,7 @@ export function Navbar({
               <Zap className="h-4 w-4 text-white" />
             </div>
             <span className="font-bold text-lg bg-gradient-hero bg-clip-text text-transparent">
-              Auzap
+              Auzap.Ai
             </span>
           </div>
           <div className="hidden md:block text-sm text-muted-foreground">
@@ -54,7 +54,7 @@ export function Navbar({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-full bg-success/10 px-3 py-1">
             <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-            <span className="text-xs font-medium text-success">WhatsApp Conectado</span>
+            <span className="text-xs font-medium text-success">Pronto para atender</span>
           </div>
         </div>
 

@@ -153,10 +153,10 @@ const Pets = () => {
               <div>
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                   <Heart className="h-8 w-8 text-primary" />
-                  Pets Cadastrados
+                  Pets Queridos
                 </h1>
                 <p className="text-muted-foreground">
-                  Gerencie todos os pets dos seus clientes
+                  Cada pet tem uma história especial conosco 💙
                 </p>
               </div>
               
@@ -164,14 +164,14 @@ const Pets = () => {
                 <DialogTrigger asChild>
                   <Button variant="hero" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
-                    Cadastrar Pet
+                    Novo Amiguinho
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Cadastrar Novo Pet</DialogTitle>
+                    <DialogTitle>Bem-vindo, novo amiguinho! 🐾</DialogTitle>
                     <DialogDescription>
-                      Adicione um novo pet ao sistema
+                      Vamos conhecer melhor esse novo membro da família
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -217,7 +217,7 @@ const Pets = () => {
                   </div>
                   <div className="flex justify-end gap-3">
                     <Button variant="outline">Cancelar</Button>
-                    <Button variant="default">Cadastrar Pet</Button>
+                    <Button variant="default">Cadastrar com Carinho</Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -261,7 +261,7 @@ const Pets = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.needsAttention}</p>
-                      <p className="text-sm text-muted-foreground">Precisam Atenção</p>
+                      <p className="text-sm text-muted-foreground">Precisam de Carinho</p>
                     </div>
                   </div>
                 </CardContent>
@@ -372,15 +372,15 @@ const Pets = () => {
             {filteredPets.length === 0 && (
               <div className="text-center py-12">
                 <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhum pet encontrado</h3>
+                <h3 className="text-lg font-medium mb-2">Ainda não há pets aqui</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm || filterSpecies !== "all" || filterStatus !== "all"
-                    ? "Tente ajustar os filtros para encontrar pets."
-                    : "Comece cadastrando o primeiro pet da sua base de clientes."}
+                    ? "Tente ajustar os filtros para encontrar seus amiguinhos."
+                    : "Que tal começar cadastrando o primeiro pet que conquistou seu coração?"}
                 </p>
                 <Button variant="outline">
                   <Plus className="h-4 w-4 mr-2" />
-                  Cadastrar Primeiro Pet
+                  Cadastrar Primeiro Amiguinho
                 </Button>
               </div>
             )}

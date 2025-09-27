@@ -36,9 +36,9 @@ const Index = () => {
             {/* Page Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Bem-vindo ao seu petshop! 🐾</h1>
                 <p className="text-muted-foreground">
-                  Visão geral do seu negócio pet
+                  Aqui você cuida do que mais importa: seus clientes e seus pets
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -48,7 +48,7 @@ const Index = () => {
                 </Button>
                 <Button variant="hero">
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  Relatório Completo
+                  Ver Crescimento
                 </Button>
               </div>
             </div>
@@ -72,28 +72,28 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-primary" />
-                    Ações Rápidas
+                    Ações do Coração
                   </CardTitle>
                   <CardDescription>
-                    Tarefas mais comuns do seu dia a dia
+                    Tudo que você precisa para cuidar melhor dos pets
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <MessageSquare className="h-6 w-6" />
-                    <span className="text-sm">Nova Conversa</span>
+                    <span className="text-sm">Conversar</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Calendar className="h-6 w-6" />
-                    <span className="text-sm">Agendar</span>
+                    <span className="text-sm">Agendar Visita</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Users className="h-6 w-6" />
-                    <span className="text-sm">Novo Cliente</span>
+                    <span className="text-sm">Novo Amigo</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Heart className="h-6 w-6" />
-                    <span className="text-sm">Cadastrar Pet</span>
+                    <span className="text-sm">Novo Pet</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -101,9 +101,9 @@ const Index = () => {
               {/* System Status */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Status do Sistema</CardTitle>
+                  <CardTitle>Tudo Funcionando</CardTitle>
                   <CardDescription>
-                    Todos os serviços operacionais
+                    Seus clientes sempre bem atendidos
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -119,7 +119,7 @@ const Index = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-                      <span className="text-sm font-medium">IA Assistant</span>
+                      <span className="text-sm font-medium">Assistente Auzap</span>
                     </div>
                     <Badge variant="secondary" className="text-success">
                       Ativo

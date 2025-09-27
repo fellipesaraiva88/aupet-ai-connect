@@ -99,11 +99,11 @@ const Conversations = () => {
           {/* Conversations List */}
           <div className="w-80 border-r border-border bg-card/50">
             <div className="p-4 border-b border-border">
-              <h2 className="text-lg font-semibold mb-3">Conversas</h2>
+              <h2 className="text-lg font-semibold mb-3">Conversas do Coração</h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Buscar conversas..."
+                  placeholder="Encontrar uma conversa..."
                   className="pl-10"
                 />
               </div>
@@ -190,7 +190,7 @@ const Conversations = () => {
                   {selectedConversation.isAIHandled && (
                     <Badge variant="secondary">
                       <Bot className="h-3 w-3 mr-1" />
-                      Atendimento Automático
+                      Atendimento Auzap
                     </Badge>
                   )}
                 </div>
@@ -231,7 +231,7 @@ const Conversations = () => {
                 </Button>
                 <div className="flex-1 relative">
                   <Input
-                    placeholder="Digite sua mensagem..."
+                    placeholder="Escreva com carinho..."
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     className="pr-10"
@@ -250,7 +250,7 @@ const Conversations = () => {
           {/* Customer Info Panel */}
           <div className="w-80 border-l border-border bg-card/50 p-4 space-y-6">
             <div>
-              <h3 className="font-semibold mb-3">Informações do Cliente</h3>
+              <h3 className="font-semibold mb-3">Nosso Cliente Especial</h3>
               <div className="space-y-3">
                 <div className="text-center">
                   <Avatar className="h-16 w-16 mx-auto mb-2">
@@ -265,7 +265,7 @@ const Conversations = () => {
             </div>
 
             <div>
-              <h4 className="font-medium mb-3">Pet Information</h4>
+              <h4 className="font-medium mb-3">Informações do Pet Querido</h4>
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-3">
@@ -296,7 +296,7 @@ const Conversations = () => {
             </div>
 
             <div>
-              <h4 className="font-medium mb-3">Histórico de Serviços</h4>
+              <h4 className="font-medium mb-3">Momentos Especiais</h4>
               <div className="space-y-2">
                 <div className="text-sm p-2 bg-accent/20 rounded">
                   <span className="font-medium">Banho e Tosa</span>
@@ -311,7 +311,7 @@ const Conversations = () => {
 
             <div>
               <Button variant="outline" className="w-full">
-                Ver Perfil Completo
+                Ver História Completa
               </Button>
             </div>
           </div>

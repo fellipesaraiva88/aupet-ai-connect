@@ -2,47 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Auzap Design System - Pet care meets modern technology */
+/* Auzap.Ai Design System - Cuidado com amor e tecnologia para pets */
 
 @layer base {
   :root {
-    /* Brand Colors - Pet care and technology harmony */
+    /* Brand Colors - Cores que transmitem confiança e carinho */
     --background: 0 0% 100%;
-    --foreground: 215 25% 26.7%;
+    --foreground: 220 26% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 26.7%;
+    --card-foreground: 220 26% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 26.7%;
+    --popover-foreground: 220 26% 14%;
 
-    /* Primary - Pet care green */
-    --primary: 142 76% 36%;
+    /* Primary - Azul confiança (cor principal da marca) */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 98%;
-    --primary-light: 142 76% 46%;
-    --primary-dark: 142 76% 26%;
+    --primary-light: 217 91% 70%;
+    --primary-dark: 217 91% 50%;
 
-    /* Secondary - Trust blue */
-    --secondary: 213 94% 68%;
+    /* Secondary - Azul profundo para estabilidade */
+    --secondary: 220 70% 50%;
     --secondary-foreground: 0 0% 98%;
-    --secondary-light: 213 94% 78%;
-    --secondary-dark: 213 94% 58%;
+    --secondary-light: 220 70% 60%;
+    --secondary-dark: 220 70% 40%;
 
-    /* Accent - Warm orange for calls-to-action */
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 98%;
-    --accent-light: 25 95% 63%;
+    /* Accent - Azul claro para destaques suaves */
+    --accent: 200 100% 85%;
+    --accent-foreground: 220 26% 14%;
+    --accent-light: 200 100% 90%;
 
-    /* Muted tones */
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted tones - Tons neutros com base azul */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8.9% 46.1%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 36%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
 
     --radius: 0.75rem;
 
@@ -50,9 +50,9 @@
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
     --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-light)));
     --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.8), hsl(0 0% 100% / 0.4));
-    
-    /* Shadows */
+    --gradient-card: linear-gradient(145deg, hsl(220 60% 98% / 0.8), hsl(220 60% 98% / 0.4));
+
+    /* Shadows com tom azul */
     --shadow-soft: 0 4px 6px -1px hsl(var(--primary) / 0.1), 0 2px 4px -1px hsl(var(--primary) / 0.06);
     --shadow-medium: 0 10px 15px -3px hsl(var(--primary) / 0.1), 0 4px 6px -2px hsl(var(--primary) / 0.05);
     --shadow-large: 0 20px 25px -5px hsl(var(--primary) / 0.1), 0 10px 10px -5px hsl(var(--primary) / 0.04);
@@ -71,7 +71,7 @@
     --success: 142 76% 36%;
     --warning: 45 93% 58%;
     --error: 0 84% 60%;
-    --info: 213 94% 68%;
+    --info: 217 91% 60%;
 
     --sidebar-background: 0 0% 98%;
 
