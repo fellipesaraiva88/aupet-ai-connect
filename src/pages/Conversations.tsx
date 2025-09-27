@@ -99,11 +99,11 @@ const Conversations = () => {
           {/* Conversations List */}
           <div className="w-80 border-r border-border bg-card/50">
             <div className="p-4 border-b border-border">
-              <h2 className="text-lg font-semibold mb-3">Conversas do Coração</h2>
+              <h2 className="text-lg font-semibold mb-3">Conversas</h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Encontrar uma conversa..."
+                  placeholder="Buscar conversas..."
                   className="pl-10"
                 />
               </div>

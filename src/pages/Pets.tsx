@@ -153,10 +153,10 @@ const Pets = () => {
               <div>
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                   <Heart className="h-8 w-8 text-primary" />
-                  Pets Queridos
+                  Pets Cadastrados
                 </h1>
-                <p className="text-muted-foreground">
-                  Cada pet tem uma história especial conosco 💙
+                <p className="text-muted-foreground font-secondary">
+                  Gerencie todos os pets dos seus clientes
                 </p>
               </div>
               
@@ -164,7 +164,7 @@ const Pets = () => {
                 <DialogTrigger asChild>
                   <Button variant="hero" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
-                    Novo Amiguinho
+                    Cadastrar Pet
                   </Button>
                 </DialogTrigger>
                 <DialogContent>

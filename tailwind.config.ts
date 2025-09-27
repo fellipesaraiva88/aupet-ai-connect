@@ -13,6 +13,12 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        'sans': ['Montserrat', 'system-ui', 'sans-serif'],
+        'mono': ['IBM Plex Mono', 'monospace'],
+        'primary': ['Montserrat', 'system-ui', 'sans-serif'],
+        'secondary': ['IBM Plex Mono', 'monospace'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -71,6 +77,14 @@ export default {
         warning: "hsl(var(--warning))",
         error: "hsl(var(--error))",
         info: "hsl(var(--info))",
+        // Auzap Brand Colors
+        auzap: {
+          blue: "#1E62EC",
+          yellow: "#FFDE59",
+          dark: "#1E1E1E",
+          light: "#F5F6FA",
+          gray: "#333333",
+        },
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',

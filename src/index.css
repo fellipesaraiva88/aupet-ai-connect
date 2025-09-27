@@ -2,61 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Auzap.Ai Design System - Cuidado com amor e tecnologia para pets */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+
+/* Auzap.ai Design System - Atendimento humano, 100% automatizado */
 
 @layer base {
   :root {
-    /* Brand Colors - Cores que transmitem confiança e carinho */
-    --background: 0 0% 100%;
-    --foreground: 220 26% 14%;
+    /* Auzap Official Brand Colors */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 0 0% 11.8%; /* #1E1E1E */
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 26% 14%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 0 0% 20%; /* #333333 */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 14%;
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 0 0% 20%; /* #333333 */
 
-    /* Primary - Azul confiança (cor principal da marca) */
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 98%;
-    --primary-light: 217 91% 70%;
-    --primary-dark: 217 91% 50%;
+    /* Primary - Azul Auzap Official */
+    --primary: 223 86% 52%; /* #1E62EC */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --primary-light: 223 86% 62%;
+    --primary-dark: 223 86% 42%;
 
-    /* Secondary - Azul profundo para estabilidade */
-    --secondary: 220 70% 50%;
-    --secondary-foreground: 0 0% 98%;
-    --secondary-light: 220 70% 60%;
-    --secondary-dark: 220 70% 40%;
+    /* Secondary - Amarelo para CTAs e conversões */
+    --secondary: 48 100% 67%; /* #FFDE59 */
+    --secondary-foreground: 0 0% 11.8%; /* #1E1E1E */
+    --secondary-light: 48 100% 77%;
+    --secondary-dark: 48 100% 57%;
 
-    /* Accent - Azul claro para destaques suaves */
-    --accent: 200 100% 85%;
-    --accent-foreground: 220 26% 14%;
-    --accent-light: 200 100% 90%;
+    /* Accent - Amarelo para destaques */
+    --accent: 48 100% 67%; /* #FFDE59 */
+    --accent-foreground: 0 0% 11.8%; /* #1E1E1E */
+    --accent-light: 48 100% 77%;
 
-    /* Muted tones - Tons neutros com base azul */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8.9% 46.1%;
+    /* Neutral Colors */
+    --muted: 228 25% 96%; /* #F5F6FA */
+    --muted-foreground: 0 0% 20%; /* #333333 */
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    --border: 228 25% 96%; /* #F5F6FA */
+    --input: 228 25% 96%; /* #F5F6FA */
+    --ring: 223 86% 52%; /* #1E62EC */
 
     --radius: 0.75rem;
 
     /* Custom Design Tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
-    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-light)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(220 60% 98% / 0.8), hsl(220 60% 98% / 0.4));
+    --gradient-primary: linear-gradient(135deg, #1E62EC, #4F7FFF);
+    --gradient-secondary: linear-gradient(135deg, #FFDE59, #FFE875);
+    --gradient-hero: linear-gradient(135deg, #1E62EC 0%, #FFDE59 100%);
+    --gradient-card: linear-gradient(145deg, rgba(245, 246, 250, 0.8), rgba(245, 246, 250, 0.4));
 
-    /* Shadows com tom azul */
-    --shadow-soft: 0 4px 6px -1px hsl(var(--primary) / 0.1), 0 2px 4px -1px hsl(var(--primary) / 0.06);
-    --shadow-medium: 0 10px 15px -3px hsl(var(--primary) / 0.1), 0 4px 6px -2px hsl(var(--primary) / 0.05);
-    --shadow-large: 0 20px 25px -5px hsl(var(--primary) / 0.1), 0 10px 10px -5px hsl(var(--primary) / 0.04);
-    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.3);
+    /* Shadows */
+    --shadow-soft: 0 4px 6px -1px rgba(30, 98, 236, 0.1), 0 2px 4px -1px rgba(30, 98, 236, 0.06);
+    --shadow-medium: 0 10px 15px -3px rgba(30, 98, 236, 0.1), 0 4px 6px -2px rgba(30, 98, 236, 0.05);
+    --shadow-large: 0 20px 25px -5px rgba(30, 98, 236, 0.1), 0 10px 10px -5px rgba(30, 98, 236, 0.04);
+    --shadow-glow: 0 0 30px rgba(30, 98, 236, 0.3);
+
+    /* Typography */
+    --font-primary: 'Montserrat', sans-serif;
+    --font-secondary: 'IBM Plex Mono', monospace;
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -69,9 +76,9 @@
 
     /* Status Colors */
     --success: 142 76% 36%;
-    --warning: 45 93% 58%;
+    --warning: 48 100% 67%; /* Usando amarelo da marca */
     --error: 0 84% 60%;
-    --info: 217 91% 60%;
+    --info: 223 86% 52%; /* Usando azul da marca */
 
     --sidebar-background: 0 0% 98%;
 
@@ -136,5 +143,26 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-primary);
+    font-weight: 700;
+    color: hsl(var(--primary));
+  }
+
+  .font-mono {
+    font-family: var(--font-secondary);
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+  }
+
+  .text-impact {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }

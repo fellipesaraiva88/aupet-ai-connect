@@ -36,9 +36,9 @@ const Index = () => {
             {/* Page Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Bem-vindo ao seu petshop! 🐾</h1>
-                <p className="text-muted-foreground">
-                  Aqui você cuida do que mais importa: seus clientes e seus pets
+                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary">Dashboard</h1>
+                <p className="text-muted-foreground font-secondary">
+                  Você faz o que ama, nós cuidamos do seu atendimento
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -46,9 +46,9 @@ const Index = () => {
                   <Calendar className="h-4 w-4 mr-2" />
                   Últimos 30 dias
                 </Button>
-                <Button variant="hero">
+                <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  Ver Crescimento
+                  Relatórios
                 </Button>
               </div>
             </div>
@@ -72,28 +72,28 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-primary" />
-                    Ações do Coração
+                    Ações Rápidas
                   </CardTitle>
                   <CardDescription>
-                    Tudo que você precisa para cuidar melhor dos pets
+                    Atendimento ágil e eficiente para seus clientes
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <MessageSquare className="h-6 w-6" />
-                    <span className="text-sm">Conversar</span>
+                    <span className="text-sm">Atender</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Calendar className="h-6 w-6" />
-                    <span className="text-sm">Agendar Visita</span>
+                    <span className="text-sm">Agendar</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Users className="h-6 w-6" />
-                    <span className="text-sm">Novo Amigo</span>
+                    <span className="text-sm">Cliente</span>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2">
                     <Heart className="h-6 w-6" />
-                    <span className="text-sm">Novo Pet</span>
+                    <span className="text-sm">Pet</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -101,9 +101,9 @@ const Index = () => {
               {/* System Status */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Tudo Funcionando</CardTitle>
+                  <CardTitle>Sistema Ativo</CardTitle>
                   <CardDescription>
-                    Seus clientes sempre bem atendidos
+                    Atendimento 24/7 funcionando
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -119,7 +119,7 @@ const Index = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-                      <span className="text-sm font-medium">Assistente Auzap</span>
+                      <span className="text-sm font-medium">Auzap.ai</span>
                     </div>
                     <Badge variant="secondary" className="text-success">
                       Ativo

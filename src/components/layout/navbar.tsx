@@ -38,14 +38,14 @@ export function Navbar({
         {/* Logo e Nome da Organização */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Zap className="h-4 w-4 text-white" />
             </div>
-            <span className="font-bold text-lg bg-gradient-hero bg-clip-text text-transparent">
-              Auzap.Ai
+            <span className="font-primary font-bold text-lg text-primary">
+              Auzap.ai
             </span>
           </div>
-          <div className="hidden md:block text-sm text-muted-foreground">
+          <div className="hidden md:block text-sm font-secondary text-muted-foreground">
             {organizationName}
           </div>
         </div>
@@ -54,7 +54,7 @@ export function Navbar({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-full bg-success/10 px-3 py-1">
             <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-            <span className="text-xs font-medium text-success">Pronto para atender</span>
+            <span className="text-xs font-secondary font-medium text-success">NUNCA PERDE UM CLIENTE</span>
           </div>
         </div>
 
