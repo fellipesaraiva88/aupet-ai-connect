@@ -4,9 +4,9 @@ services:
     env: node
     plan: starter
     region: oregon
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    repo: https://github.com/your-username/auzap-backend.git
+    buildCommand: ./render-build.sh
+    startCommand: ./render-start.sh
+    repo: https://github.com/fellipesaraiva88/aupet-ai-connect.git
     branch: main
     envVars:
       - key: NODE_ENV
@@ -14,7 +14,7 @@ services:
       - key: PORT
         value: 10000
       - key: FRONTEND_URL
-        value: https://aupet-ai-connect.vercel.app
+        value: https://aupet-ai-connect.lovable.dev
       - key: SUPABASE_URL
         value: https://lytpeljmwjugsbapjkeb.supabase.co
       - key: SUPABASE_ANON_KEY
@@ -28,7 +28,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: WEBHOOK_URL
-        generateValue: true
+        value: https://auzap-backend.onrender.com
       - key: JWT_SECRET
         generateValue: true
       - key: API_KEY
