@@ -90,10 +90,10 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-primary" />
-                    Resolver Agora
+                    Cuidar com Amor Agora
                   </CardTitle>
                   <CardDescription>
-                    Transforme cada necessidade em solução imediata
+                    Transforme cada necessidade em carinho e cuidado especial
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
@@ -103,7 +103,7 @@ const Index = () => {
                     onClick={() => navigate('/conversations')}
                   >
                     <MessageSquare className="h-6 w-6" />
-                    <span className="text-sm">Conversar</span>
+                    <span className="text-sm">Falar com uma Família</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -111,7 +111,7 @@ const Index = () => {
                     onClick={() => navigate('/appointments/new')}
                   >
                     <Calendar className="h-6 w-6" />
-                    <span className="text-sm">Agendar Cuidado</span>
+                    <span className="text-sm">Marcar Momento Especial</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -119,7 +119,7 @@ const Index = () => {
                     onClick={() => navigate('/customers/new')}
                   >
                     <Users className="h-6 w-6" />
-                    <span className="text-sm">Novo Cliente</span>
+                    <span className="text-sm">Acolher Nova Família</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -127,7 +127,7 @@ const Index = () => {
                     onClick={() => navigate('/pets/new')}
                   >
                     <Heart className="h-6 w-6" />
-                    <span className="text-sm">Novo Amiguinho</span>
+                    <span className="text-sm">Cadastrar Novo Peludo</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -135,9 +135,9 @@ const Index = () => {
               {/* Real-time Stats */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Hoje Você Está Brilhando</CardTitle>
+                  <CardTitle>Hoje Fizemos a Diferença</CardTitle>
                   <CardDescription>
-                    Acompanhe como cada momento se transforma em sucesso
+                    Acompanhe como cada momento se transforma em amor e cuidado
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -166,7 +166,7 @@ const Index = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <MessageSquare className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-medium">Clientes cuidados hoje</span>
+                          <span className="text-sm font-medium">Famílias abraçadas hoje</span>
                         </div>
                         <Badge variant="secondary" className="text-primary font-bold">
                           {dashboardStats?.conversations_today || 0}

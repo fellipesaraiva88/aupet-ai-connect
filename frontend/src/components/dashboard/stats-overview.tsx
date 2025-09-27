@@ -20,7 +20,7 @@ export function StatsOverview() {
   // Create stats from Supabase data with defaults
   const stats = [
     {
-      title: "Conversas Hoje",
+      title: "Famílias Atendidas Hoje",
       value: (dashboardStats?.conversations_today || 0).toString(),
       change: `+${Math.round((dashboardStats?.conversations_today || 0) * 0.23)}% vs ontem`,
       changeType: "positive" as const,
@@ -28,7 +28,7 @@ export function StatsOverview() {
       variant: "success" as const,
     },
     {
-      title: "Clientes Ativos",
+      title: "Famílias Felizes",
       value: (dashboardStats?.active_clients || 0).toLocaleString('pt-BR'),
       change: "+12% este mês",
       changeType: "positive" as const,
@@ -36,7 +36,7 @@ export function StatsOverview() {
       variant: "info" as const,
     },
     {
-      title: "Pets Cadastrados",
+      title: "Peludos Cuidados",
       value: (dashboardStats?.total_pets || 0).toLocaleString('pt-BR'),
       change: `+${dashboardStats?.new_pets_today || 0} hoje`,
       changeType: "positive" as const,
@@ -44,7 +44,7 @@ export function StatsOverview() {
       variant: "default" as const,
     },
     {
-      title: "Agendamentos",
+      title: "Momentos Marcados",
       value: (dashboardStats?.daily_appointments || 0).toString(),
       change: "Para hoje",
       changeType: "neutral" as const,
@@ -60,7 +60,7 @@ export function StatsOverview() {
       variant: "success" as const,
     },
     {
-      title: "Tempo Resposta",
+      title: "Rapidez no Carinho",
       value: "1.2s",
       change: "NUNCA PERDE CLIENTE",
       changeType: "positive" as const,
@@ -68,7 +68,7 @@ export function StatsOverview() {
       variant: "info" as const,
     },
     {
-      title: "Taxa Automação",
+      title: "Cuidado 24/7",
       value: `${(dashboardStats?.response_rate_percent || 87.5).toFixed(1)}%`,
       change: "+5% este mês",
       changeType: "positive" as const,
@@ -76,7 +76,7 @@ export function StatsOverview() {
       variant: "success" as const,
     },
     {
-      title: "IA Respostas",
+      title: "IA Cuidando",
       value: (dashboardStats?.ai_responses_today || 0).toString(),
       change: "Automático",
       changeType: "positive" as const,

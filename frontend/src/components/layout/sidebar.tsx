@@ -25,56 +25,56 @@ interface SidebarProps {
 const menuItems = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    label: "Central de Amor",
     icon: LayoutDashboard,
     href: "/",
   },
   {
     id: "conversations",
-    label: "Conversas",
+    label: "Papos com Famílias",
     icon: MessageSquare,
     href: "/conversations",
     badge: 5,
   },
   {
     id: "customers",
-    label: "Clientes",
+    label: "Famílias Pet",
     icon: Users,
     href: "/customers",
   },
   {
     id: "pets",
-    label: "Pets",
+    label: "Nossos Amiguinhos",
     icon: Heart,
     href: "/pets",
   },
   {
     id: "appointments",
-    label: "Agendamentos",
+    label: "Momentos de Cuidado",
     icon: Calendar,
     href: "/appointments",
   },
   {
     id: "catalog",
-    label: "Catálogo",
+    label: "Mimos & Cuidados",
     icon: Package,
     href: "/catalog",
   },
   {
     id: "ai-config",
-    label: "Configuração IA",
+    label: "Assistente Virtual Pet",
     icon: Bot,
     href: "/ai-config",
   },
   {
     id: "analytics",
-    label: "Relatórios",
+    label: "Como Estamos Cuidando",
     icon: BarChart3,
     href: "/analytics",
   },
   {
     id: "settings",
-    label: "Configurações",
+    label: "Ajustes do Cantinho",
     icon: Settings,
     href: "/settings",
   },
@@ -149,9 +149,9 @@ export function Sidebar({
           <div className="flex items-center justify-center w-10 h-10 bg-gradient-primary rounded-full mx-auto mb-2">
             <Bot className="h-5 w-5 text-white" />
           </div>
-          <p className="text-sm font-medium mb-1 font-secondary">ATIVO 24/7</p>
+          <p className="text-sm font-medium mb-1 font-secondary">CUIDANDO 24/7</p>
           <p className="text-xs text-muted-foreground">
-            Atendimento automático funcionando
+            Sempre aqui para cuidar
           </p>
         </div>
       </div>

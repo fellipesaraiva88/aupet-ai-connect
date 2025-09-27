@@ -151,8 +151,8 @@ const Conversations = () => {
       } catch (error) {
         console.error('Error loading messages:', error);
         toast({
-          title: "Erro ao carregar mensagens",
-          description: "Não foi possível carregar as mensagens da conversa",
+          title: "Ops, algo deu errado",
+          description: "Não conseguimos carregar o papo com essa família",
           variant: "destructive",
         });
       }
@@ -191,16 +191,16 @@ const Conversations = () => {
       if (error) throw error;
 
       toast({
-        title: "Mensagem enviada",
-        description: `Mensagem enviada para ${selectedConversation.customerName}`,
+        title: "Mensagem enviada com carinho",
+        description: `Mensagem chegou até ${selectedConversation.customerName}`,
       });
 
       setMessageText("");
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
-        title: "Erro ao enviar mensagem",
-        description: "Não foi possível enviar a mensagem",
+        title: "Ops, algo deu errado",
+        description: "Não conseguimos enviar a mensagem. Vamos tentar novamente?",
         variant: "destructive",
       });
     }
@@ -208,7 +208,7 @@ const Conversations = () => {
 
   const handlePhoneCall = (phone: string) => {
     toast({
-      title: "Iniciando chamada",
+      title: "Conectando com carinho",
       description: `Ligando para ${phone}`,
     });
     // TODO: Integrate with phone system
@@ -217,7 +217,7 @@ const Conversations = () => {
 
   const handleVideoCall = (conversationId: number) => {
     toast({
-      title: "Iniciando videochamada",
+      title: "Vamos nos ver!",
       description: "Preparando videochamada...",
     });
     // TODO: Integrate with video call system
@@ -226,8 +226,8 @@ const Conversations = () => {
 
   const handleAssignConversation = (conversationId: number) => {
     toast({
-      title: "Conversa atribuída",
-      description: "Conversa foi atribuída a um atendente",
+      title: "Alguém vai cuidar disso",
+      description: "Conversa foi atribuída a um especialista",
     });
     // TODO: Assign conversation to agent
     console.log("Assigning conversation:", conversationId);
