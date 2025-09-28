@@ -77,11 +77,20 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     // Apply pagination
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    query = query.range(from, to).order('last_message_at', { ascending: false });
+    query = query.range(from, to).order('last_message_time', { ascending: false });
 
     const { data: conversations, error, count } = await query;
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Database error in conversations query:', {
+        error: error.message,
+        code: error.code,
+        hint: error.hint,
+        organizationId,
+        query: 'conversations_list'
+      });
+      throw error;
+    }
 
     const totalPages = Math.ceil((count || 0) / limit);
 
@@ -283,11 +292,11 @@ router.post('/:id/messages', asyncHandler(async (req: Request, res: Response) =>
 
     if (error) throw error;
 
-    // Update conversation last_message_at
+    // Update conversation last_message_time
     await supabase.supabase
       .from('whatsapp_conversations')
       .update({
-        last_message_at: new Date().toISOString(),
+        last_message_time: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
