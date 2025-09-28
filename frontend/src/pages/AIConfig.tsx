@@ -117,44 +117,60 @@ const AIConfig = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
+      {/* AI-themed floating elements */}
+      <div className="absolute inset-0 paw-pattern opacity-[0.02] pointer-events-none" />
+      <div className="absolute top-16 left-16 w-20 h-20 bg-gradient-to-br from-primary/30 to-purple-400/30 rounded-full glass-morphism animate-glass-float" />
+      <div className="absolute top-60 right-32 w-14 h-14 bg-gradient-to-br from-accent/30 to-pink-400/30 rounded-full glass-morphism animate-pet-bounce delay-500" />
+      <div className="absolute bottom-32 left-1/4 w-10 h-10 bg-gradient-to-br from-secondary/30 to-blue-400/30 rounded-full glass-morphism animate-glass-float delay-1000" />
+
       <Navbar />
-      
+
       <div className="flex h-[calc(100vh-4rem)]">
         <Sidebar
           activeItem={activeMenuItem}
         />
-        
-        <main className="flex-1 overflow-auto">
+
+        <main className="flex-1 overflow-auto relative">
           <div className="p-8 space-y-6">
-            {/* Page Header */}
+            {/* Enhanced AI Page Header */}
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                  <Bot className="h-8 w-8 text-primary" />
-                  Configuração da IA
-                </h1>
-                <p className="text-muted-foreground">
-                  Personalize como sua assistente inteligente atende seus clientes
-                </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="p-4 bg-gradient-to-br from-primary to-purple-600 rounded-2xl shadow-xl">
+                      <Bot className="h-10 w-10 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-success rounded-full animate-pulse border-2 border-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      Configuração da IA
+                    </h1>
+                    <p className="text-muted-foreground text-lg">
+                      Personalize como sua assistente inteligente cuida dos seus clientes com amor
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Badge variant={aiEnabled ? "secondary" : "secondary"} className={`px-3 py-1 ${aiEnabled ? 'text-success' : ''}`}>
-                  <div className={`h-2 w-2 rounded-full mr-2 ${aiEnabled ? 'bg-success animate-pulse-soft' : 'bg-muted-foreground'}`} />
-                  {aiEnabled ? "IA Ativa" : "IA Desativada"}
+              <div className="flex items-center gap-4">
+                <Badge className={`px-4 py-2 glass-morphism ${aiEnabled ? 'bg-gradient-to-r from-success/20 to-green-400/20 text-success border-success/30' : 'bg-gradient-to-r from-red-500/20 to-orange-400/20 text-destructive border-destructive/30'}`}>
+                  <div className={`h-3 w-3 rounded-full mr-2 ${aiEnabled ? 'bg-success animate-pulse' : 'bg-destructive'}`} />
+                  {aiEnabled ? "IA Protegendo" : "IA Offline"}
                 </Badge>
                 <Button
                   variant="outline"
                   onClick={handleTestAI}
                   disabled={isTesting}
+                  className="glass-morphism hover:bg-gradient-to-r hover:from-accent/10 hover:to-blue-500/10 transition-all duration-300"
                 >
                   {isTesting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
                   Testar IA
                 </Button>
                 <Button
-                  variant="hero"
                   onClick={handleSaveConfiguration}
                   disabled={isLoading}
+                  className="bg-gradient-to-r from-primary to-purple-600 text-white hover:shadow-xl hover:scale-105 transition-all duration-300 px-6 py-3"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                   Salvar Configurações
