@@ -13,6 +13,18 @@ import { toast } from "@/hooks/use-toast";
 import { useConversations, useOrganizationId } from "@/hooks/useApiData";
 import { useRealTimeSubscriptions, useMessageRealTime } from "@/hooks/useRealTime";
 import { supabase } from "@/integrations/supabase/client";
+import { WhatsAppSetup } from "@/components/whatsapp/WhatsAppSetup";
+import { TemplateManager } from "@/components/whatsapp/TemplateManager";
+import { AutoReplySettings } from "@/components/whatsapp/AutoReplySettings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +52,9 @@ import {
   CheckCircle2,
   Clock,
   Zap,
+  Settings,
+  FileText,
+  Smartphone,
 } from "lucide-react";
 
 // Real-time conversation data interface
@@ -93,6 +108,11 @@ const Conversations = () => {
     showFavorites: false,
   });
   const [favoriteConversations, setFavoriteConversations] = useState<Set<string>>(new Set());
+  const [showWhatsAppSetup, setShowWhatsAppSetup] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [showAutoReplySettings, setShowAutoReplySettings] = useState(false);
+  const [whatsappInstances, setWhatsappInstances] = useState<any[]>([]);
+  const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Get organization ID and real conversation data
@@ -101,6 +121,34 @@ const Conversations = () => {
 
   // Set up real-time subscriptions
   useRealTimeSubscriptions(organizationId);
+
+  // Load WhatsApp instances
+  useEffect(() => {
+    if (!organizationId) return;
+
+    const loadWhatsAppInstances = async () => {
+      try {
+        const { data: instances, error } = await supabase
+          .from('whatsapp_instances')
+          .select('*')
+          .eq('organization_id', organizationId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        setWhatsappInstances(instances || []);
+
+        // Set default instance if available
+        if (instances && instances.length > 0 && !selectedInstance) {
+          setSelectedInstance(instances[0].id);
+        }
+      } catch (error) {
+        console.error('Error loading WhatsApp instances:', error);
+      }
+    };
+
+    loadWhatsAppInstances();
+  }, [organizationId, selectedInstance]);
 
   // Set up message-specific real-time updates
   useMessageRealTime(selectedConversation?.id || null, (newMessage) => {
@@ -218,7 +266,7 @@ const Conversations = () => {
           isFromMe: msg.direction === 'outbound',
           senderName: msg.direction === 'inbound' ? selectedConversation.customerName : undefined,
           isRead: true,
-          direction: msg.direction,
+          direction: msg.direction as 'inbound' | 'outbound',
           message_type: msg.message_type,
         }));
 
@@ -246,25 +294,28 @@ const Conversations = () => {
 
   // Handler functions with useCallback for performance
   const handleSendMessage = useCallback(async () => {
-    if (!messageText.trim() || !selectedConversation) return;
+    if (!messageText.trim() || !selectedConversation || !selectedInstance) return;
 
     setIsTyping(true);
     try {
-      const { data, error } = await supabase
-        .from('whatsapp_messages')
-        .insert({
-          conversation_id: selectedConversation.id,
-          instance_id: 'default-instance', // TODO: Get from context
-          content: messageText,
-          direction: 'outbound',
-          message_type: 'text',
-          external_id: `out-${Date.now()}`,
-          organization_id: organizationId,
-        })
-        .select()
-        .single();
+      // Send via API to handle WhatsApp delivery
+      const response = await fetch(`/api/whatsapp/${selectedInstance}/send-message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: selectedConversation.customerPhone,
+          message: messageText,
+          type: 'text',
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const result = await response.json();
 
       toast({
         title: "Mensagem enviada com carinho 💝",
@@ -282,7 +333,7 @@ const Conversations = () => {
     } finally {
       setIsTyping(false);
     }
-  }, [messageText, selectedConversation, organizationId]);
+  }, [messageText, selectedConversation, selectedInstance]);
 
   const toggleFavorite = useCallback((conversationId: string) => {
     setFavoriteConversations(prev => {
@@ -362,6 +413,24 @@ const Conversations = () => {
     console.log("Attaching file");
   }, []);
 
+  const handleUseTemplate = useCallback(async (template: any) => {
+    if (!selectedConversation || !selectedInstance) return;
+
+    let content = template.content;
+
+    // Replace variables if any
+    content = content.replace(/\{\{customerName\}\}/g, selectedConversation.customerName);
+    content = content.replace(/\{\{petName\}\}/g, selectedConversation.petName || 'seu pet');
+
+    setMessageText(content);
+    setShowTemplateManager(false);
+
+    toast({
+      title: "Template aplicado! ✨",
+      description: "Mensagem preparada com carinho para seu cliente",
+    });
+  }, [selectedConversation, selectedInstance]);
+
   // Status badge component
   const getStatusBadge = (conversation: ConversationWithDetails) => {
     if (conversation.isAIHandled) {
@@ -416,11 +485,74 @@ const Conversations = () => {
           {/* Conversations List */}
           <div className="w-80 border-r border-border bg-card/50 glass-morphism">
             <div className="p-4 border-b border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <h2 className="text-lg font-semibold bg-gradient-primary bg-clip-text text-transparent">
-                  Conversas Especiais
-                </h2>
-                <Heart className="h-4 w-4 text-pink-500" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold bg-gradient-primary bg-clip-text text-transparent">
+                    Conversas Especiais
+                  </h2>
+                  <Heart className="h-4 w-4 text-pink-500" />
+                </div>
+                <div className="flex gap-1">
+                  <Dialog open={showWhatsAppSetup} onOpenChange={setShowWhatsAppSetup}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Configurar WhatsApp">
+                        <Smartphone className="h-4 w-4 text-blue-600" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Configuração WhatsApp</DialogTitle>
+                        <DialogDescription>
+                          Configure suas instâncias do WhatsApp Business
+                        </DialogDescription>
+                      </DialogHeader>
+                      <WhatsAppSetup organizationId={organizationId} />
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={showTemplateManager} onOpenChange={setShowTemplateManager}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Templates de Mensagem">
+                        <FileText className="h-4 w-4 text-purple-600" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Templates de Mensagem</DialogTitle>
+                        <DialogDescription>
+                          Gerencie seus templates de mensagens personalizados
+                        </DialogDescription>
+                      </DialogHeader>
+                      <TemplateManager organizationId={organizationId} onUseTemplate={handleUseTemplate} />
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={showAutoReplySettings} onOpenChange={setShowAutoReplySettings}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Auto-respostas">
+                        <Bot className="h-4 w-4 text-green-600" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Auto-respostas Inteligentes</DialogTitle>
+                        <DialogDescription>
+                          Configure respostas automáticas para melhorar o atendimento
+                        </DialogDescription>
+                      </DialogHeader>
+                      {selectedInstance && (
+                        <AutoReplySettings
+                          organizationId={organizationId}
+                          instanceId={selectedInstance}
+                        />
+                      )}
+                      {!selectedInstance && (
+                        <div className="text-center p-8 text-muted-foreground">
+                          <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>Selecione uma instância WhatsApp para configurar auto-respostas</p>
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
               <div className="relative mb-3">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -459,6 +591,35 @@ const Conversations = () => {
                   {filteredConversations.length} total
                 </Badge>
               </div>
+
+              {/* WhatsApp Instance Selector */}
+              {whatsappInstances.length > 0 && (
+                <div className="mt-3">
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Instância WhatsApp:
+                  </label>
+                  <select
+                    value={selectedInstance || ''}
+                    onChange={(e) => setSelectedInstance(e.target.value)}
+                    className="w-full text-sm border border-blue-200 rounded-md px-2 py-1 bg-white/50"
+                  >
+                    {whatsappInstances.map((instance) => (
+                      <option key={instance.id} value={instance.id}>
+                        {instance.instance_name} {instance.is_connected ? '🟢' : '🔴'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {whatsappInstances.length === 0 && (
+                <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-xs text-amber-700 text-center">
+                    <Smartphone className="h-3 w-3 inline mr-1" />
+                    Configure seu WhatsApp para começar!
+                  </p>
+                </div>
+              )}
               {showFilters && (
                 <div className="mt-3 p-3 glass-morphism rounded-lg space-y-3">
                   <div>
@@ -789,6 +950,15 @@ const Conversations = () => {
                   title="Anexar arquivo"
                 >
                   <Paperclip className="h-5 w-5 text-blue-600" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTemplateManager(true)}
+                  className="glass-morphism hover:bg-purple-50 p-2"
+                  title="Usar template"
+                >
+                  <FileText className="h-5 w-5 text-purple-600" />
                 </Button>
                 <div className="flex-1 relative">
                   <Input

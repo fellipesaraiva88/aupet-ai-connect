@@ -12,6 +12,7 @@ import { Server } from 'socket.io';
 
 // Import routes
 import evolutionRoutes from './routes/evolution';
+import whatsappRoutes from './routes/whatsapp';
 import aiRoutes from './routes/ai';
 import webhookRoutes from './routes/webhook';
 import dashboardRoutes from './routes/dashboard';
@@ -179,6 +180,7 @@ class AuzapServer {
 
     // Protected routes (auth + tenant isolation required)
     this.app.use('/api/evolution', authMiddleware, tenantIsolationMiddleware, evolutionRoutes);
+    this.app.use('/api/whatsapp', authMiddleware, tenantIsolationMiddleware, whatsappRoutes);
     this.app.use('/api/ai', authMiddleware, tenantIsolationMiddleware, aiRoutes);
     this.app.use('/api/dashboard', authMiddleware, tenantIsolationMiddleware, dashboardRoutes);
     this.app.use('/api/settings', authMiddleware, tenantIsolationMiddleware, settingsRoutes);
