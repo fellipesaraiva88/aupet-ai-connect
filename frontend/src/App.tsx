@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { ToastContainer } from "@/components/ui/enhanced-toast";
 import { useLoading } from "@/contexts/LoadingContext";
@@ -190,15 +191,17 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LoadingProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AppContent />
-        </TooltipProvider>
-      </AuthProvider>
-    </LoadingProvider>
+    <ThemeProvider>
+      <LoadingProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AppContent />
+          </TooltipProvider>
+        </AuthProvider>
+      </LoadingProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

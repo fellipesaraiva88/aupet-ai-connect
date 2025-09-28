@@ -202,7 +202,7 @@ const Analytics = () => {
             {/* Charts Grid */}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Revenue Chart */}
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader>
                   <CardTitle>Receita Mensal</CardTitle>
                   <CardDescription>
@@ -232,7 +232,7 @@ const Analytics = () => {
               </Card>
 
               {/* Services Distribution */}
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader>
                   <CardTitle>Distribuição de Serviços</CardTitle>
                   <CardDescription>
@@ -263,7 +263,7 @@ const Analytics = () => {
               </Card>
 
               {/* Appointments Chart */}
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader>
                   <CardTitle>Agendamentos por Mês</CardTitle>
                   <CardDescription>
@@ -285,7 +285,7 @@ const Analytics = () => {
               </Card>
 
               {/* Automation Performance */}
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader>
                   <CardTitle>Performance da Automação</CardTitle>
                   <CardDescription>
@@ -310,7 +310,7 @@ const Analytics = () => {
 
             {/* Summary Cards */}
             <div className="grid gap-6 lg:grid-cols-3">
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader>
                   <CardTitle className="text-center">Eficiência da IA</CardTitle>
                 </CardHeader>
@@ -327,7 +327,7 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader>
                   <CardTitle className="text-center">Tempo Médio de Resposta</CardTitle>
                 </CardHeader>
@@ -344,7 +344,7 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader>
                   <CardTitle className="text-center">Taxa de Conversão</CardTitle>
                 </CardHeader>

@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationSystem } from "@/components/ui/notification-system";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,7 +64,7 @@ export function Navbar({
   const userEmail = userProfile?.email || user?.email || 'usuario@exemplo.com';
   const currentOrganizationName = organizationName || userProfile?.organization?.name || "Meu Pet VIP";
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/30 bg-white/95 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-border/30 bg-card/95 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between px-6">
         {/* Área de Busca Apple-style */}
         <div className="flex items-center gap-4 flex-1 max-w-xs">
@@ -99,6 +100,9 @@ export function Navbar({
               }
             }}
           />
+
+          {/* Toggle de Tema */}
+          <ThemeToggle variant="icon" />
 
           {/* Mensagens Ativas */}
           <Button variant="ghost" size="sm" className="relative h-9 w-9 rounded-[10px] hover:bg-secondary/50 transition-all duration-200">

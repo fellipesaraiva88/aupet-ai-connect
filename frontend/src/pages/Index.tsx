@@ -126,7 +126,7 @@ const Index = () => {
 
             {/* Quick Actions Apple-style */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Sparkles className="h-4 w-4 text-primary" />
@@ -172,7 +172,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[20px] bg-card border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Clock className="h-4 w-4 text-primary" />

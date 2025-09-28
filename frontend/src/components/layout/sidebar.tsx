@@ -96,7 +96,7 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "flex h-full w-64 flex-col bg-white/95 backdrop-blur-xl border-r border-border/40",
+        "flex h-full w-64 flex-col bg-card/95 backdrop-blur-xl border-r border-border/40",
         className
       )}
     >
