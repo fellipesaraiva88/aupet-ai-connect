@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/sonner";
 import {
   Settings as SettingsIcon,
   User,
@@ -29,50 +30,160 @@ import {
   Save,
   Eye,
   EyeOff,
+  Loader2,
+  CheckCircle,
 } from "lucide-react";
+import {
+  useOrganizationSettings,
+  useUpdateOrganizationSettings,
+  useCreateOrganizationSettings,
+  useOrganizationId,
+  type OrganizationSettings
+} from "@/hooks/useApiData";
 
 const Settings = () => {
   const activeMenuItem = useActiveNavigation();
+  const organizationId = useOrganizationId();
   const [showApiKey, setShowApiKey] = useState(false);
-  const [settings, setSettings] = useState({
-    // Business Info
-    businessName: "Meu Pet VIP",
-    ownerName: "Dr. Ana Silva",
-    email: "ana@meupetvip.com",
-    phone: "+55 11 99999-1234",
-    address: "Rua das Flores, 123 - São Paulo, SP",
-    cnpj: "12.345.678/0001-90",
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // WhatsApp Settings
-    whatsappNumber: "+55 11 99999-1234",
-    welcomeMessage: "Olá! Bem-vindo ao {businessName}. Como posso ajudar você e seu pet hoje?",
-    autoReply: true,
-    businessHours: true,
+  // API hooks
+  const { data: settings, isLoading, error } = useOrganizationSettings(organizationId);
+  const updateSettingsMutation = useUpdateOrganizationSettings();
+  const createSettingsMutation = useCreateOrganizationSettings();
 
-    // AI Settings
-    aiPersonality: "professional",
-    responseDelay: 2,
-    escalationKeywords: ["humano", "atendente", "falar com alguém"],
+  // Local state for form
+  const [formData, setFormData] = useState<Partial<OrganizationSettings>>({});
 
-    // Notifications
-    emailNotifications: true,
-    smsNotifications: false,
-    pushNotifications: true,
-    notifyNewCustomer: true,
-    notifyMissedMessage: true,
-
-    // Security
-    apiKey: "sk-auzap-1234567890abcdef",
-    twoFactorAuth: false,
-    sessionTimeout: 8,
-  });
+  // Initialize form data when settings are loaded
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        business_name: settings.business_name || "",
+        owner_name: settings.owner_name || "",
+        email: settings.email || "",
+        phone: settings.phone || "",
+        address: settings.address || "",
+        cnpj: settings.cnpj || "",
+        whatsapp_number: settings.whatsapp_number || "",
+        welcome_message: settings.welcome_message || "Olá! Bem-vindo ao {businessName}. Como posso ajudar você e seu pet hoje?",
+        auto_reply: settings.auto_reply ?? true,
+        business_hours: settings.business_hours ?? true,
+        ai_personality: settings.ai_personality || "professional",
+        response_delay: settings.response_delay ?? 2,
+        escalation_keywords: settings.escalation_keywords || ["humano", "atendente", "falar com alguém"],
+        email_notifications: settings.email_notifications ?? true,
+        sms_notifications: settings.sms_notifications ?? false,
+        push_notifications: settings.push_notifications ?? true,
+        notify_new_customer: settings.notify_new_customer ?? true,
+        notify_missed_message: settings.notify_missed_message ?? true,
+        api_key: settings.api_key || "",
+        two_factor_auth: settings.two_factor_auth ?? false,
+        session_timeout: settings.session_timeout ?? 8,
+      });
+      setHasUnsavedChanges(false);
+    } else if (!isLoading && !settings) {
+      // Initialize with default values if no settings exist
+      setFormData({
+        business_name: "Meu Pet VIP",
+        owner_name: "Dr. Ana Silva",
+        email: "ana@meupetvip.com",
+        phone: "+55 11 99999-1234",
+        address: "Rua das Flores, 123 - São Paulo, SP",
+        cnpj: "12.345.678/0001-90",
+        whatsapp_number: "+55 11 99999-1234",
+        welcome_message: "Olá! Bem-vindo ao {businessName}. Como posso ajudar você e seu pet hoje?",
+        auto_reply: true,
+        business_hours: true,
+        ai_personality: "professional",
+        response_delay: 2,
+        escalation_keywords: ["humano", "atendente", "falar com alguém"],
+        email_notifications: true,
+        sms_notifications: false,
+        push_notifications: true,
+        notify_new_customer: true,
+        notify_missed_message: true,
+        api_key: "sk-auzap-1234567890abcdef",
+        two_factor_auth: false,
+        session_timeout: 8,
+      });
+    }
+  }, [settings, isLoading]);
 
   const handleSettingChange = (key: string, value: any) => {
-    setSettings(prev => ({
+    setFormData(prev => ({
       ...prev,
       [key]: value
     }));
+    setHasUnsavedChanges(true);
   };
+
+  const handleSaveSettings = async () => {
+    if (!formData || !organizationId) {
+      toast.error("Dados incompletos para salvar as configurações 🐾");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const settingsToSave = {
+        ...formData,
+        organization_id: organizationId,
+      };
+
+      if (settings?.id) {
+        // Update existing settings
+        await updateSettingsMutation.mutateAsync({
+          organizationId,
+          updates: settingsToSave
+        });
+        toast.success("Configurações atualizadas com sucesso! 🎉");
+      } else {
+        // Create new settings
+        await createSettingsMutation.mutateAsync(settingsToSave as Omit<OrganizationSettings, 'id' | 'created_at' | 'updated_at'>);
+        toast.success("Configurações salvas com sucesso! 🎉");
+      }
+
+      setHasUnsavedChanges(false);
+    } catch (error: any) {
+      console.error('Error saving settings:', error);
+      toast.error(error.message || "Erro ao salvar configurações. Tente novamente! 🐾");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Carregando configurações...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center space-y-4 p-6 bg-red-50 rounded-xl border border-red-200 max-w-md">
+          <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <SettingsIcon className="h-8 w-8 text-red-600" />
+          </div>
+          <h3 className="text-xl font-bold text-red-700">Erro ao carregar configurações</h3>
+          <p className="text-red-600">Não foi possível carregar as configurações. Tente recarregar a página.</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Recarregar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 relative overflow-hidden">
@@ -108,9 +219,19 @@ const Settings = () => {
                 </div>
               </div>
 
-              <Button className="glass-morphism bg-gradient-primary text-white hover:shadow-lg hover:scale-105 transition-all duration-300 px-6 py-3">
-                <Save className="h-4 w-4 mr-2" />
-                Salvar Alterações
+              <Button
+                onClick={handleSaveSettings}
+                disabled={isSaving || !hasUnsavedChanges}
+                className="glass-morphism bg-gradient-primary text-white hover:shadow-lg hover:scale-105 transition-all duration-300 px-6 py-3 disabled:opacity-50 disabled:transform-none"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : hasUnsavedChanges ? (
+                  <Save className="h-4 w-4 mr-2" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
+                {isSaving ? "Salvando..." : hasUnsavedChanges ? "Salvar Alterações" : "Salvo"}
               </Button>
             </div>
 
@@ -160,16 +281,16 @@ const Settings = () => {
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Nome do Negócio</label>
                           <Input
-                            value={settings.businessName}
-                            onChange={(e) => handleSettingChange('businessName', e.target.value)}
+                            value={formData.business_name || ""}
+                            onChange={(e) => handleSettingChange('business_name', e.target.value)}
                             placeholder="Nome do seu petshop"
                           />
                         </div>
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Nome do Proprietário</label>
                           <Input
-                            value={settings.ownerName}
-                            onChange={(e) => handleSettingChange('ownerName', e.target.value)}
+                            value={formData.owner_name || ""}
+                            onChange={(e) => handleSettingChange('owner_name', e.target.value)}
                             placeholder="Seu nome completo"
                           />
                         </div>
@@ -180,7 +301,7 @@ const Settings = () => {
                           <label className="text-sm font-medium">Email</label>
                           <Input
                             type="email"
-                            value={settings.email}
+                            value={formData.email || ""}
                             onChange={(e) => handleSettingChange('email', e.target.value)}
                             placeholder="seu@email.com"
                           />
@@ -188,7 +309,7 @@ const Settings = () => {
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Telefone</label>
                           <Input
-                            value={settings.phone}
+                            value={formData.phone || ""}
                             onChange={(e) => handleSettingChange('phone', e.target.value)}
                             placeholder="(11) 99999-9999"
                           />
@@ -198,7 +319,7 @@ const Settings = () => {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Endereço</label>
                         <Input
-                          value={settings.address}
+                          value={formData.address || ""}
                           onChange={(e) => handleSettingChange('address', e.target.value)}
                           placeholder="Rua, número - Cidade, Estado"
                         />
@@ -207,7 +328,7 @@ const Settings = () => {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">CNPJ</label>
                         <Input
-                          value={settings.cnpj}
+                          value={formData.cnpj || ""}
                           onChange={(e) => handleSettingChange('cnpj', e.target.value)}
                           placeholder="12.345.678/0001-90"
                         />
@@ -231,8 +352,8 @@ const Settings = () => {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Número do WhatsApp</label>
                         <Input
-                          value={settings.whatsappNumber}
-                          onChange={(e) => handleSettingChange('whatsappNumber', e.target.value)}
+                          value={formData.whatsapp_number || ""}
+                          onChange={(e) => handleSettingChange('whatsapp_number', e.target.value)}
                           placeholder="+55 11 99999-9999"
                         />
                         <p className="text-xs text-muted-foreground">
@@ -243,8 +364,8 @@ const Settings = () => {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Mensagem de Boas-vindas</label>
                         <Textarea
-                          value={settings.welcomeMessage}
-                          onChange={(e) => handleSettingChange('welcomeMessage', e.target.value)}
+                          value={formData.welcome_message || ""}
+                          onChange={(e) => handleSettingChange('welcome_message', e.target.value)}
                           placeholder="Mensagem que será enviada quando um novo cliente entrar em contato"
                           rows={3}
                         />
@@ -264,8 +385,8 @@ const Settings = () => {
                             </p>
                           </div>
                           <Switch
-                            checked={settings.autoReply}
-                            onCheckedChange={(checked) => handleSettingChange('autoReply', checked)}
+                            checked={formData.auto_reply ?? true}
+                            onCheckedChange={(checked) => handleSettingChange('auto_reply', checked)}
                           />
                         </div>
 
@@ -277,8 +398,8 @@ const Settings = () => {
                             </p>
                           </div>
                           <Switch
-                            checked={settings.businessHours}
-                            onCheckedChange={(checked) => handleSettingChange('businessHours', checked)}
+                            checked={formData.business_hours ?? true}
+                            onCheckedChange={(checked) => handleSettingChange('business_hours', checked)}
                           />
                         </div>
                       </div>
@@ -301,8 +422,8 @@ const Settings = () => {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Personalidade da IA</label>
                         <Select
-                          value={settings.aiPersonality}
-                          onValueChange={(value) => handleSettingChange('aiPersonality', value)}
+                          value={formData.ai_personality || "professional"}
+                          onValueChange={(value) => handleSettingChange('ai_personality', value)}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -319,8 +440,8 @@ const Settings = () => {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Delay de Resposta (segundos)</label>
                         <Select
-                          value={settings.responseDelay.toString()}
-                          onValueChange={(value) => handleSettingChange('responseDelay', parseInt(value))}
+                          value={(formData.response_delay ?? 2).toString()}
+                          onValueChange={(value) => handleSettingChange('response_delay', parseInt(value))}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -341,8 +462,8 @@ const Settings = () => {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Palavras-chave para Escalação</label>
                         <Textarea
-                          value={settings.escalationKeywords.join(', ')}
-                          onChange={(e) => handleSettingChange('escalationKeywords', e.target.value.split(', '))}
+                          value={(formData.escalation_keywords || []).join(', ')}
+                          onChange={(e) => handleSettingChange('escalation_keywords', e.target.value.split(', '))}
                           placeholder="humano, atendente, falar com alguém"
                           rows={2}
                         />
@@ -375,8 +496,8 @@ const Settings = () => {
                             </p>
                           </div>
                           <Switch
-                            checked={settings.emailNotifications}
-                            onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
+                            checked={formData.email_notifications ?? true}
+                            onCheckedChange={(checked) => handleSettingChange('email_notifications', checked)}
                           />
                         </div>
 
@@ -388,8 +509,8 @@ const Settings = () => {
                             </p>
                           </div>
                           <Switch
-                            checked={settings.smsNotifications}
-                            onCheckedChange={(checked) => handleSettingChange('smsNotifications', checked)}
+                            checked={formData.sms_notifications ?? false}
+                            onCheckedChange={(checked) => handleSettingChange('sms_notifications', checked)}
                           />
                         </div>
 
@@ -401,8 +522,8 @@ const Settings = () => {
                             </p>
                           </div>
                           <Switch
-                            checked={settings.pushNotifications}
-                            onCheckedChange={(checked) => handleSettingChange('pushNotifications', checked)}
+                            checked={formData.push_notifications ?? true}
+                            onCheckedChange={(checked) => handleSettingChange('push_notifications', checked)}
                           />
                         </div>
 
@@ -416,8 +537,8 @@ const Settings = () => {
                             </p>
                           </div>
                           <Switch
-                            checked={settings.notifyNewCustomer}
-                            onCheckedChange={(checked) => handleSettingChange('notifyNewCustomer', checked)}
+                            checked={formData.notify_new_customer ?? true}
+                            onCheckedChange={(checked) => handleSettingChange('notify_new_customer', checked)}
                           />
                         </div>
 
@@ -429,8 +550,8 @@ const Settings = () => {
                             </p>
                           </div>
                           <Switch
-                            checked={settings.notifyMissedMessage}
-                            onCheckedChange={(checked) => handleSettingChange('notifyMissedMessage', checked)}
+                            checked={formData.notify_missed_message ?? true}
+                            onCheckedChange={(checked) => handleSettingChange('notify_missed_message', checked)}
                           />
                         </div>
                       </div>
@@ -455,8 +576,8 @@ const Settings = () => {
                         <div className="flex gap-2">
                           <Input
                             type={showApiKey ? "text" : "password"}
-                            value={settings.apiKey}
-                            onChange={(e) => handleSettingChange('apiKey', e.target.value)}
+                            value={formData.api_key || ""}
+                            onChange={(e) => handleSettingChange('api_key', e.target.value)}
                             placeholder="sk-auzap-..."
                             className="flex-1"
                           />
@@ -483,16 +604,16 @@ const Settings = () => {
                           </p>
                         </div>
                         <Switch
-                          checked={settings.twoFactorAuth}
-                          onCheckedChange={(checked) => handleSettingChange('twoFactorAuth', checked)}
+                          checked={formData.two_factor_auth ?? false}
+                          onCheckedChange={(checked) => handleSettingChange('two_factor_auth', checked)}
                         />
                       </div>
 
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Timeout da Sessão (horas)</label>
                         <Select
-                          value={settings.sessionTimeout.toString()}
-                          onValueChange={(value) => handleSettingChange('sessionTimeout', parseInt(value))}
+                          value={(formData.session_timeout ?? 8).toString()}
+                          onValueChange={(value) => handleSettingChange('session_timeout', parseInt(value))}
                         >
                           <SelectTrigger>
                             <SelectValue />

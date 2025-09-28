@@ -588,4 +588,98 @@ export function useUpdateCatalogItemImage() {
   });
 }
 
+// Settings types
+interface OrganizationSettings {
+  id: string;
+  organization_id: string;
+  business_name: string;
+  owner_name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  cnpj?: string;
+  whatsapp_number?: string;
+  welcome_message?: string;
+  auto_reply: boolean;
+  business_hours: boolean;
+  ai_personality: 'professional' | 'friendly' | 'casual' | 'formal';
+  response_delay: number;
+  escalation_keywords: string[];
+  email_notifications: boolean;
+  sms_notifications: boolean;
+  push_notifications: boolean;
+  notify_new_customer: boolean;
+  notify_missed_message: boolean;
+  api_key?: string;
+  two_factor_auth: boolean;
+  session_timeout: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Settings Hooks - Connected to Backend API
+export function useOrganizationSettings(organizationId?: string) {
+  return useQuery({
+    queryKey: ['organization-settings-api', organizationId],
+    queryFn: async (): Promise<OrganizationSettings> => {
+      try {
+        const response = await api.get('/settings', {
+          params: { organization_id: organizationId }
+        });
+        return response.data.data;
+      } catch (error) {
+        console.error('Error fetching organization settings:', error);
+        throw error;
+      }
+    },
+    enabled: !!organizationId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useUpdateOrganizationSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      organizationId,
+      updates
+    }: {
+      organizationId: string;
+      updates: Partial<OrganizationSettings>
+    }) => {
+      const response = await api.put('/settings', updates, {
+        params: { organization_id: organizationId }
+      });
+      return response.data.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['organization-settings-api', variables.organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats-api'] });
+    },
+    onError: (error) => {
+      console.error('Error updating organization settings:', error);
+    }
+  });
+}
+
+export function useCreateOrganizationSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (settings: Omit<OrganizationSettings, 'id' | 'created_at' | 'updated_at'>) => {
+      const response = await api.post('/settings', settings);
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['organization-settings-api', data.organization_id] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats-api'] });
+    },
+    onError: (error) => {
+      console.error('Error creating organization settings:', error);
+    }
+  });
+}
+
+export type { OrganizationSettings };
 export { api };
