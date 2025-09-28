@@ -1,0 +1,497 @@
+import { Request, Response, NextFunction } from 'express';
+import { createClient } from '@supabase/supabase-js';
+import { createError } from './errorHandler';
+import { logger } from '../utils/logger';
+import { envValidator } from '../config/env-validator';
+import crypto from 'crypto';
+
+// ===================================================================
+// LGPD/GDPR COMPLIANCE MIDDLEWARE
+// ===================================================================
+
+interface DataSubjectRequest {
+  type: 'access' | 'deletion' | 'rectification' | 'portability' | 'restriction';
+  email: string;
+  phone?: string;
+  details?: string;
+  organizationId: string;
+}
+
+interface ConsentRecord {
+  purpose: string;
+  granted: boolean;
+  timestamp: Date;
+  version: string;
+  ip_address: string;
+  user_agent: string;
+}
+
+// ===================================================================
+// AUDITORIA PARA COMPLIANCE
+// ===================================================================
+
+export const auditDataAccess = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Auditar apenas operações que envolvem dados pessoais
+    const sensitiveEndpoints = [
+      '/customers', '/users', '/profiles', '/whatsapp-contacts',
+      '/messages', '/conversations', '/health-records'
+    ];
+
+    const isSensitive = sensitiveEndpoints.some(endpoint => req.path.includes(endpoint));
+
+    if (isSensitive && req.user) {
+      const supabase = createClient(
+        envValidator.get('SUPABASE_URL'),
+        envValidator.get('SUPABASE_SERVICE_KEY') || envValidator.get('SUPABASE_ANON_KEY')
+      );
+
+      // Registrar acesso a dados pessoais
+      await supabase.from('audit_log').insert({
+        table_name: extractTableName(req.path),
+        operation: req.method,
+        new_values: req.method !== 'GET' ? req.body : null,
+        user_id: req.user.id,
+        organization_id: req.user.organizationId,
+        ip_address: req.ip,
+        user_agent: req.get('User-Agent'),
+        session_id: (req as any).sessionId,
+        risk_score: calculatePrivacyRiskScore(req),
+        data_classification: 'personal_data',
+        retention_period: '7 years'
+      });
+
+      logger.info('Personal data access audited', {
+        userId: req.user.id,
+        organizationId: req.user.organizationId,
+        endpoint: req.path,
+        method: req.method,
+        ip: req.ip
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in data access audit', { error });
+    // Não bloquear a requisição por erro de auditoria
+    next();
+  }
+};
+
+// ===================================================================
+// CONTROLE DE CONSENTIMENTO
+// ===================================================================
+
+export const validateConsent = (purposes: string[]) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      // Para operações que requerem consentimento específico
+      if (['POST', 'PUT'].includes(req.method)) {
+        const customerId = req.body.customer_id || req.params.customerId;
+
+        if (customerId) {
+          const supabase = createClient(
+            envValidator.get('SUPABASE_URL'),
+            envValidator.get('SUPABASE_SERVICE_KEY') || envValidator.get('SUPABASE_ANON_KEY')
+          );
+
+          // Verificar consentimento do cliente
+          const { data: customer, error } = await supabase
+            .from('customers')
+            .select('consent_marketing, consent_analytics, gdpr_status')
+            .eq('id', customerId)
+            .eq('organization_id', req.user?.organizationId)
+            .single();
+
+          if (error || !customer) {
+            return next(createError('Cliente não encontrado', 404));
+          }
+
+          if (customer.gdpr_status === 'deleted') {
+            return next(createError('Dados do cliente foram deletados por solicitação LGPD', 410));
+          }
+
+          if (customer.gdpr_status === 'restricted') {
+            return next(createError('Acesso aos dados do cliente foi restrito', 403));
+          }
+
+          // Verificar consentimentos específicos
+          if (purposes.includes('marketing') && !customer.consent_marketing) {
+            logger.warn('Marketing operation without consent', {
+              customerId,
+              userId: req.user?.id,
+              organizationId: req.user?.organizationId
+            });
+            return next(createError('Cliente não consentiu com marketing', 403));
+          }
+
+          if (purposes.includes('analytics') && !customer.consent_analytics) {
+            logger.warn('Analytics operation without consent', {
+              customerId,
+              userId: req.user?.id,
+              organizationId: req.user?.organizationId
+            });
+            return next(createError('Cliente não consentiu com analytics', 403));
+          }
+        }
+      }
+
+      next();
+    } catch (error) {
+      logger.error('Error in consent validation', { error });
+      next(createError('Erro na validação de consentimento', 500));
+    }
+  };
+};
+
+// ===================================================================
+// GESTÃO DE SOLICITAÇÕES DE DIREITOS
+// ===================================================================
+
+export const processDataSubjectRequest = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const request: DataSubjectRequest = req.body;
+
+    if (!request.type || !request.email || !request.organizationId) {
+      return next(createError('Dados da solicitação incompletos', 400));
+    }
+
+    const supabase = createClient(
+      envValidator.get('SUPABASE_URL'),
+      envValidator.get('SUPABASE_SERVICE_KEY') || envValidator.get('SUPABASE_ANON_KEY')
+    );
+
+    // Calcular deadline baseado no tipo de solicitação
+    const deadlineMap = {
+      access: 30, // 30 dias para acesso
+      deletion: 30, // 30 dias para exclusão
+      rectification: 30, // 30 dias para retificação
+      portability: 30, // 30 dias para portabilidade
+      restriction: 3 // 3 dias para restrição
+    };
+
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + deadlineMap[request.type]);
+
+    // Registrar solicitação
+    const { data: privacyRequest, error } = await supabase
+      .from('data_privacy_requests')
+      .insert({
+        organization_id: request.organizationId,
+        user_id: req.user?.id,
+        request_type: request.type,
+        data_subject_email: request.email,
+        data_subject_phone: request.phone,
+        request_details: {
+          details: request.details,
+          source: 'api',
+          user_agent: req.get('User-Agent')
+        },
+        completion_deadline: deadline.toISOString(),
+        legal_basis: determineLegalBasis(request.type)
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    // Log evento de segurança
+    await logSecurityEvent(supabase, {
+      organizationId: request.organizationId,
+      userId: req.user?.id,
+      eventType: `data_subject_request_${request.type}`,
+      severity: 'medium',
+      eventData: {
+        requestId: privacyRequest.id,
+        email: request.email,
+        type: request.type
+      },
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+
+    // Para solicitações de restrição, aplicar imediatamente
+    if (request.type === 'restriction') {
+      await applyDataRestriction(supabase, request.email, request.organizationId);
+    }
+
+    logger.info('Data subject request processed', {
+      requestId: privacyRequest.id,
+      type: request.type,
+      email: request.email,
+      organizationId: request.organizationId,
+      userId: req.user?.id
+    });
+
+    res.json({
+      message: 'Solicitação registrada com sucesso',
+      requestId: privacyRequest.id,
+      deadline: deadline.toISOString(),
+      estimatedProcessingTime: `${deadlineMap[request.type]} dias`
+    });
+
+  } catch (error) {
+    logger.error('Error processing data subject request', { error });
+    next(createError('Erro ao processar solicitação LGPD', 500));
+  }
+};
+
+// ===================================================================
+// ANONIMIZAÇÃO E PSEUDONIMIZAÇÃO
+// ===================================================================
+
+export const anonymizeData = (data: any, fieldsToAnonymize: string[]): any => {
+  const anonymized = { ...data };
+
+  fieldsToAnonymize.forEach(field => {
+    if (anonymized[field]) {
+      // Diferentes estratégias de anonimização baseadas no tipo de campo
+      if (field.includes('email')) {
+        const [local, domain] = anonymized[field].split('@');
+        anonymized[field] = `${local.substring(0, 2)}***@${domain}`;
+      } else if (field.includes('phone')) {
+        anonymized[field] = anonymized[field].replace(/\d(?=\d{4})/g, '*');
+      } else if (field.includes('name')) {
+        const names = anonymized[field].split(' ');
+        anonymized[field] = `${names[0]} ${'*'.repeat(names.slice(1).join(' ').length)}`;
+      } else if (field.includes('cpf')) {
+        anonymized[field] = anonymized[field].replace(/\d(?=\d{4})/g, '*');
+      } else {
+        // Anonimização genérica
+        anonymized[field] = '*'.repeat(anonymized[field].length);
+      }
+    }
+  });
+
+  return anonymized;
+};
+
+export const pseudonymizeData = (data: any, secret: string): any => {
+  const pseudonymized = { ...data };
+
+  // Campos que devem ser pseudonimizados
+  const sensitiveFields = ['email', 'phone', 'cpf', 'name'];
+
+  sensitiveFields.forEach(field => {
+    if (pseudonymized[field]) {
+      const hash = crypto
+        .createHmac('sha256', secret)
+        .update(pseudonymized[field])
+        .digest('hex');
+
+      pseudonymized[field] = `pseudo_${hash.substring(0, 8)}`;
+    }
+  });
+
+  return pseudonymized;
+};
+
+// ===================================================================
+// RETENÇÃO DE DADOS
+// ===================================================================
+
+export const checkDataRetention = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Executar verificação de retenção apenas para operações de leitura
+    if (req.method === 'GET') {
+      const supabase = createClient(
+        envValidator.get('SUPABASE_URL'),
+        envValidator.get('SUPABASE_SERVICE_KEY') || envValidator.get('SUPABASE_ANON_KEY')
+      );
+
+      // Marcar dados expirados
+      await supabase.rpc('cleanup_expired_data');
+
+      logger.debug('Data retention check completed', {
+        organizationId: req.user?.organizationId
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in data retention check', { error });
+    // Não bloquear a requisição
+    next();
+  }
+};
+
+// ===================================================================
+// FUNÇÕES AUXILIARES
+// ===================================================================
+
+const extractTableName = (path: string): string => {
+  const segments = path.split('/').filter(Boolean);
+  return segments[1] || 'unknown';
+};
+
+const calculatePrivacyRiskScore = (req: Request): number => {
+  let score = 0;
+
+  // Operações DELETE são de alto risco
+  if (req.method === 'DELETE') score += 5;
+
+  // Operações em dados sensíveis
+  const sensitiveEndpoints = ['/health-records', '/messages'];
+  if (sensitiveEndpoints.some(endpoint => req.path.includes(endpoint))) {
+    score += 3;
+  }
+
+  // Acesso fora do horário comercial
+  const hour = new Date().getHours();
+  if (hour < 8 || hour > 18) score += 2;
+
+  return score;
+};
+
+const determineLegalBasis = (requestType: string): string => {
+  const basisMap = {
+    access: 'Art. 18, I - LGPD (Direito de acesso)',
+    deletion: 'Art. 18, VI - LGPD (Direito de eliminação)',
+    rectification: 'Art. 18, III - LGPD (Direito de correção)',
+    portability: 'Art. 18, V - LGPD (Direito de portabilidade)',
+    restriction: 'Art. 18, IV - LGPD (Direito de oposição/restrição)'
+  };
+
+  return basisMap[requestType as keyof typeof basisMap] || 'LGPD - Direitos do titular';
+};
+
+const applyDataRestriction = async (
+  supabase: any,
+  email: string,
+  organizationId: string
+): Promise<void> => {
+  try {
+    // Marcar cliente como restrito
+    await supabase
+      .from('customers')
+      .update({ gdpr_status: 'restricted' })
+      .eq('email', email)
+      .eq('organization_id', organizationId);
+
+    logger.info('Data restriction applied', { email, organizationId });
+  } catch (error) {
+    logger.error('Error applying data restriction', { error, email, organizationId });
+    throw error;
+  }
+};
+
+const logSecurityEvent = async (
+  supabase: any,
+  event: {
+    organizationId: string;
+    userId?: string;
+    eventType: string;
+    severity: string;
+    eventData: any;
+    ipAddress: string;
+    userAgent?: string;
+  }
+): Promise<void> => {
+  try {
+    await supabase.from('security_events').insert({
+      organization_id: event.organizationId,
+      user_id: event.userId,
+      event_type: event.eventType,
+      severity: event.severity,
+      event_data: event.eventData,
+      ip_address: event.ipAddress,
+      user_agent: event.userAgent
+    });
+  } catch (error) {
+    logger.error('Error logging security event', { error });
+  }
+};
+
+// ===================================================================
+// MIDDLEWARE DE EXPORTAÇÃO DE DADOS
+// ===================================================================
+
+export const exportUserData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { email, organizationId } = req.params;
+
+    if (!email || !organizationId) {
+      return next(createError('Email e organização são obrigatórios', 400));
+    }
+
+    const supabase = createClient(
+      envValidator.get('SUPABASE_URL'),
+      envValidator.get('SUPABASE_SERVICE_KEY') || envValidator.get('SUPABASE_ANON_KEY')
+    );
+
+    // Coletar todos os dados do usuário
+    const userData: any = {};
+
+    // Dados do cliente
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('email', email)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (customer) {
+      userData.customer = customer;
+
+      // Pets do cliente
+      const { data: pets } = await supabase
+        .from('pets')
+        .select('*')
+        .eq('customer_id', customer.id);
+
+      userData.pets = pets || [];
+
+      // Conversas e mensagens
+      const { data: conversations } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          messages (*)
+        `)
+        .eq('customer_id', customer.id);
+
+      userData.conversations = conversations || [];
+
+      // Agendamentos
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('customer_id', customer.id);
+
+      userData.appointments = appointments || [];
+    }
+
+    // Log da exportação
+    await logSecurityEvent(supabase, {
+      organizationId,
+      userId: req.user?.id,
+      eventType: 'data_export',
+      severity: 'medium',
+      eventData: {
+        email,
+        dataTypes: Object.keys(userData),
+        recordCount: Object.values(userData).flat().length
+      },
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+
+    res.json({
+      message: 'Dados exportados com sucesso',
+      exportDate: new Date().toISOString(),
+      dataSubject: email,
+      organization: organizationId,
+      data: userData
+    });
+
+  } catch (error) {
+    logger.error('Error exporting user data', { error });
+    next(createError('Erro ao exportar dados do usuário', 500));
+  }
+};

@@ -1,0 +1,87 @@
+services:
+  # Backend API Service
+  - type: web
+    name: auzap-backend-api
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: |
+      cd backend &&
+      npm ci --only=production &&
+      npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: https://auzap-frontend.onrender.com
+      - key: WEBHOOK_URL
+        value: https://auzap-backend-api.onrender.com/api/webhook
+    healthCheckPath: /health
+    autoDeploy: true
+    domains:
+      - auzap-backend-api.onrender.com
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetCPUPercent: 70
+      targetMemoryPercent: 80
+
+  # Frontend Static Site
+  - type: web
+    name: auzap-frontend
+    runtime: static
+    plan: starter
+    region: oregon
+    buildCommand: |
+      cd frontend &&
+      npm ci &&
+      VITE_API_URL=https://auzap-backend-api.onrender.com/api npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://auzap-backend-api.onrender.com/api
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+    pullRequestPreviewsEnabled: true
+    domains:
+      - auzap-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: geolocation=(), microphone=(), camera=()
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+databases:
+  # Redis Cache for Sessions and Rate Limiting
+  - name: auzap-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys_lru

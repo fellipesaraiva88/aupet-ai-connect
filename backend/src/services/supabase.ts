@@ -506,4 +506,25 @@ export class SupabaseService {
       return false;
     }
   }
+
+  // Test connection for monitoring
+  async testConnection(): Promise<any> {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_instances')
+        .select('id')
+        .limit(1);
+
+      if (error) throw error;
+
+      return {
+        status: 'connected',
+        timestamp: new Date().toISOString(),
+        recordsFound: data?.length || 0
+      };
+    } catch (error) {
+      logger.error('Supabase connection test failed:', error);
+      throw error;
+    }
+  }
 }

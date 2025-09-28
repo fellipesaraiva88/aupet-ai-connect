@@ -22,6 +22,8 @@ import petsRoutes from './routes/pets';
 import appointmentsRoutes from './routes/appointments';
 import conversationsRoutes from './routes/conversations';
 import catalogRoutes from './routes/catalog';
+import reportsRoutes from './routes/reports';
+import monitoringRoutes from './routes/monitoring';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -33,9 +35,12 @@ import { auditLogger } from './middleware/audit-logger';
 import { sanitizeInput } from './middleware/input-validator';
 import { tenantIsolationMiddleware } from './middleware/tenant-isolation';
 
+// Enhanced security and compliance features will be added in the future
+
 // Import services
 import { WebSocketService } from './services/websocket';
 import { SupabaseService } from './services/supabase';
+import { MonitoringService } from './services/monitoring';
 import { logger } from './utils/logger';
 
 // Environment variables already loaded above
@@ -46,6 +51,7 @@ class AuzapServer {
   private io: Server;
   private wsService: WebSocketService;
   private supabaseService: SupabaseService;
+  private monitoringService: MonitoringService;
 
   constructor() {
     this.app = express();
@@ -60,6 +66,7 @@ class AuzapServer {
 
     this.wsService = new WebSocketService(this.io);
     this.supabaseService = new SupabaseService();
+    this.monitoringService = new MonitoringService();
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -89,6 +96,9 @@ class AuzapServer {
     // Advanced rate limiting
     this.app.use('/api/', rateLimitAPI);
 
+    // Request metrics tracking
+    this.app.use(this.monitoringService.requestMetricsMiddleware());
+
     // Logging
     this.app.use(morgan('combined', {
       stream: {
@@ -100,16 +110,53 @@ class AuzapServer {
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    // Health check
-    this.app.get('/health', (req, res) => {
-      res.status(200).json({
-        success: true,
-        message: 'Auzap Backend is healthy! 💝',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        version: process.env.npm_package_version || '1.0.0'
-      });
+    // Enhanced health check
+    this.app.get('/health', async (req, res) => {
+      try {
+        const healthStatus = await this.monitoringService.getHealthStatus();
+        const statusCode = healthStatus.status === 'healthy' ? 200 :
+                          healthStatus.status === 'degraded' ? 200 : 503;
+
+        res.status(statusCode).json(healthStatus);
+      } catch (error) {
+        res.status(503).json({
+          status: 'unhealthy',
+          error: 'Health check failed',
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    // Readiness probe (for Kubernetes)
+    this.app.get('/ready', async (req, res) => {
+      try {
+        const readiness = await this.monitoringService.getReadiness();
+        const statusCode = readiness.status === 'ready' ? 200 : 503;
+        res.status(statusCode).json(readiness);
+      } catch (error) {
+        res.status(503).json({
+          status: 'not_ready',
+          error: 'Readiness check failed',
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    // Liveness probe (for Kubernetes)
+    this.app.get('/live', (req, res) => {
+      const liveness = this.monitoringService.getLiveness();
+      res.status(200).json(liveness);
+    });
+
+    // Prometheus metrics endpoint
+    this.app.get('/metrics', async (req, res) => {
+      try {
+        const metrics = await this.monitoringService.getMetrics();
+        res.set('Content-Type', 'text/plain');
+        res.send(metrics);
+      } catch (error) {
+        res.status(500).send('Error collecting metrics');
+      }
     });
 
     // API info
@@ -140,6 +187,8 @@ class AuzapServer {
     this.app.use('/api/appointments', authMiddleware, tenantIsolationMiddleware, appointmentsRoutes);
     this.app.use('/api/conversations', authMiddleware, tenantIsolationMiddleware, conversationsRoutes);
     this.app.use('/api/catalog', authMiddleware, tenantIsolationMiddleware, catalogRoutes);
+    this.app.use('/api/reports', authMiddleware, tenantIsolationMiddleware, reportsRoutes);
+    this.app.use('/api/monitoring', authMiddleware, tenantIsolationMiddleware, monitoringRoutes);
 
     // Serve static files
     this.app.use('/public', express.static('public'));
@@ -148,6 +197,9 @@ class AuzapServer {
   private setupWebSocket(): void {
     this.io.on('connection', (socket) => {
       logger.info(`Client connected: ${socket.id}`);
+
+      // Update active connections count
+      this.monitoringService.updateActiveConnections(this.io.engine.clientsCount);
 
       // Join organization room
       socket.on('join_organization', (organizationId: string) => {
@@ -158,16 +210,20 @@ class AuzapServer {
       // Handle disconnect
       socket.on('disconnect', () => {
         logger.info(`Client disconnected: ${socket.id}`);
+        // Update active connections count
+        this.monitoringService.updateActiveConnections(this.io.engine.clientsCount);
       });
 
       // Handle errors
       socket.on('error', (error) => {
         logger.error(`Socket error: ${error}`);
+        this.monitoringService.recordError('websocket', 'connection');
       });
     });
 
     // Store WebSocket service globally for access in routes
     this.app.set('wsService', this.wsService);
+    this.app.set('monitoringService', this.monitoringService);
   }
 
   private setupErrorHandling(): void {

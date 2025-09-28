@@ -1,0 +1,429 @@
+import { Request, Response, NextFunction } from 'express';
+import { z, ZodSchema, ZodError } from 'zod';
+import validator from 'validator';
+import { createError } from './errorHandler';
+import { logger } from '../utils/logger';
+
+// ===================================================================
+// SCHEMAS DE VALIDAÇÃO AVANÇADA
+// ===================================================================
+
+// Schema base para UUID
+const uuidSchema = z.string().uuid('UUID inválido');
+
+// Schema para email
+const emailSchema = z.string().email('Email inválido').max(320, 'Email muito longo');
+
+// Schema para telefone brasileiro
+const phoneSchema = z.string().regex(
+  /^(\+55\s?)?(\(?\d{2}\)?\s?)?\d{4,5}-?\d{4}$/,
+  'Telefone brasileiro inválido'
+);
+
+// Schema para validação de organização
+export const organizationValidationSchema = z.object({
+  name: z.string()
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(100, 'Nome muito longo')
+    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Nome contém caracteres inválidos'),
+
+  email: emailSchema,
+
+  phone: phoneSchema.optional(),
+
+  business_type: z.enum([
+    'petshop', 'veterinaria', 'hotel_pet', 'adestramento',
+    'pet_care', 'outro'
+  ]).optional(),
+
+  cnpj: z.string()
+    .regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$/, 'CNPJ inválido')
+    .optional(),
+
+  settings: z.object({
+    timezone: z.string().default('America/Sao_Paulo'),
+    currency: z.string().default('BRL'),
+    language: z.string().default('pt-BR')
+  }).optional()
+});
+
+// Schema para validação de usuário
+export const userValidationSchema = z.object({
+  email: emailSchema,
+
+  full_name: z.string()
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(100, 'Nome muito longo')
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome deve conter apenas letras e espaços'),
+
+  phone: phoneSchema.optional(),
+
+  role: z.enum(['owner', 'admin', 'user', 'viewer']).default('user'),
+
+  avatar_url: z.string().url('URL do avatar inválida').optional(),
+
+  preferences: z.object({
+    notifications: z.boolean().default(true),
+    theme: z.enum(['light', 'dark', 'auto']).default('light'),
+    language: z.string().default('pt-BR')
+  }).optional()
+});
+
+// Schema para validação de cliente
+export const customerValidationSchema = z.object({
+  name: z.string()
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(100, 'Nome muito longo'),
+
+  email: emailSchema.optional(),
+
+  phone: phoneSchema,
+
+  cpf: z.string()
+    .regex(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/, 'CPF inválido')
+    .optional(),
+
+  address: z.object({
+    street: z.string().max(200, 'Endereço muito longo'),
+    city: z.string().max(100, 'Cidade muito longa'),
+    state: z.string().length(2, 'Estado deve ter 2 caracteres'),
+    zip_code: z.string().regex(/^\d{5}-?\d{3}$/, 'CEP inválido'),
+    complement: z.string().max(100, 'Complemento muito longo').optional()
+  }).optional(),
+
+  consent_marketing: z.boolean().default(false),
+  consent_analytics: z.boolean().default(false),
+
+  tags: z.array(z.string().max(50, 'Tag muito longa')).optional()
+});
+
+// Schema para validação de pet
+export const petValidationSchema = z.object({
+  name: z.string()
+    .min(1, 'Nome do pet é obrigatório')
+    .max(50, 'Nome muito longo'),
+
+  species: z.enum(['dog', 'cat', 'bird', 'rabbit', 'fish', 'other']),
+
+  breed: z.string().max(50, 'Raça muito longa').optional(),
+
+  age: z.number().int().min(0).max(30, 'Idade inválida'),
+
+  weight: z.number().positive('Peso deve ser positivo').max(200, 'Peso muito alto').optional(),
+
+  color: z.string().max(30, 'Cor muito longa').optional(),
+
+  medical_notes: z.string().max(1000, 'Notas médicas muito longas').optional(),
+
+  vaccinations: z.array(z.object({
+    name: z.string().max(50, 'Nome da vacina muito longo'),
+    date: z.string().datetime('Data inválida'),
+    next_due: z.string().datetime('Data inválida').optional()
+  })).optional()
+});
+
+// Schema para validação de mensagem
+export const messageValidationSchema = z.object({
+  content: z.string()
+    .min(1, 'Mensagem não pode estar vazia')
+    .max(4000, 'Mensagem muito longa'),
+
+  type: z.enum(['text', 'image', 'document', 'audio', 'video', 'location']),
+
+  metadata: z.object({
+    file_url: z.string().url('URL inválida').optional(),
+    file_name: z.string().max(255, 'Nome do arquivo muito longo').optional(),
+    file_size: z.number().int().positive('Tamanho inválido').optional(),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional()
+  }).optional()
+});
+
+// ===================================================================
+// MIDDLEWARE DE VALIDAÇÃO
+// ===================================================================
+
+export const validateData = (schema: ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      // Validar dados do body
+      const validatedData = schema.parse(req.body);
+
+      // Substituir o body pelos dados validados e sanitizados
+      req.body = validatedData;
+
+      logger.debug('Data validation successful', {
+        endpoint: req.path,
+        method: req.method,
+        userId: req.user?.id,
+        organizationId: req.user?.organizationId
+      });
+
+      next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const errors = error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+          value: err.input
+        }));
+
+        logger.warn('Data validation failed', {
+          endpoint: req.path,
+          method: req.method,
+          errors,
+          userId: req.user?.id,
+          ip: req.ip
+        });
+
+        return next(createError('Dados inválidos', 400, errors));
+      }
+
+      logger.error('Unexpected validation error', { error });
+      next(createError('Erro na validação dos dados', 500));
+    }
+  };
+};
+
+// ===================================================================
+// VALIDAÇÕES ESPECÍFICAS DE SEGURANÇA
+// ===================================================================
+
+// Validação de CPF
+export const validateCPF = (cpf: string): boolean => {
+  // Remove formatação
+  const cleanCPF = cpf.replace(/[^\d]/g, '');
+
+  if (cleanCPF.length !== 11) return false;
+
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
+
+  // Validação do algoritmo do CPF
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+  }
+
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCPF.charAt(9))) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+  }
+
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  return remainder === parseInt(cleanCPF.charAt(10));
+};
+
+// Validação de CNPJ
+export const validateCNPJ = (cnpj: string): boolean => {
+  const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
+
+  if (cleanCNPJ.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
+
+  // Algoritmo de validação do CNPJ
+  const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights1[i];
+  }
+
+  let remainder = sum % 11;
+  const digit1 = remainder < 2 ? 0 : 11 - remainder;
+
+  if (digit1 !== parseInt(cleanCNPJ.charAt(12))) return false;
+
+  sum = 0;
+  for (let i = 0; i < 13; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights2[i];
+  }
+
+  remainder = sum % 11;
+  const digit2 = remainder < 2 ? 0 : 11 - remainder;
+
+  return digit2 === parseInt(cleanCNPJ.charAt(13));
+};
+
+// ===================================================================
+// SANITIZAÇÃO AVANÇADA
+// ===================================================================
+
+export const sanitizeAndValidate = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // Função recursiva para sanitizar objetos
+    const sanitizeObject = (obj: any): any => {
+      if (typeof obj === 'string') {
+        // Trim whitespace
+        obj = obj.trim();
+
+        // Escape HTML
+        obj = validator.escape(obj);
+
+        // Remove caracteres de controle
+        obj = obj.replace(/[\x00-\x1F\x7F]/g, '');
+
+        // Validar encoding UTF-8
+        if (!validator.isLength(obj, { min: 0, max: 10000 })) {
+          throw new Error('String muito longa');
+        }
+
+        return obj;
+      }
+
+      if (Array.isArray(obj)) {
+        return obj.map(sanitizeObject);
+      }
+
+      if (obj && typeof obj === 'object') {
+        const sanitized: any = {};
+        for (const key in obj) {
+          if (obj.hasOwnProperty(key)) {
+            // Sanitizar também as chaves
+            const sanitizedKey = validator.escape(key.trim());
+            sanitized[sanitizedKey] = sanitizeObject(obj[key]);
+          }
+        }
+        return sanitized;
+      }
+
+      return obj;
+    };
+
+    // Aplicar sanitização
+    if (req.body) {
+      req.body = sanitizeObject(req.body);
+    }
+
+    if (req.query) {
+      req.query = sanitizeObject(req.query);
+    }
+
+    if (req.params) {
+      req.params = sanitizeObject(req.params);
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in sanitization', { error, endpoint: req.path });
+    next(createError('Erro na sanitização dos dados', 400));
+  }
+};
+
+// ===================================================================
+// VALIDAÇÃO DE ARQUIVOS
+// ===================================================================
+
+export const validateFileUpload = (allowedTypes: string[], maxSize: number) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      const files = req.files as Express.Multer.File[] | undefined;
+
+      if (!files || files.length === 0) {
+        return next();
+      }
+
+      for (const file of files) {
+        // Verificar tipo de arquivo
+        if (!allowedTypes.includes(file.mimetype)) {
+          logger.warn('Invalid file type uploaded', {
+            filename: file.originalname,
+            mimetype: file.mimetype,
+            userId: req.user?.id,
+            ip: req.ip
+          });
+
+          return next(createError(
+            `Tipo de arquivo não permitido: ${file.mimetype}`,
+            400
+          ));
+        }
+
+        // Verificar tamanho
+        if (file.size > maxSize) {
+          logger.warn('File too large uploaded', {
+            filename: file.originalname,
+            size: file.size,
+            maxSize,
+            userId: req.user?.id,
+            ip: req.ip
+          });
+
+          return next(createError(
+            `Arquivo muito grande. Máximo: ${Math.round(maxSize / 1024 / 1024)}MB`,
+            400
+          ));
+        }
+
+        // Verificar nome do arquivo
+        if (!validator.isLength(file.originalname, { min: 1, max: 255 })) {
+          return next(createError('Nome do arquivo inválido', 400));
+        }
+
+        // Verificar se não contém caracteres perigosos
+        if (!/^[a-zA-Z0-9._-]+$/.test(file.originalname)) {
+          logger.warn('Dangerous filename detected', {
+            filename: file.originalname,
+            userId: req.user?.id,
+            ip: req.ip
+          });
+
+          return next(createError('Nome do arquivo contém caracteres inválidos', 400));
+        }
+      }
+
+      logger.info('File validation successful', {
+        fileCount: files.length,
+        userId: req.user?.id,
+        organizationId: req.user?.organizationId
+      });
+
+      next();
+    } catch (error) {
+      logger.error('Error in file validation', { error });
+      next(createError('Erro na validação do arquivo', 500));
+    }
+  };
+};
+
+// ===================================================================
+// VALIDAÇÃO DE BUSINESS RULES
+// ===================================================================
+
+export const validateBusinessRules = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // Validações específicas de negócio baseadas no endpoint
+    const path = req.path;
+
+    if (path.includes('/customers') && req.method === 'POST') {
+      // Validar se CPF é válido (se fornecido)
+      if (req.body.cpf && !validateCPF(req.body.cpf)) {
+        return next(createError('CPF inválido', 400));
+      }
+    }
+
+    if (path.includes('/organizations') && req.method === 'POST') {
+      // Validar se CNPJ é válido (se fornecido)
+      if (req.body.cnpj && !validateCNPJ(req.body.cnpj)) {
+        return next(createError('CNPJ inválido', 400));
+      }
+    }
+
+    // Validar limites de recursos por organização
+    if (['POST'].includes(req.method)) {
+      // TODO: Implementar validação de limites baseada no plano
+      // Por exemplo: limite de clientes, mensagens, etc.
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in business rules validation', { error });
+    next(createError('Erro na validação de regras de negócio', 500));
+  }
+};

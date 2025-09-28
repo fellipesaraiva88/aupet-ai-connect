@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationSystem } from "@/components/ui/notification-system";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
 import {
   Bell,
@@ -32,6 +34,13 @@ export function Navbar({
 }: NavbarProps) {
   const { user, userProfile, signOut } = useAuthContext();
   const { toast } = useToast();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    removeNotification
+  } = useNotifications();
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -81,17 +90,18 @@ export function Navbar({
         {/* Direita - Ações do Usuário */}
         <div className="flex items-center gap-4">
           {/* Notificações */}
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-4 w-4" />
-            {unreadNotifications > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 text-xs"
-              >
-                {unreadNotifications}
-              </Badge>
-            )}
-          </Button>
+          <NotificationSystem
+            notifications={notifications}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onRemove={removeNotification}
+            onAction={(notification) => {
+              // Handle notification action based on type
+              if (notification.actionUrl) {
+                window.location.href = notification.actionUrl;
+              }
+            }}
+          />
 
           {/* Mensagens Ativas */}
           <Button variant="ghost" size="sm" className="relative">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PetCardSkeleton, StatCardSkeleton } from "@/components/ui/optimized-skeleton";
+import { ResponsiveLayouts, ResponsiveContainer } from "@/components/ui/responsive-grid";
+import { EmptyStates, PetFeedback } from "@/components/ui/feedback";
 import { Label } from "@/components/ui/label";
+import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -42,6 +46,7 @@ import {
   Calendar,
   Stethoscope,
   Loader2,
+  Camera,
 } from "lucide-react";
 
 type PetFormData = {
@@ -51,6 +56,7 @@ type PetFormData = {
   age: string;
   weight: string;
   owner_id: string;
+  photo?: File | null;
 };
 
 const Pets = () => {
@@ -67,7 +73,11 @@ const Pets = () => {
     age: "",
     weight: "",
     owner_id: "",
+    photo: null,
   });
+  const [photoPreview, setPhotoPreview] = useState<string>("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const organizationId = useOrganizationId();
   const { data: pets = [], isLoading, error } = usePets(organizationId);
@@ -76,21 +86,83 @@ const Pets = () => {
   const updatePetMutation = useUpdatePet();
   const { toast } = useToast();
 
-  const filteredPets = pets.filter((pet) => {
-    const ownerName = pet.whatsapp_contacts?.name || '';
-    const matchesSearch = pet.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ownerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecies = filterSpecies === "all" || pet.species === filterSpecies;
-    const matchesStatus = filterStatus === "all" || pet.status === filterStatus;
+  // Memoize filtered pets for performance
+  const filteredPets = useMemo(() => {
+    return pets.filter((pet) => {
+      const ownerName = pet.whatsapp_contacts?.name || '';
+      const matchesSearch = pet.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           ownerName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSpecies = filterSpecies === "all" || pet.species === filterSpecies;
+      const matchesStatus = filterStatus === "all" || pet.status === filterStatus;
 
-    return matchesSearch && matchesSpecies && matchesStatus;
-  });
+      return matchesSearch && matchesSpecies && matchesStatus;
+    });
+  }, [pets, searchTerm, filterSpecies, filterStatus]);
 
-  const stats = {
+  // Memoize stats for performance
+  const stats = useMemo(() => ({
     total: pets.length,
     active: pets.filter(p => p.is_active).length,
     needsAttention: pets.filter(p => !p.is_active).length,
     vaccinated: pets.filter(p => p.vaccination_status === 'up_to_date').length,
+  }), [pets]);
+
+  // Upload photo function
+  const uploadPhoto = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      setUploadingPhoto(true);
+      setUploadProgress(0);
+
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(interval);
+            return 90;
+          }
+          return prev + Math.random() * 30;
+        });
+      }, 200);
+
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append('photo', file);
+      formData.append('type', 'pet_photo');
+
+      // Simulated upload - replace with actual API call
+      setTimeout(() => {
+        clearInterval(interval);
+        setUploadProgress(100);
+
+        // Create a preview URL for now
+        const photoUrl = URL.createObjectURL(file);
+        setPhotoPreview(photoUrl);
+
+        setTimeout(() => {
+          setUploadingPhoto(false);
+          setUploadProgress(0);
+          resolve(photoUrl);
+        }, 500);
+      }, 2000);
+    });
+  };
+
+  const handleFileSelect = async (file: File) => {
+    try {
+      const photoUrl = await uploadPhoto(file);
+      setFormData(prev => ({ ...prev, photo: file }));
+    } catch (error) {
+      toast({
+        title: "Ops, algo deu errado",
+        description: "Não conseguimos enviar a foto. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFileRemove = () => {
+    setFormData(prev => ({ ...prev, photo: null }));
+    setPhotoPreview("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,7 +202,8 @@ const Pets = () => {
       }
       setIsDialogOpen(false);
       setEditingPet(null);
-      setFormData({ name: "", species: "", breed: "", age: "", weight: "", owner_id: "" });
+      setFormData({ name: "", species: "", breed: "", age: "", weight: "", owner_id: "", photo: null });
+      setPhotoPreview("");
     } catch (error) {
       toast({
         title: "Opa, precisamos de um minutinho",
@@ -149,14 +222,17 @@ const Pets = () => {
       age: pet.age || "",
       weight: pet.weight || "",
       owner_id: pet.owner_id || "",
+      photo: null,
     });
+    setPhotoPreview(pet.photo_url || "");
     setIsDialogOpen(true);
   };
 
   const handleCancel = () => {
     setIsDialogOpen(false);
     setEditingPet(null);
-    setFormData({ name: "", species: "", breed: "", age: "", weight: "", owner_id: "" });
+    setFormData({ name: "", species: "", breed: "", age: "", weight: "", owner_id: "", photo: null });
+    setPhotoPreview("");
   };
 
   return (
@@ -169,7 +245,7 @@ const Pets = () => {
         />
         
         <main className="flex-1 overflow-auto">
-          <div className="p-8 space-y-6">
+          <ResponsiveContainer className="py-8 space-y-6">
             {/* Page Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -200,6 +276,23 @@ const Pets = () => {
                   </DialogHeader>
                   <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
+                      {/* Photo Upload Section */}
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Camera className="h-4 w-4" />
+                          Foto do Pet
+                        </Label>
+                        <FileUpload
+                          onFileSelect={handleFileSelect}
+                          onFileRemove={handleFileRemove}
+                          preview={photoPreview}
+                          uploading={uploadingPhoto}
+                          uploadProgress={uploadProgress}
+                          placeholder="Adicione uma foto deste amiguinho especial"
+                          className="w-full max-w-xs mx-auto"
+                        />
+                      </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="name">Nome do Pet</Label>
                         <Input
@@ -292,79 +385,71 @@ const Pets = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-6 md:grid-cols-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3">
-                      <Heart className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.total}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Amiguinhos Queridos</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <ResponsiveLayouts.Stats>
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <StatCardSkeleton key={i} />
+                ))
+              ) : (
+                <>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-primary/10 p-3">
+                          <Heart className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.total}</p>
+                          <p className="text-sm text-muted-foreground">Amiguinhos Queridos</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-success/10 p-3">
-                      <TrendingUp className="h-6 w-6 text-success" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.active}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Cheios de Vida</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-success/10 p-3">
+                          <TrendingUp className="h-6 w-6 text-success" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.active}</p>
+                          <p className="text-sm text-muted-foreground">Cheios de Vida</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-warning/10 p-3">
-                      <Calendar className="h-6 w-6 text-warning" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.needsAttention}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Precisam de Atenção Extra</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-warning/10 p-3">
+                          <Calendar className="h-6 w-6 text-warning" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.needsAttention}</p>
+                          <p className="text-sm text-muted-foreground">Precisam de Atenção Extra</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-secondary/10 p-3">
-                      <Stethoscope className="h-6 w-6 text-secondary" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.vaccinated}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Protegidos com Amor</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-secondary/10 p-3">
+                          <Stethoscope className="h-6 w-6 text-secondary" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.vaccinated}</p>
+                          <p className="text-sm text-muted-foreground">Protegidos com Amor</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </ResponsiveLayouts.Stats>
 
             {/* Filters */}
             <Card>
@@ -446,32 +531,17 @@ const Pets = () => {
 
             {/* Pets Grid */}
             {isLoading ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <ResponsiveLayouts.Cards>
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <Card key={index} className="p-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-12 w-12 rounded-full" />
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-3 w-32" />
-                        </div>
-                      </div>
-                      <Skeleton className="h-20 w-full" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-8 w-20" />
-                        <Skeleton className="h-8 w-20" />
-                      </div>
-                    </div>
-                  </Card>
+                  <PetCardSkeleton key={index} />
                 ))}
-              </div>
+              </ResponsiveLayouts.Cards>
             ) : error ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">Erro ao carregar pets</p>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <ResponsiveLayouts.Cards>
                 {filteredPets.map((pet) => (
                   <PetCard
                     key={pet.id}
@@ -479,31 +549,24 @@ const Pets = () => {
                       ...pet,
                       owner: pet.whatsapp_contacts?.name || 'Proprietário não informado',
                       ownerPhone: pet.whatsapp_contacts?.phone || '',
+                      lastVisit: pet.last_visit || 'Nunca visitou',
                     }}
                     onEdit={handleEdit}
                     onSchedule={(pet) => console.log("Schedule for pet:", pet)}
                     onContact={(pet) => console.log("Contact owner of pet:", pet)}
                   />
                 ))}
-              </div>
+              </ResponsiveLayouts.Cards>
             )}
 
             {!isLoading && !error && filteredPets.length === 0 && (
-              <div className="text-center py-12">
-                <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Ainda não há pets aqui</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm || filterSpecies !== "all" || filterStatus !== "all"
-                    ? "Tente ajustar os filtros para encontrar seus amiguinhos."
-                    : "Que tal começar cadastrando o primeiro pet que conquistou seu coração?"}
-                </p>
-                <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Cadastrar Primeiro Amiguinho
-                </Button>
-              </div>
+              searchTerm || filterSpecies !== "all" || filterStatus !== "all" ? (
+                <EmptyStates.SearchNoResults />
+              ) : (
+                <EmptyStates.NoPets onAddPet={() => setIsDialogOpen(true)} />
+              )
             )}
-          </div>
+          </ResponsiveContainer>
         </main>
       </div>
     </div>

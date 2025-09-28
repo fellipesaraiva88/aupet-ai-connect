@@ -1,0 +1,447 @@
+import { Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import { createError } from './errorHandler';
+import { logger } from '../utils/logger';
+import { envValidator } from '../config/env-validator';
+import crypto from 'crypto';
+import validator from 'validator';
+import { createClient } from '@supabase/supabase-js';
+
+// ===================================================================
+// OWASP TOP 10 PROTECTION MIDDLEWARE
+// ===================================================================
+
+// 1. Injection Prevention (A03:2021)
+export const sanitizeInput = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // Sanitizar todos os inputs de string
+    const sanitizeObject = (obj: any): any => {
+      if (typeof obj === 'string') {
+        // Prevenir SQL Injection
+        if (obj.includes("'") || obj.includes('"') || obj.includes(';') || obj.includes('--')) {
+          // Log tentativa de injection
+          logger.warn('Potential SQL injection attempt detected', {
+            input: obj,
+            ip: req.ip,
+            userAgent: req.get('User-Agent'),
+            userId: req.user?.id,
+            organizationId: req.user?.organizationId
+          });
+        }
+
+        // Sanitizar HTML/XSS
+        return validator.escape(obj.trim());
+      }
+
+      if (Array.isArray(obj)) {
+        return obj.map(sanitizeObject);
+      }
+
+      if (obj && typeof obj === 'object') {
+        const sanitized: any = {};
+        for (const key in obj) {
+          sanitized[key] = sanitizeObject(obj[key]);
+        }
+        return sanitized;
+      }
+
+      return obj;
+    };
+
+    // Sanitizar body, query e params
+    if (req.body) {
+      req.body = sanitizeObject(req.body);
+    }
+    if (req.query) {
+      req.query = sanitizeObject(req.query);
+    }
+    if (req.params) {
+      req.params = sanitizeObject(req.params);
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in input sanitization', { error, req: req.url });
+    next(createError('Erro na validação de entrada', 400));
+  }
+};
+
+// 2. Broken Authentication Prevention (A07:2021)
+export const enhancedAuthValidation = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // Verificar tentativas de login suspeitas
+    const userAgent = req.get('User-Agent');
+    const ip = req.ip;
+
+    // Detectar bots/crawlers maliciosos
+    const suspiciousUserAgents = [
+      'sqlmap', 'nikto', 'nmap', 'masscan', 'curl', 'wget'
+    ];
+
+    if (userAgent && suspiciousUserAgents.some(agent =>
+      userAgent.toLowerCase().includes(agent))) {
+      logger.warn('Suspicious user agent detected', {
+        userAgent,
+        ip,
+        endpoint: req.path
+      });
+
+      // Retornar erro genérico para não revelar informações
+      return next(createError('Acesso negado', 403));
+    }
+
+    // Validar headers de autenticação
+    const authHeader = req.headers.authorization;
+    if (authHeader && !authHeader.startsWith('Bearer ')) {
+      logger.warn('Invalid authorization header format', { ip, userAgent });
+      return next(createError('Formato de autenticação inválido', 401));
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in enhanced auth validation', { error });
+    next(createError('Erro na validação de autenticação', 500));
+  }
+};
+
+// 3. Sensitive Data Exposure Prevention (A02:2021)
+export const dataClassificationMiddleware = (classification: 'public' | 'internal' | 'confidential' | 'restricted') => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    // Adicionar classificação de dados ao contexto da requisição
+    (req as any).dataClassification = classification;
+
+    // Log para auditoria baseado na classificação
+    if (classification === 'confidential' || classification === 'restricted') {
+      logger.info('Access to sensitive data', {
+        classification,
+        userId: req.user?.id,
+        organizationId: req.user?.organizationId,
+        endpoint: req.path,
+        method: req.method,
+        ip: req.ip
+      });
+    }
+
+    // Headers de segurança específicos para dados sensíveis
+    if (classification === 'restricted') {
+      res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+    }
+
+    next();
+  };
+};
+
+// 4. XML External Entities (XXE) Prevention (A05:2021)
+export const preventXXE = (req: Request, res: Response, next: NextFunction): void => {
+  const contentType = req.get('Content-Type');
+
+  if (contentType && (contentType.includes('xml') || contentType.includes('application/xml'))) {
+    logger.warn('XML content detected - potential XXE risk', {
+      contentType,
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+
+    // Rejeitar XML por segurança - use JSON instead
+    return next(createError('Formato XML não permitido por segurança', 400));
+  }
+
+  next();
+};
+
+// 5. Broken Access Control Prevention (A01:2021)
+export const enforceOrganizationIsolation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) {
+      return next(createError('Usuário não autenticado', 401));
+    }
+
+    // Verificar se o recurso solicitado pertence à organização do usuário
+    const resourceOrgId = req.params.organizationId || req.body.organizationId || req.query.organizationId;
+
+    if (resourceOrgId && resourceOrgId !== req.user.organizationId && req.user.role !== 'super_admin') {
+      logger.warn('Organization isolation violation attempt', {
+        userId: req.user.id,
+        userOrgId: req.user.organizationId,
+        requestedOrgId: resourceOrgId,
+        endpoint: req.path,
+        ip: req.ip
+      });
+
+      return next(createError('Acesso negado - isolamento organizacional', 403));
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in organization isolation enforcement', { error });
+    next(createError('Erro na validação de acesso', 500));
+  }
+};
+
+// 6. Security Misconfiguration Prevention (A05:2021)
+export const securityHeaders = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api.openai.com", process.env.SUPABASE_URL || ""],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
+});
+
+// 7. Cross-Site Scripting (XSS) Prevention (A03:2021)
+export const xssProtection = (req: Request, res: Response, next: NextFunction): void => {
+  // Headers XSS já estão no helmet, mas vamos adicionar validação extra
+  const checkXSS = (value: string): boolean => {
+    const xssPatterns = [
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,
+      /<iframe/gi,
+      /<object/gi,
+      /<embed/gi
+    ];
+
+    return xssPatterns.some(pattern => pattern.test(value));
+  };
+
+  const validateInput = (obj: any): boolean => {
+    if (typeof obj === 'string') {
+      return checkXSS(obj);
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.some(validateInput);
+    }
+
+    if (obj && typeof obj === 'object') {
+      return Object.values(obj).some(validateInput);
+    }
+
+    return false;
+  };
+
+  // Verificar XSS no body, query e params
+  if ((req.body && validateInput(req.body)) ||
+      (req.query && validateInput(req.query)) ||
+      (req.params && validateInput(req.params))) {
+
+    logger.warn('XSS attempt detected', {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      endpoint: req.path,
+      userId: req.user?.id
+    });
+
+    return next(createError('Conteúdo potencialmente malicioso detectado', 400));
+  }
+
+  next();
+};
+
+// 8. Insecure Deserialization Prevention (A08:2021)
+export const secureDeserialization = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // Verificar se há tentativas de deserialização insegura
+    const contentType = req.get('Content-Type');
+
+    if (contentType && contentType.includes('application/x-java-serialized-object')) {
+      logger.warn('Insecure deserialization attempt', {
+        contentType,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      return next(createError('Formato não suportado', 400));
+    }
+
+    // Validar JSON parsing seguro
+    if (req.body && typeof req.body === 'string') {
+      try {
+        JSON.parse(req.body);
+      } catch (e) {
+        logger.warn('Invalid JSON format', { ip: req.ip, error: e });
+        return next(createError('Formato JSON inválido', 400));
+      }
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in deserialization validation', { error });
+    next(createError('Erro na validação de dados', 500));
+  }
+};
+
+// 9. Components with Known Vulnerabilities Prevention (A06:2021)
+export const componentSecurityCheck = (req: Request, res: Response, next: NextFunction): void => {
+  // Este middleware pode ser expandido para verificar versões de componentes
+  // Por ora, adiciona headers informativos para monitoramento
+
+  res.set('X-Security-Framework', 'AUZAP-Security-v1.0');
+  res.set('X-Content-Type-Options', 'nosniff');
+
+  next();
+};
+
+// 10. Insufficient Logging & Monitoring Prevention (A09:2021)
+export const securityEventLogger = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const startTime = Date.now();
+
+    // Log da requisição
+    logger.info('Request received', {
+      method: req.method,
+      path: req.path,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      userId: req.user?.id,
+      organizationId: req.user?.organizationId,
+      timestamp: new Date().toISOString()
+    });
+
+    // Override do res.end para capturar resposta
+    const originalEnd = res.end;
+    res.end = function(chunk, encoding) {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      // Log da resposta
+      logger.info('Request completed', {
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        duration,
+        ip: req.ip,
+        userId: req.user?.id,
+        organizationId: req.user?.organizationId
+      });
+
+      // Log eventos de segurança baseado no status
+      if (res.statusCode >= 400) {
+        logger.warn('Security event - Error response', {
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          ip: req.ip,
+          userAgent: req.get('User-Agent'),
+          userId: req.user?.id,
+          organizationId: req.user?.organizationId
+        });
+      }
+
+      originalEnd.call(this, chunk, encoding);
+    };
+
+    next();
+  } catch (error) {
+    logger.error('Error in security event logging', { error });
+    next();
+  }
+};
+
+// ===================================================================
+// RATE LIMITING ESPECÍFICO POR ENDPOINT
+// ===================================================================
+
+export const createRateLimit = (windowMs: number, max: number, message: string) => {
+  return rateLimit({
+    windowMs,
+    max,
+    message: { error: message },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      logger.warn('Rate limit exceeded', {
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        endpoint: req.path,
+        userId: req.user?.id
+      });
+
+      res.status(429).json({
+        error: message,
+        retryAfter: Math.round(windowMs / 1000)
+      });
+    }
+  });
+};
+
+// Rate limits específicos
+export const authRateLimit = createRateLimit(15 * 60 * 1000, 5, 'Muitas tentativas de login');
+export const apiRateLimit = createRateLimit(15 * 60 * 1000, 100, 'Muitas requisições à API');
+export const webhookRateLimit = createRateLimit(60 * 1000, 10, 'Muitos webhooks');
+
+// ===================================================================
+// AUDITORIA AUTOMÁTICA PARA COMPLIANCE
+// ===================================================================
+
+export const auditLogger = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Só fazer auditoria para operações importantes
+    if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+      const supabase = createClient(
+        envValidator.get('SUPABASE_URL'),
+        envValidator.get('SUPABASE_SERVICE_KEY') || envValidator.get('SUPABASE_ANON_KEY')
+      );
+
+      await supabase.from('audit_log').insert({
+        table_name: req.path.split('/')[2] || 'unknown',
+        operation: req.method,
+        new_values: req.body,
+        user_id: req.user?.id,
+        organization_id: req.user?.organizationId,
+        ip_address: req.ip,
+        user_agent: req.get('User-Agent'),
+        session_id: (req as any).sessionId,
+        risk_score: calculateRiskScore(req),
+        data_classification: (req as any).dataClassification || 'public'
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in audit logging', { error });
+    // Não bloquear a requisição por erro de auditoria
+    next();
+  }
+};
+
+// Calcular score de risco baseado na requisição
+const calculateRiskScore = (req: Request): number => {
+  let score = 0;
+
+  // Operações DELETE são mais arriscadas
+  if (req.method === 'DELETE') score += 3;
+
+  // Dados sensíveis aumentam o risco
+  if ((req as any).dataClassification === 'confidential') score += 2;
+  if ((req as any).dataClassification === 'restricted') score += 3;
+
+  // IPs externos aumentam o risco
+  if (!req.ip.startsWith('192.168.') && !req.ip.startsWith('10.')) score += 1;
+
+  // Horários fora do expediente
+  const hour = new Date().getHours();
+  if (hour < 8 || hour > 18) score += 1;
+
+  return score;
+};

@@ -15,72 +15,109 @@ const getSupabaseService = () => {
   return supabaseService;
 };
 
-// Validation schemas
+// Enhanced validation schemas
 const createPetSchema = z.object({
   customer_id: z.string().uuid('Customer ID inválido'),
-  name: z.string().min(1, 'Nome é obrigatório'),
-  species: z.string().min(1, 'Espécie é obrigatória'),
-  breed: z.string().optional(),
-  color: z.string().optional(),
-  gender: z.enum(['male', 'female', 'unknown']).optional(),
-  birth_date: z.string().optional(),
-  weight: z.number().positive().optional(),
-  microchip_number: z.string().optional(),
-  special_needs: z.string().optional(),
-  allergies: z.array(z.string()).optional(),
+  name: z.string()
+    .min(1, 'Nome é obrigatório')
+    .max(50, 'Nome deve ter no máximo 50 caracteres')
+    .regex(/^[A-Za-zÀ-ÿ\s]+$/, 'Nome deve conter apenas letras e espaços'),
+  species: z.enum(['cat', 'dog', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other'], {
+    errorMap: () => ({ message: 'Espécie deve ser: cat, dog, bird, rabbit, hamster, fish, reptile ou other' })
+  }),
+  breed: z.string().max(50, 'Raça deve ter no máximo 50 caracteres').optional(),
+  color: z.string().max(30, 'Cor deve ter no máximo 30 caracteres').optional(),
+  gender: z.enum(['male', 'female', 'unknown']).default('unknown'),
+  birth_date: z.string().datetime('Data de nascimento inválida').optional(),
+  weight: z.number().positive('Peso deve ser positivo').max(200, 'Peso máximo de 200kg').optional(),
+  microchip_number: z.string()
+    .regex(/^[0-9A-Fa-f]{15}$/, 'Microchip deve ter 15 caracteres hexadecimais')
+    .optional(),
+  special_needs: z.string().max(500, 'Necessidades especiais devem ter no máximo 500 caracteres').optional(),
+  allergies: z.array(z.string().max(100)).max(20, 'Máximo 20 alergias').optional(),
   medications: z.array(z.object({
-    name: z.string(),
-    dosage: z.string(),
-    prescribed_by: z.string().optional()
-  })).optional(),
-  photo_url: z.string().url().optional()
+    name: z.string().min(1, 'Nome do medicamento obrigatório').max(100),
+    dosage: z.string().min(1, 'Dosagem obrigatória').max(50),
+    frequency: z.string().max(50).optional(),
+    prescribed_by: z.string().max(100).optional(),
+    start_date: z.string().datetime().optional(),
+    end_date: z.string().datetime().optional(),
+    notes: z.string().max(200).optional()
+  })).max(10, 'Máximo 10 medicamentos').optional(),
+  photo_url: z.string().url('URL da foto inválida').optional(),
+  emergency_contact: z.object({
+    name: z.string().max(100).optional(),
+    phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Telefone inválido').optional(),
+    relationship: z.string().max(50).optional()
+  }).optional(),
+  insurance_info: z.object({
+    provider: z.string().max(100).optional(),
+    policy_number: z.string().max(50).optional(),
+    coverage_details: z.string().max(500).optional()
+  }).optional()
 });
 
 const updatePetSchema = createPetSchema.partial().omit({ customer_id: true });
 
-// GET /pets - List all pets with filtering
+// Pet search and filter schema
+const petSearchSchema = z.object({
+  page: z.string().transform(val => parseInt(val) || 1),
+  limit: z.string().transform(val => Math.min(parseInt(val) || 20, 100)),
+  customer_id: z.string().uuid().optional(),
+  species: z.string().optional(),
+  breed: z.string().optional(),
+  age_range: z.enum(['young', 'adult', 'senior', 'all']).default('all'),
+  weight_range: z.string().regex(/^\d+-\d+$/).optional(),
+  has_allergies: z.string().transform(val => val === 'true').optional(),
+  has_medications: z.string().transform(val => val === 'true').optional(),
+  has_special_needs: z.string().transform(val => val === 'true').optional(),
+  search: z.string().max(100).optional()
+});
+
+// GET /pets - List all pets with advanced filtering
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 20;
-  const customer_id = req.query.customer_id as string;
-  const species = req.query.species as string;
-  const breed = req.query.breed as string;
-  const age_range = req.query.age_range as string;
-
   try {
+    const filters = petSearchSchema.parse(req.query);
     const supabase = getSupabaseService();
+
     let query = supabase.supabase
       .from('pets')
       .select(`
         *,
-        customers (id, name, phone)
+        customers (id, name, phone, email),
+        appointments (
+          count
+        ),
+        health_records (
+          count
+        )
       `, { count: 'exact' })
       .eq('organization_id', organizationId)
       .eq('is_active', true);
 
     // Apply filters
-    if (customer_id) {
-      query = query.eq('customer_id', customer_id);
+    if (filters.customer_id) {
+      query = query.eq('customer_id', filters.customer_id);
     }
 
-    if (species && species !== 'all') {
-      query = query.eq('species', species);
+    if (filters.species && filters.species !== 'all') {
+      query = query.eq('species', filters.species);
     }
 
-    if (breed && breed !== 'all') {
-      query = query.eq('breed', breed);
+    if (filters.breed && filters.breed !== 'all') {
+      query = query.ilike('breed', `%${filters.breed}%`);
     }
 
-    // Age range filtering (requires birth_date)
-    if (age_range && age_range !== 'all') {
+    // Age range filtering
+    if (filters.age_range !== 'all') {
       const currentDate = new Date();
       let startDate: Date;
       let endDate: Date;
 
-      switch (age_range) {
+      switch (filters.age_range) {
         case 'young':
           startDate = new Date(currentDate.getFullYear() - 2, currentDate.getMonth(), currentDate.getDate());
           endDate = currentDate;
@@ -102,25 +139,84 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
                    .lte('birth_date', endDate.toISOString());
     }
 
-    // Apply pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+    // Weight range filtering
+    if (filters.weight_range) {
+      const [minWeight, maxWeight] = filters.weight_range.split('-').map(Number);
+      query = query.gte('weight', minWeight).lte('weight', maxWeight);
+    }
+
+    // Boolean filters
+    if (filters.has_allergies !== undefined) {
+      if (filters.has_allergies) {
+        query = query.not('allergies', 'is', null);
+      } else {
+        query = query.or('allergies.is.null,allergies.eq.{}');
+      }
+    }
+
+    if (filters.has_medications !== undefined) {
+      if (filters.has_medications) {
+        query = query.not('medications', 'is', null);
+      } else {
+        query = query.or('medications.is.null,medications.eq.{}');
+      }
+    }
+
+    if (filters.has_special_needs !== undefined) {
+      if (filters.has_special_needs) {
+        query = query.not('special_needs', 'is', null);
+      } else {
+        query = query.or('special_needs.is.null,special_needs.eq.""');
+      }
+    }
+
+    // Text search
+    if (filters.search) {
+      query = query.or(
+        `name.ilike.%${filters.search}%,` +
+        `breed.ilike.%${filters.search}%,` +
+        `color.ilike.%${filters.search}%,` +
+        `microchip_number.ilike.%${filters.search}%`
+      );
+    }
+
+    // Apply pagination and sorting
+    const from = (filters.page - 1) * filters.limit;
+    const to = from + filters.limit - 1;
     query = query.range(from, to).order('created_at', { ascending: false });
 
     const { data: pets, error, count } = await query;
 
     if (error) throw error;
 
-    const totalPages = Math.ceil((count || 0) / limit);
+    // Calculate age for each pet
+    const enrichedPets = (pets || []).map(pet => {
+      let age = null;
+      if (pet.birth_date) {
+        const birthDate = new Date(pet.birth_date);
+        const ageDiff = Date.now() - birthDate.getTime();
+        const ageDate = new Date(ageDiff);
+        age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      }
+
+      return {
+        ...pet,
+        age,
+        appointment_count: pet.appointments?.length || 0,
+        health_record_count: pet.health_records?.length || 0
+      };
+    });
+
+    const totalPages = Math.ceil((count || 0) / filters.limit);
 
     const response: PaginatedResponse<any> = {
       success: true,
-      data: pets || [],
+      data: enrichedPets,
       message: 'Pets retrieved successfully',
       timestamp: new Date().toISOString(),
       pagination: {
-        page,
-        limit,
+        page: filters.page,
+        limit: filters.limit,
         total: count || 0,
         totalPages
       }
@@ -129,6 +225,9 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     res.json(response);
   } catch (error: any) {
     logger.error('Error getting pets:', error);
+    if (error.name === 'ZodError') {
+      throw createError('Parâmetros de busca inválidos', 400);
+    }
     throw createError('Erro ao obter pets', 500);
   }
 }));
@@ -550,6 +649,237 @@ router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response)
   } catch (error: any) {
     logger.error('Error getting pet appointments:', error);
     throw createError('Erro ao obter agendamentos do pet', 500);
+  }
+}));
+
+// GET /pets/stats - Pet statistics
+router.get('/stats/overview', asyncHandler(async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+
+  try {
+    const supabase = getSupabaseService();
+
+    // Get total pets count
+    const { count: totalPets } = await supabase.supabase
+      .from('pets')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', organizationId)
+      .eq('is_active', true);
+
+    // Get species distribution
+    const { data: speciesData } = await supabase.supabase
+      .from('pets')
+      .select('species')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true);
+
+    const speciesDistribution = speciesData?.reduce((acc, pet) => {
+      acc[pet.species] = (acc[pet.species] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) || {};
+
+    // Get age distribution
+    const { data: petsWithBirthDate } = await supabase.supabase
+      .from('pets')
+      .select('birth_date')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .not('birth_date', 'is', null);
+
+    const ageDistribution = { young: 0, adult: 0, senior: 0, unknown: 0 };
+    const currentDate = new Date();
+
+    petsWithBirthDate?.forEach(pet => {
+      if (pet.birth_date) {
+        const birthDate = new Date(pet.birth_date);
+        const ageDiff = Date.now() - birthDate.getTime();
+        const ageDate = new Date(ageDiff);
+        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+        if (age < 2) ageDistribution.young++;
+        else if (age < 8) ageDistribution.adult++;
+        else ageDistribution.senior++;
+      } else {
+        ageDistribution.unknown++;
+      }
+    });
+
+    // Get pets with special conditions
+    const { count: petsWithAllergies } = await supabase.supabase
+      .from('pets')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .not('allergies', 'is', null);
+
+    const { count: petsWithMedications } = await supabase.supabase
+      .from('pets')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .not('medications', 'is', null);
+
+    const { count: petsWithSpecialNeeds } = await supabase.supabase
+      .from('pets')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .not('special_needs', 'is', null);
+
+    // Recent registrations (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { count: recentRegistrations } = await supabase.supabase
+      .from('pets')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .gte('created_at', thirtyDaysAgo.toISOString());
+
+    const stats = {
+      total_pets: totalPets || 0,
+      species_distribution: speciesDistribution,
+      age_distribution: ageDistribution,
+      pets_with_allergies: petsWithAllergies || 0,
+      pets_with_medications: petsWithMedications || 0,
+      pets_with_special_needs: petsWithSpecialNeeds || 0,
+      recent_registrations: recentRegistrations || 0
+    };
+
+    const response: ApiResponse<any> = {
+      success: true,
+      data: stats,
+      message: 'Pet statistics retrieved successfully',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(response);
+  } catch (error: any) {
+    logger.error('Error getting pet statistics:', error);
+    throw createError('Erro ao obter estatísticas de pets', 500);
+  }
+}));
+
+// GET /pets/breeds - Get popular breeds by species
+router.get('/breeds/popular', asyncHandler(async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const species = req.query.species as string;
+
+  try {
+    const supabase = getSupabaseService();
+
+    let query = supabase.supabase
+      .from('pets')
+      .select('breed')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .not('breed', 'is', null);
+
+    if (species) {
+      query = query.eq('species', species);
+    }
+
+    const { data: breedData } = await query;
+
+    const breedCounts = breedData?.reduce((acc, pet) => {
+      if (pet.breed) {
+        acc[pet.breed] = (acc[pet.breed] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>) || {};
+
+    // Sort by count and get top 10
+    const popularBreeds = Object.entries(breedCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([breed, count]) => ({ breed, count }));
+
+    const response: ApiResponse<any[]> = {
+      success: true,
+      data: popularBreeds,
+      message: 'Popular breeds retrieved successfully',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(response);
+  } catch (error: any) {
+    logger.error('Error getting popular breeds:', error);
+    throw createError('Erro ao obter raças populares', 500);
+  }
+}));
+
+// POST /pets/bulk-import - Bulk import pets from CSV
+router.post('/bulk-import', asyncHandler(async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+
+  const bulkImportSchema = z.object({
+    pets: z.array(createPetSchema).min(1, 'Pelo menos um pet é obrigatório').max(100, 'Máximo 100 pets por importação')
+  });
+
+  try {
+    const { pets } = bulkImportSchema.parse(req.body);
+    const supabase = getSupabaseService();
+
+    // Validate all customer IDs exist
+    const customerIds = [...new Set(pets.map(pet => pet.customer_id))];
+    const { data: existingCustomers } = await supabase.supabase
+      .from('customers')
+      .select('id')
+      .eq('organization_id', organizationId)
+      .in('id', customerIds);
+
+    const validCustomerIds = new Set(existingCustomers?.map(c => c.id) || []);
+    const invalidPets = pets.filter(pet => !validCustomerIds.has(pet.customer_id));
+
+    if (invalidPets.length > 0) {
+      throw createError(
+        `Clientes não encontrados para ${invalidPets.length} pets`,
+        400
+      );
+    }
+
+    // Prepare data for insertion
+    const petsToInsert = pets.map(pet => ({
+      ...pet,
+      organization_id: organizationId,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+
+    const { data: insertedPets, error } = await supabase.supabase
+      .from('pets')
+      .insert(petsToInsert)
+      .select(`
+        *,
+        customers (id, name, phone)
+      `);
+
+    if (error) throw error;
+
+    logger.info('Bulk pet import completed', {
+      count: insertedPets?.length || 0,
+      organizationId
+    });
+
+    const response: ApiResponse<any[]> = {
+      success: true,
+      data: insertedPets || [],
+      message: `${insertedPets?.length || 0} pets importados com sucesso`,
+      timestamp: new Date().toISOString()
+    };
+
+    res.status(201).json(response);
+  } catch (error: any) {
+    logger.error('Error bulk importing pets:', error);
+    if (error.name === 'ZodError') {
+      throw createError('Dados de importação inválidos', 400);
+    }
+    throw createError('Erro ao importar pets', 500);
   }
 }));
 

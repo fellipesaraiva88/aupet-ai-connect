@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AppointmentCardSkeleton, StatCardSkeleton } from "@/components/ui/optimized-skeleton";
+import { ResponsiveLayouts, ResponsiveContainer } from "@/components/ui/responsive-grid";
+import { EmptyStates, AppointmentFeedback } from "@/components/ui/feedback";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -114,29 +117,33 @@ const Appointments = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const customerName = appointment.whatsapp_contacts?.name || '';
-    const petName = appointment.pets?.name || '';
-    const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         petName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.service_type?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || appointment.status === filterStatus;
+  // Memoize filtered appointments for performance
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((appointment) => {
+      const customerName = appointment.whatsapp_contacts?.name || '';
+      const petName = appointment.pets?.name || '';
+      const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           petName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           appointment.service_type?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === "all" || appointment.status === filterStatus;
 
-    let matchesDate = true;
-    if (filterDate === "today") {
-      const appointmentDate = new Date(appointment.appointment_date).toISOString().split('T')[0];
-      matchesDate = appointmentDate === today;
-    } else if (filterDate === "week") {
-      const appointmentDate = new Date(appointment.appointment_date);
-      const weekFromNow = new Date();
-      weekFromNow.setDate(weekFromNow.getDate() + 7);
-      matchesDate = appointmentDate >= new Date() && appointmentDate <= weekFromNow;
-    }
+      let matchesDate = true;
+      if (filterDate === "today") {
+        const appointmentDate = new Date(appointment.appointment_date).toISOString().split('T')[0];
+        matchesDate = appointmentDate === today;
+      } else if (filterDate === "week") {
+        const appointmentDate = new Date(appointment.appointment_date);
+        const weekFromNow = new Date();
+        weekFromNow.setDate(weekFromNow.getDate() + 7);
+        matchesDate = appointmentDate >= new Date() && appointmentDate <= weekFromNow;
+      }
 
-    return matchesSearch && matchesStatus && matchesDate;
-  });
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [appointments, searchTerm, filterStatus, filterDate, today]);
 
-  const stats = {
+  // Memoize stats for performance
+  const stats = useMemo(() => ({
     total: appointments.length,
     today: appointments.filter(a => {
       const appointmentDate = new Date(a.appointment_date).toISOString().split('T')[0];
@@ -144,7 +151,7 @@ const Appointments = () => {
     }).length,
     confirmed: appointments.filter(a => a.status === "confirmed").length,
     pending: appointments.filter(a => a.status === "pending").length,
-  };
+  }), [appointments, today]);
 
   const customerPets = pets.filter(pet => pet.owner_id === selectedCustomer);
 
@@ -292,7 +299,7 @@ const Appointments = () => {
         />
 
         <main className="flex-1 overflow-auto">
-          <div className="p-8 space-y-6">
+          <ResponsiveContainer className="py-8 space-y-6">
             {/* Page Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -441,79 +448,71 @@ const Appointments = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-6 md:grid-cols-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3">
-                      <CalendarIcon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.total}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Total Agendamentos</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <ResponsiveLayouts.Stats>
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <StatCardSkeleton key={i} />
+                ))
+              ) : (
+                <>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-primary/10 p-3">
+                          <CalendarIcon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.total}</p>
+                          <p className="text-sm text-muted-foreground">Total Agendamentos</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-secondary/10 p-3">
-                      <Clock className="h-6 w-6 text-secondary" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.today}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Hoje</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-secondary/10 p-3">
+                          <Clock className="h-6 w-6 text-secondary" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.today}</p>
+                          <p className="text-sm text-muted-foreground">Hoje</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-success/10 p-3">
-                      <CheckCircle className="h-6 w-6 text-success" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.confirmed}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Confirmados</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-success/10 p-3">
+                          <CheckCircle className="h-6 w-6 text-success" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.confirmed}</p>
+                          <p className="text-sm text-muted-foreground">Confirmados</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-warning/10 p-3">
-                      <AlertCircle className="h-6 w-6 text-warning" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.pending}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Pendentes</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-lg bg-warning/10 p-3">
+                          <AlertCircle className="h-6 w-6 text-warning" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.pending}</p>
+                          <p className="text-sm text-muted-foreground">Pendentes</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </ResponsiveLayouts.Stats>
 
             {/* Filters */}
             <Card>
@@ -579,24 +578,7 @@ const Appointments = () => {
               {isLoading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, index) => (
-                    <Card key={index} className="border-l-4">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <Skeleton className="h-12 w-12 rounded-full" />
-                            <div className="space-y-2 flex-1">
-                              <Skeleton className="h-4 w-48" />
-                              <Skeleton className="h-3 w-32" />
-                              <Skeleton className="h-3 w-64" />
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Skeleton className="h-6 w-20" />
-                            <Skeleton className="h-8 w-32" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <AppointmentCardSkeleton key={index} />
                   ))}
                 </div>
               ) : error ? (
@@ -680,21 +662,13 @@ const Appointments = () => {
             </div>
 
             {!isLoading && !error && filteredAppointments.length === 0 && (
-              <div className="text-center py-12">
-                <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhum agendamento encontrado</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm || filterStatus !== "all" || filterDate !== "all"
-                    ? "Tente ajustar os filtros para encontrar agendamentos."
-                    : "Comece criando seu primeiro agendamento."}
-                </p>
-                <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Primeiro Agendamento
-                </Button>
-              </div>
+              searchTerm || filterStatus !== "all" || filterDate !== "all" ? (
+                <EmptyStates.SearchNoResults />
+              ) : (
+                <EmptyStates.NoAppointments onSchedule={() => setIsDialogOpen(true)} />
+              )
             )}
-          </div>
+          </ResponsiveContainer>
         </main>
       </div>
     </div>

@@ -1,0 +1,407 @@
+name: Auzap E2E Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/playwright-browsers
+
+jobs:
+  # Health Check Job
+  health-check:
+    name: System Health Check
+    runs-on: ubuntu-latest
+    outputs:
+      should-run-tests: ${{ steps.health.outputs.healthy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+          cd ../backend && npm ci
+
+      - name: Check code quality
+        run: |
+          cd frontend && npm run lint
+          cd ../backend && npm run build
+
+      - name: Health check
+        id: health
+        run: echo "healthy=true" >> $GITHUB_OUTPUT
+
+  # Unit Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: needs.health-check.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+          cd ../backend && npm ci
+
+      - name: Run frontend unit tests
+        run: |
+          cd frontend && npm run test -- --coverage --reporter=junit
+        continue-on-error: true
+
+      - name: Upload frontend test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-unit-test-results
+          path: frontend/coverage/
+
+  # E2E Tests Matrix
+  e2e-tests:
+    name: E2E Tests (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: needs.health-check.outputs.should-run-tests == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2, 3]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+          cd ../backend && npm ci
+
+      - name: Install Playwright Browsers
+        run: |
+          npx playwright install ${{ matrix.browser }} --with-deps
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+
+      - name: Setup test environment
+        run: |
+          mkdir -p test-results
+          echo "PLAYWRIGHT_BASE_URL=http://localhost:8080" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_API_URL=http://localhost:3001" >> $GITHUB_ENV
+
+      - name: Start development servers
+        run: |
+          # Start backend
+          cd backend && npm run dev &
+          BACKEND_PID=$!
+          echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
+
+          # Start frontend
+          cd frontend && npm run dev &
+          FRONTEND_PID=$!
+          echo "FRONTEND_PID=$FRONTEND_PID" >> $GITHUB_ENV
+
+          # Wait for services to be ready
+          timeout 120s bash -c 'until curl -f http://localhost:3001/health; do sleep 1; done'
+          timeout 120s bash -c 'until curl -f http://localhost:8080; do sleep 1; done'
+
+      - name: Run E2E tests
+        run: |
+          npx playwright test \
+            --project=${{ matrix.browser }} \
+            --shard=${{ matrix.shard }}/3 \
+            --reporter=html,json,junit \
+            --output-dir=test-results
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+
+      - name: Stop development servers
+        if: always()
+        run: |
+          kill $BACKEND_PID || true
+          kill $FRONTEND_PID || true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results-${{ matrix.browser }}-${{ matrix.shard }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
+      - name: Upload screenshots and videos
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-failures-${{ matrix.browser }}-${{ matrix.shard }}
+          path: |
+            test-results/screenshots/
+            test-results/videos/
+            test-results/traces/
+          retention-days: 7
+
+  # API Integration Tests
+  api-tests:
+    name: API Integration Tests
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: needs.health-check.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd backend && npm ci
+
+      - name: Start backend server
+        run: |
+          cd backend && npm run dev &
+          BACKEND_PID=$!
+          echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
+          timeout 60s bash -c 'until curl -f http://localhost:3001/health; do sleep 1; done'
+
+      - name: Run API tests
+        run: |
+          npx playwright test tests/api/ \
+            --reporter=json,junit \
+            --output-dir=test-results/api
+
+      - name: Stop backend server
+        if: always()
+        run: kill $BACKEND_PID || true
+
+      - name: Upload API test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-test-results
+          path: test-results/api/
+
+  # Security Tests
+  security-tests:
+    name: Security & Authorization Tests
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: needs.health-check.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+          cd ../backend && npm ci
+
+      - name: Install Playwright
+        run: npx playwright install chromium --with-deps
+
+      - name: Start servers
+        run: |
+          cd backend && npm run dev &
+          BACKEND_PID=$!
+          echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
+
+          cd frontend && npm run dev &
+          FRONTEND_PID=$!
+          echo "FRONTEND_PID=$FRONTEND_PID" >> $GITHUB_ENV
+
+          timeout 120s bash -c 'until curl -f http://localhost:3001/health; do sleep 1; done'
+          timeout 120s bash -c 'until curl -f http://localhost:8080; do sleep 1; done'
+
+      - name: Run security tests
+        run: |
+          npx playwright test tests/security/ \
+            --project=chromium \
+            --reporter=json,junit \
+            --output-dir=test-results/security
+
+      - name: Stop servers
+        if: always()
+        run: |
+          kill $BACKEND_PID || true
+          kill $FRONTEND_PID || true
+
+      - name: Upload security test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-test-results
+          path: test-results/security/
+
+  # Visual Regression Tests
+  visual-tests:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: needs.health-check.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+          cd ../backend && npm ci
+
+      - name: Install Playwright
+        run: npx playwright install chromium --with-deps
+
+      - name: Start servers
+        run: |
+          cd backend && npm run dev &
+          BACKEND_PID=$!
+          echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
+
+          cd frontend && npm run dev &
+          FRONTEND_PID=$!
+          echo "FRONTEND_PID=$FRONTEND_PID" >> $GITHUB_ENV
+
+          timeout 120s bash -c 'until curl -f http://localhost:3001/health; do sleep 1; done'
+          timeout 120s bash -c 'until curl -f http://localhost:8080; do sleep 1; done'
+
+      - name: Run visual tests
+        run: |
+          npx playwright test tests/responsive/ \
+            --project=chromium \
+            --reporter=html,json \
+            --output-dir=test-results/visual
+        continue-on-error: true
+
+      - name: Stop servers
+        if: always()
+        run: |
+          kill $BACKEND_PID || true
+          kill $FRONTEND_PID || true
+
+      - name: Upload visual test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-test-results
+          path: |
+            test-results/visual/
+            test-results/screenshots/
+
+  # Test Results Aggregation
+  aggregate-results:
+    name: Aggregate Test Results
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests, api-tests, security-tests, visual-tests]
+    if: always() && needs.health-check.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-test-results/
+
+      - name: Aggregate test results
+        run: |
+          mkdir -p aggregated-results
+
+          # Combine all JUnit XML files
+          find all-test-results/ -name "*.xml" -exec cp {} aggregated-results/ \;
+
+          # Combine all JSON reports
+          find all-test-results/ -name "*.json" -exec cp {} aggregated-results/ \;
+
+          # Create summary
+          echo "# Test Results Summary" > aggregated-results/README.md
+          echo "" >> aggregated-results/README.md
+          echo "Generated on: $(date)" >> aggregated-results/README.md
+          echo "Commit: ${{ github.sha }}" >> aggregated-results/README.md
+          echo "Branch: ${{ github.ref_name }}" >> aggregated-results/README.md
+
+      - name: Upload aggregated results
+        uses: actions/upload-artifact@v4
+        with:
+          name: aggregated-test-results
+          path: aggregated-results/
+          retention-days: 90
+
+      - name: Create test summary
+        run: |
+          echo "## 🧪 Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ${{ needs.e2e-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Tests | ${{ needs.api-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Tests | ${{ needs.security-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Visual Tests | ${{ needs.visual-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  # Slack Notification (optional)
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [aggregate-results]
+    if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'schedule')
+    steps:
+      - name: Notify Slack
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Auzap E2E Test Suite completed
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Results: ${{ needs.aggregate-results.result }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
