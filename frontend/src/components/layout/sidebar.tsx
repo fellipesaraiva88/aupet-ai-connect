@@ -26,51 +26,51 @@ interface SidebarProps {
 const menuItems = [
   {
     id: "dashboard",
-    label: "Central do Amor 💝",
+    label: "Central do Cuidado",
     icon: LayoutDashboard,
     href: "/",
   },
   {
     id: "conversations",
-    label: "Conversas Especiais 💬",
+    label: "Conversas com Tutores",
     icon: MessageSquare,
     href: "/conversations",
     badge: 5,
   },
   {
     id: "clients-pets",
-    label: "Famílias & Pets 🏠🐾",
+    label: "Tutores & Pets 🐾",
     icon: Activity,
     href: "/clients-pets",
     badge: "Nova",
   },
   {
     id: "appointments",
-    label: "Encontros de Cuidado 📅",
+    label: "Consultas Veterinárias",
     icon: Calendar,
     href: "/appointments",
   },
   {
     id: "catalog",
-    label: "Lojinha do Amor 🛍️",
+    label: "Produtos Pet 🛍️",
     icon: Package,
     href: "/catalog",
   },
   {
     id: "ai-config",
-    label: "Configuração IA 🤖💕",
+    label: "Assistente IA Pet",
     icon: Bot,
     href: "/ai-config",
   },
   {
     id: "analytics",
-    label: "Insights do Coração 📊",
+    label: "Relatórios de Cuidado 📊",
     icon: BarChart3,
     href: "/analytics",
   },
   {
     id: "settings",
-    label: "Preferências 🔧💝",
+    label: "Configurações",
     icon: Settings,
     href: "/settings",
   },
@@ -104,10 +104,10 @@ export function Sidebar({
           </div>
           <div className="flex flex-col">
             <span className="font-semibold text-[15px] text-foreground tracking-[-0.01em]">
-              Auzap 💝
+              Auzap Pet Care
             </span>
             <span className="text-[11px] text-muted-foreground font-medium tracking-[-0.005em]">
-              Cuidado com Amor & IA
+              Tecnologia & Cuidado Veterinário
             </span>
           </div>
         </div>
@@ -163,10 +163,10 @@ export function Sidebar({
             <Bot className="h-4 w-4 text-primary" />
           </div>
           <p className="text-[12px] font-semibold mb-0.5 text-foreground tracking-[-0.01em]">
-            Cuidando com Amor ✨
+            Sistema Ativo ✨
           </p>
           <p className="text-[10px] text-muted-foreground tracking-[-0.005em]">
-            Proteção & carinho 24/7
+            Monitoramento inteligente 24/7
           </p>
         </div>
       </div>

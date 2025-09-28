@@ -27,15 +27,15 @@ const Login: React.FC = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!formData.email) {
-      newErrors.email = 'Precisamos do seu email para te encontrar 💌';
+      newErrors.email = 'Precisamos do seu email para te encontrar';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Por favor, verifique se o email está correto 😊';
+      newErrors.email = 'Por favor, verifique se o email está correto';
     }
 
     if (!formData.password) {
-      newErrors.password = 'Sua senha especial é necessária 🔐';
+      newErrors.password = 'Sua senha especial é necessária';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Para sua segurança, use pelo menos 6 caracteres 🛡️';
+      newErrors.password = 'Para sua segurança, use pelo menos 6 caracteres';
     }
 
     setErrors(newErrors);
@@ -47,7 +47,7 @@ const Login: React.FC = () => {
 
     if (!validateForm()) {
       toast({
-        title: 'Opa! Vamos ajudar você 🤗',
+        title: 'Opa! Vamos ajudar você',
         description: 'Por favor, verifique as informações abaixo com carinho.',
         variant: 'destructive'
       });
@@ -62,7 +62,7 @@ const Login: React.FC = () => {
       if (error) {
         console.error('Login error:', error);
         toast({
-          title: 'Ops! Algo não deu certo 🥺',
+          title: 'Ops! Algo não deu certo',
           description: 'Verifique suas credenciais com carinho. Estamos aqui para ajudar!',
           variant: 'destructive'
         });
@@ -71,7 +71,7 @@ const Login: React.FC = () => {
 
       if (data?.user) {
         toast({
-          title: 'Bem-vindo de volta! 🎉💝',
+          title: 'Bem-vindo de volta!',
           description: 'Que alegria ter você aqui! Vamos espalhar muito amor pelos pets.',
         });
 
@@ -140,7 +140,7 @@ const Login: React.FC = () => {
 
       if (data?.user) {
         toast({
-          title: 'Bem-vindo de volta! 🎉💝',
+          title: 'Bem-vindo de volta!',
           description: 'Que alegria ter você aqui! Vamos espalhar muito amor pelos pets.',
         });
         navigate('/', { replace: true });
@@ -189,7 +189,7 @@ const Login: React.FC = () => {
 
           <div className="space-y-2">
             <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Que alegria ter você de volta! 💝
+              Que alegria ter você de volta!
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
               Entre na sua conta e continue espalhando amor e cuidado pelos nossos amiguinhos peludos
@@ -258,7 +258,7 @@ const Login: React.FC = () => {
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
                 <Label htmlFor="remember" className="text-sm">
-                  Lembrar de mim com carinho 💕
+                  Lembrar de mim com carinho
                 </Label>
               </div>
               <Button
@@ -266,7 +266,7 @@ const Login: React.FC = () => {
                 className="p-0 h-auto text-sm text-primary hover:text-primary/80"
                 onClick={() => navigate('/forgot-password')}
               >
-                Esqueceu a senha? Não se preocupe! 🤗
+                Esqueceu a senha? Não se preocupe!
               </Button>
             </div>
 
@@ -282,7 +282,7 @@ const Login: React.FC = () => {
                 </>
               ) : (
                 <>
-                  Entrar com Amor 💝
+                  Entrar com Amor
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
@@ -299,20 +299,20 @@ const Login: React.FC = () => {
                 disabled={isLoading}
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Acesso Carinhoso para Desenvolvedores 💖
+                Acesso Especial para Desenvolvedores
               </Button>
             </div>
           )}
 
           <div className="text-center pt-4">
             <p className="text-sm text-muted-foreground">
-              Ainda não faz parte da nossa família?{' '}
+              Ainda não faz parte da nossa família de amantes de pets?{' '}
               <Button
                 variant="link"
                 className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
                 onClick={() => navigate('/signup')}
               >
-                Junte-se a nós com amor! 🐾💕
+                Junte-se a nós e aos nossos peludos! 🐾
               </Button>
             </p>
           </div>

@@ -49,9 +49,12 @@ const Index = () => {
             {/* Modern Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Central do Amor 🏠💝</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Central do Cuidado Pet 🐾</h1>
                 <p className="text-muted-foreground text-sm sm:text-base">
-                  Acompanhe toda a magia e carinho que você espalha cuidando dos nossos amiguinhos peludos
+                  Acompanhe todo o carinho que você espalha cuidando de cãezinhos, gatinhos e todos os peludos especiais
+                </p>
+                <p className="text-xs text-primary/70 mt-1 italic">
+                  "Curiosidade: Cães podem detectar doenças através do olfato - por isso o cuidado preventivo é tão importante!"
                 </p>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
@@ -61,7 +64,7 @@ const Index = () => {
                   icon={<TrendingUp className="h-4 w-4" />}
                   className="flex-1 sm:flex-none"
                 >
-                  <span className="hidden sm:inline">Insights do Coração 📊</span>
+                  <span className="hidden sm:inline">Insights do Cuidado 📊</span>
                 </LoadingButton>
                 <FeedbackButton
                   variant="info"
@@ -70,7 +73,7 @@ const Index = () => {
                 >
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    <span className="hidden sm:inline">Ver </span>Conversas Especiais 💝
+                    <span className="hidden sm:inline">Ver </span>Conversas com Tutores
                   </div>
                 </FeedbackButton>
               </div>
@@ -79,9 +82,9 @@ const Index = () => {
             {/* Apple Stats Grid */}
             <AppleStatsGrid>
               <AppleCard
-                title="Corações Tocados Hoje 💝"
+                title="Tutores Atendidos Hoje"
                 value={dashboardStats?.conversations_today || 0}
-                subtitle="Famílias acolhidas com carinho"
+                subtitle="Famílias de pets acolhidas"
                 icon={MessageSquare}
                 trend={{
                   value: "+12%",
@@ -90,9 +93,9 @@ const Index = () => {
                 variant="default"
               />
               <AppleCard
-                title="Encontros de Cuidado 🗓️"
+                title="Consultas Agendadas"
                 value={dashboardStats?.daily_appointments || 0}
-                subtitle="Momentos especiais agendados"
+                subtitle="Cuidados para cães e gatos"
                 icon={Calendar}
                 trend={{
                   value: "+8%",
@@ -101,9 +104,9 @@ const Index = () => {
                 variant="gradient"
               />
               <AppleCard
-                title="Magia da IA Auzap ✨"
+                title="Assistente IA Especializada"
                 value={`${dashboardStats?.response_rate_percent?.toFixed(1) || '87.5'}%`}
-                subtitle="Amor em cada resposta"
+                subtitle="Respostas inteligentes sobre pets"
                 icon={Bot}
                 trend={{
                   value: "+5%",
@@ -112,9 +115,9 @@ const Index = () => {
                 variant="elevated"
               />
               <AppleCard
-                title="Prosperidade Compartilhada 💰"
+                title="Faturamento do Dia"
                 value={`R$ ${dashboardStats?.daily_revenue?.toLocaleString('pt-BR') || '1.240'}`}
-                subtitle="Sucesso construído com amor"
+                subtitle="Cuidando bem, crescendo sempre"
                 icon={TrendingUp}
                 trend={{
                   value: "+15%",
@@ -130,10 +133,10 @@ const Index = () => {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    Acesso Carinhoso ⚡💕
+                    Acesso Rápido para o Cuidado
                   </CardTitle>
                   <CardDescription className="text-[13px] text-muted-foreground tracking-[-0.005em]">
-                    Tudo que você precisa para espalhar amor pelos amiguinhos
+                    Tudo que você precisa para cuidar dos peludos com excelência
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-3">
@@ -143,7 +146,7 @@ const Index = () => {
                     onClick={() => navigate('/conversations')}
                   >
                     <MessageSquare className="h-5 w-5 text-primary" />
-                    <span className="text-[12px] font-medium tracking-[-0.01em]">Conversas 💬</span>
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Conversas</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -151,7 +154,7 @@ const Index = () => {
                     onClick={() => navigate('/appointments')}
                   >
                     <Calendar className="h-5 w-5 text-primary" />
-                    <span className="text-[12px] font-medium tracking-[-0.01em]">Agendamentos 📅</span>
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Agendamentos</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -159,7 +162,7 @@ const Index = () => {
                     onClick={() => navigate('/customers')}
                   >
                     <Users className="h-5 w-5 text-primary" />
-                    <span className="text-[12px] font-medium tracking-[-0.01em]">Famílias 👨‍👩‍👧‍👦</span>
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Tutores</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -176,10 +179,10 @@ const Index = () => {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Clock className="h-4 w-4 text-primary" />
-                    Momentos Especiais 🌟
+                    Atividades Recentes
                   </CardTitle>
                   <CardDescription className="text-[13px] text-muted-foreground tracking-[-0.005em]">
-                    Últimos momentos de carinho e cuidado
+                    Acompanhe os últimos cuidados realizados
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -208,7 +211,7 @@ const Index = () => {
                             <MessageSquare className="h-3.5 w-3.5 text-primary" />
                           </div>
                           <div>
-                            <p className="text-[13px] font-medium tracking-[-0.01em]">Corações tocados hoje 💝</p>
+                            <p className="text-[13px] font-medium tracking-[-0.01em]">Tutores atendidos com carinho</p>
                             <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 2 minutos</p>
                           </div>
                         </div>
@@ -224,7 +227,7 @@ const Index = () => {
                           <Calendar className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-[13px] font-medium tracking-[-0.01em]">Encontro de cuidado confirmado ✨</p>
+                          <p className="text-[13px] font-medium tracking-[-0.01em]">Consulta veterinária agendada</p>
                           <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 5 minutos</p>
                         </div>
                       </div>
@@ -234,7 +237,7 @@ const Index = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-[13px] font-medium tracking-[-0.01em]">Magia da IA em ação 🪄</p>
+                            <p className="text-[13px] font-medium tracking-[-0.01em]">IA respondendo sobre comportamento felino</p>
                             <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 10 minutos</p>
                           </div>
                           <div className="flex flex-col items-end gap-1">
@@ -255,6 +258,45 @@ const Index = () => {
                       </div>
                     </>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Seção de Motivação e Curiosidades */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              <Card className="rounded-[20px] bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+                <CardContent className="p-6 text-center">
+                  <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Heart className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-semibold text-blue-900 mb-2">Frase do Dia</h3>
+                  <p className="text-sm text-blue-700 italic">
+                    "O amor de um pet é a terapia mais pura que existe. Cada latido, miado ou ronronar traz cura para a alma."
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-[20px] bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                <CardContent className="p-6 text-center">
+                  <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="h-6 w-6 text-green-600" />
+                  </div>
+                  <h3 className="font-semibold text-green-900 mb-2">Curiosidade Pet</h3>
+                  <p className="text-sm text-green-700">
+                    <strong>Você sabia?</strong> Gatos dormem entre 12-16 horas por dia para conservar energia para a caça, mesmo sendo domésticos!
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-[20px] bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
+                <CardContent className="p-6 text-center">
+                  <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Activity className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h3 className="font-semibold text-purple-900 mb-2">Dica de Saúde</h3>
+                  <p className="text-sm text-purple-700">
+                    <strong>Lembre-se:</strong> Check-ups regulares são essenciais! Cães e gatos devem visitar o veterinário pelo menos uma vez ao ano.
+                  </p>
                 </CardContent>
               </Card>
             </div>
