@@ -23,8 +23,8 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Development mode bypass
-  const isDevelopment = import.meta.env.VITE_DEV_MODE === 'true';
+  // Development mode bypass (desabilitado para usar autenticação real)
+  const isDevelopment = false;
 
   // Fetch user profile data including organization
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
@@ -45,7 +45,7 @@ export function useAuth() {
             subscription_tier
           )
         `)
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
       if (profileError) {
