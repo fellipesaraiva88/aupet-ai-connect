@@ -316,11 +316,11 @@ export const createRequestLogger = () => {
 
     // Override res.end to log response
     const originalEnd = res.end;
-    res.end = function(chunk?: any, encoding?: any) {
+    res.end = function(chunk?: any, encoding?: any): any {
       const duration = Date.now() - startTime;
       requestLogger.logApiRequest(req, res, duration);
 
-      originalEnd.call(this, chunk, encoding);
+      return originalEnd.call(this, chunk, encoding);
     };
 
     next();

@@ -145,6 +145,7 @@ export class MonitoringService {
 
   // Middleware to track HTTP requests
   public requestMetricsMiddleware() {
+    const self = this; // Capture the MonitoringService instance
     return (req: Request, res: Response, next: Function) => {
       const startTime = Date.now();
 
@@ -161,9 +162,9 @@ export class MonitoringService {
           status_code: res.statusCode.toString()
         };
 
-        this.httpRequestDuration.observe(labels, duration);
-        this.httpRequestTotal.inc(labels);
-        this.responseTime.observe({ endpoint: route }, duration);
+        self.httpRequestDuration.observe(labels, duration);
+        self.httpRequestTotal.inc(labels);
+        self.responseTime.observe({ endpoint: route }, duration);
 
         // Call original end
         originalEnd.apply(this, args);

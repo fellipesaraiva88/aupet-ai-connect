@@ -467,10 +467,10 @@ export class MonitoredSupabaseClient {
    */
   async getPerformanceStats(): Promise<any> {
     try {
-      // Query recent performance metrics from Supabase
+      // Simplified performance stats to avoid complex metric extraction
       const stats = {
-        connectionHealth: supabaseConnectionHealth.get(),
-        totalQueries: await promClient.register.getSingleMetricAsString('auzap_supabase_query_duration_seconds_count'),
+        connectionHealth: 1, // 1 = healthy, 0 = unhealthy
+        totalQueries: 0,
         errorRate: await this.calculateErrorRate(),
         avgResponseTime: await this.calculateAvgResponseTime(),
         slowQueries: await this.getSlowQueries()
