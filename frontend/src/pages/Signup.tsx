@@ -174,20 +174,35 @@ const Signup: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="text-center space-y-2">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-500 rounded-full">
-              <Building className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-100 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Enhanced pet-themed background */}
+      <div className="absolute inset-0 paw-pattern opacity-[0.03] pointer-events-none" />
+      <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-primary/20 to-purple-400/20 rounded-full glass-morphism animate-glass-float" />
+      <div className="absolute bottom-20 right-20 w-16 h-16 bg-gradient-to-br from-pink-400/20 to-accent/20 rounded-full glass-morphism animate-pet-bounce delay-1000" />
+      <div className="absolute top-1/3 right-10 w-12 h-12 bg-gradient-to-br from-secondary/20 to-blue-400/20 rounded-full glass-morphism animate-glass-float delay-500" />
+
+      <Card className="w-full max-w-lg shadow-2xl glass-morphism bg-gradient-card border-0 relative">
+        {/* Magical pet particles */}
+        <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-br from-primary to-purple-600 rounded-full animate-pulse" />
+        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-br from-pink-500 to-red-500 rounded-full animate-pulse delay-300" />
+
+        <CardHeader className="text-center space-y-4 pb-6">
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="p-4 bg-gradient-to-br from-primary to-purple-600 rounded-2xl shadow-xl pet-glow">
+                <Heart className="h-10 w-10 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-pink-500 to-red-500 rounded-full animate-pulse" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Criar Conta
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            Crie sua organização e comece a usar o Auzap
-          </CardDescription>
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Criar Conta
+            </CardTitle>
+            <CardDescription className="text-muted-foreground text-lg">
+              Crie sua organização e comece a cuidar dos pets com amor digital
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <CardContent>
@@ -312,19 +327,24 @@ const Signup: React.FC = () => {
               </Select>
             </div>
 
-            {/* Botão de Submit */}
+            {/* Enhanced Submit Button */}
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+              className="w-full bg-gradient-to-r from-primary via-purple-600 to-pink-600 hover:from-primary/90 hover:via-purple-600/90 hover:to-pink-600/90 text-white font-medium py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] relative overflow-hidden"
               disabled={isLoading}
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando conta...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Criando sua conta com carinho...
                 </>
               ) : (
-                'Criar Conta'
+                <div className="flex items-center justify-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Criar Conta
+                  <Heart className="h-5 w-5" />
+                </div>
               )}
             </Button>
 
