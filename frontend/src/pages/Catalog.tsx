@@ -163,6 +163,11 @@ const Catalog = () => {
     return baseFilters;
   }, [filters.search, filters.category, filters.status]);
 
+  // API hooks - moved before usage
+  const { data: catalogItems = [], isLoading: isLoadingItems, error: itemsError } = useCatalogItems(organizationId, apiFilters);
+  const { data: catalogStats, isLoading: isLoadingStats } = useCatalogStats(organizationId);
+  const { data: categories = [], isLoading: isLoadingCategories } = useCatalogCategories(organizationId);
+
   // Filter and sort items with memoization
   const processedItems = useMemo(() => {
     let items = [...catalogItems];
@@ -207,11 +212,6 @@ const Catalog = () => {
 
     return items;
   }, [catalogItems, filters.sortBy, filters.sortDirection, filters.showFavoritesOnly, favoriteItems]);
-
-  // API hooks
-  const { data: catalogItems = [], isLoading: isLoadingItems, error: itemsError } = useCatalogItems(organizationId, apiFilters);
-  const { data: catalogStats, isLoading: isLoadingStats } = useCatalogStats(organizationId);
-  const { data: categories = [], isLoading: isLoadingCategories } = useCatalogCategories(organizationId);
 
   // Mutation hooks
   const createItemMutation = useCreateCatalogItem();
