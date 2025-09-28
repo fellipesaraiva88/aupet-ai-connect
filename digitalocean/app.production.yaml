@@ -1,0 +1,263 @@
+name: auzap-ai-connect-production
+region: nyc1
+
+services:
+  # Backend API Service - Production
+  - name: auzap-backend-api-prod
+    size: professional-s
+    instance_count: 3  # Higher availability
+    instance_size_slug: professional-s
+    source_dir: backend
+    github:
+      repo: ia_auzap/aupet-ai-connect
+      branch: main
+      deploy_on_push: false  # Manual deployment for production
+    build_command: |
+      npm ci --only=production
+      npm run build
+      npm run test:ci || (echo "Tests failed, aborting deployment" && exit 1)
+    run_command: npm start
+    environment_slug: node-js
+    http_port: 3001
+    routes:
+      - path: /api
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 90  # Longer for production warmup
+      period_seconds: 10
+      timeout_seconds: 5
+      failure_threshold: 3
+      success_threshold: 2
+    # Auto-scaling configuration
+    autoscaling:
+      min_instance_count: 2
+      max_instance_count: 10
+      metrics:
+        cpu:
+          percent: 70
+        memory:
+          percent: 75
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+      - key: REDIS_URL
+        value: ${redis.REDIS_URL}
+      - key: JWT_SECRET
+        value: ${JWT_SECRET_PROD}
+      - key: OPENAI_API_KEY
+        value: ${OPENAI_API_KEY}
+      - key: EVOLUTION_API_URL
+        value: ${EVOLUTION_API_URL_PROD}
+      - key: EVOLUTION_API_KEY
+        value: ${EVOLUTION_API_KEY_PROD}
+      - key: FRONTEND_URL
+        value: ${_self.URL}
+      - key: WEBHOOK_URL
+        value: ${_self.URL}/api/webhook
+      # Production-specific configurations
+      - key: LOG_LEVEL
+        value: info
+      - key: ENABLE_DEBUG_ROUTES
+        value: "false"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"  # 15 minutes
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"     # Conservative for production
+      - key: CORS_ORIGIN
+        value: https://auzap-ai.com,https://www.auzap-ai.com
+      # Monitoring and observability
+      - key: ENABLE_METRICS
+        value: "true"
+      - key: DATADOG_API_KEY
+        value: ${DATADOG_API_KEY}
+      - key: LOGTAIL_SOURCE_TOKEN
+        value: ${LOGTAIL_SOURCE_TOKEN}
+      # Performance optimizations
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=2048"
+      - key: UV_THREADPOOL_SIZE
+        value: "16"
+
+  # Frontend Static Site - Production
+  - name: auzap-frontend-prod
+    size: static
+    source_dir: frontend
+    github:
+      repo: ia_auzap/aupet-ai-connect
+      branch: main
+      deploy_on_push: false  # Manual deployment for production
+    build_command: |
+      npm ci
+      npm run test || (echo "Frontend tests failed, aborting deployment" && exit 1)
+      VITE_API_URL=${auzap-backend-api-prod.PUBLIC_URL}/api npm run build
+      # Run Lighthouse performance audit
+      npx lighthouse-ci autorun || echo "Performance audit warning"
+    output_dir: dist
+    routes:
+      - path: /
+    # Global CDN with edge caching
+    cdn:
+      enable: true
+    headers:
+      # Security headers
+      - path: /*
+        key: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains; preload
+      - path: /*
+        key: X-Frame-Options
+        value: DENY
+      - path: /*
+        key: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        key: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        key: Permissions-Policy
+        value: geolocation=(), microphone=(), camera=(), payment=(), usb=()
+      - path: /*
+        key: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.auzap-ai.com; font-src 'self' data:;"
+      # Cache headers
+      - path: /
+        key: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /index.html
+        key: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /assets/*
+        key: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /service-worker.js
+        key: Cache-Control
+        value: no-cache, no-store, must-revalidate
+    envs:
+      - key: VITE_API_URL
+        value: ${auzap-backend-api-prod.PUBLIC_URL}/api
+      - key: VITE_ENVIRONMENT
+        value: production
+      - key: VITE_DEBUG_MODE
+        value: "false"
+      - key: VITE_SENTRY_DSN
+        value: ${SENTRY_DSN}
+
+# Production-grade Managed Databases
+databases:
+  - name: auzap-postgres-prod
+    engine: PG
+    version: "16"
+    size: db-s-2vcpu-4gb  # Production sizing
+    num_nodes: 1
+    production: true
+    # Enable standby for high availability
+    standby_nodes: 1
+    # Connection pooling
+    connection_pools:
+      - name: auzap-pool
+        mode: transaction
+        size: 25
+        db: auzap_production
+        user: auzap_user
+    trusted_sources:
+      - type: app_component
+        name: auzap-backend-api-prod
+    # Automated backups
+    backup_restore:
+      type: daily
+      hour: 3  # 3 AM UTC
+
+  - name: auzap-redis-prod
+    engine: REDIS
+    version: "7"
+    size: db-s-2vcpu-2gb  # Production sizing
+    num_nodes: 1
+    production: true
+    # Redis configuration for production
+    eviction_policy: allkeys-lru
+    trusted_sources:
+      - type: app_component
+        name: auzap-backend-api-prod
+
+# Production Domains with Custom SSL
+domains:
+  - domain: auzap-ai.com
+    type: PRIMARY
+    wildcard: false
+    certificate:
+      type: LETS_ENCRYPT
+  - domain: www.auzap-ai.com
+    type: ALIAS
+    wildcard: false
+  - domain: api.auzap-ai.com
+    type: ALIAS
+    wildcard: false
+
+# Production Jobs
+jobs:
+  # Pre-deployment security scan
+  - name: security-scan
+    source_dir: backend
+    build_command: |
+      npm ci --only=production
+      npm audit --audit-level=moderate
+    run_command: echo "Security scan completed"
+    environment_slug: node-js
+    kind: PRE_DEPLOY
+
+  # Database migration
+  - name: db-migrate
+    source_dir: backend
+    build_command: |
+      npm ci --only=production
+      npm run build
+    run_command: npm run db:migrate:prod
+    environment_slug: node-js
+    kind: PRE_DEPLOY
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+
+  # Post-deployment health checks
+  - name: post-deploy-health
+    source_dir: backend
+    build_command: |
+      npm ci --only=production
+    run_command: npm run health:check:comprehensive
+    environment_slug: node-js
+    kind: POST_DEPLOY
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: API_URL
+        value: ${auzap-backend-api-prod.PUBLIC_URL}/api
+
+# Production Alerts - Strict monitoring
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+  - rule: CPU_UTILIZATION
+    value: 75  # Conservative threshold
+  - rule: MEM_UTILIZATION
+    value: 80  # Conservative threshold
+  - rule: RESPONSE_TIME_99P
+    value: 1000  # 1 second 99th percentile
+  - rule: ERROR_RATE_5M
+    value: 1  # 1% error rate over 5 minutes
+
+# Static Site Optimization
+static_sites:
+  - name: auzap-static-assets
+    build_command: |
+      # Optimize images and assets
+      npm run optimize:images
+      npm run compress:assets
+    output_dir: optimized-dist
+    cdn:
+      enable: true
+      cache_control: max-age=31536000

@@ -1,0 +1,163 @@
+name: auzap-ai-connect-staging
+region: nyc1
+
+services:
+  # Backend API Service - Staging
+  - name: auzap-backend-api-staging
+    size: basic-xxs
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    source_dir: backend
+    github:
+      repo: ia_auzap/aupet-ai-connect
+      branch: develop
+      deploy_on_push: true
+    build_command: |
+      npm ci --only=production
+      npm run build
+    run_command: npm start
+    environment_slug: node-js
+    http_port: 3001
+    routes:
+      - path: /api
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 60
+      period_seconds: 15
+      timeout_seconds: 10
+      failure_threshold: 3
+      success_threshold: 1
+    envs:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+      - key: REDIS_URL
+        value: ${redis.REDIS_URL}
+      - key: JWT_SECRET
+        value: ${JWT_SECRET_STAGING}
+      - key: OPENAI_API_KEY
+        value: ${OPENAI_API_KEY}
+      - key: EVOLUTION_API_URL
+        value: ${EVOLUTION_API_URL_STAGING}
+      - key: EVOLUTION_API_KEY
+        value: ${EVOLUTION_API_KEY_STAGING}
+      - key: FRONTEND_URL
+        value: ${_self.URL}
+      - key: WEBHOOK_URL
+        value: ${_self.URL}/api/webhook
+      # Staging-specific configurations
+      - key: LOG_LEVEL
+        value: debug
+      - key: ENABLE_DEBUG_ROUTES
+        value: "true"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "300000"  # 5 minutes
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "1000"    # Higher limit for testing
+
+  # Frontend Static Site - Staging
+  - name: auzap-frontend-staging
+    size: static
+    source_dir: frontend
+    github:
+      repo: ia_auzap/aupet-ai-connect
+      branch: develop
+      deploy_on_push: true
+    build_command: |
+      npm ci
+      VITE_API_URL=${auzap-backend-api-staging.PUBLIC_URL}/api npm run build
+    output_dir: dist
+    routes:
+      - path: /
+    headers:
+      - path: /
+        key: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /index.html
+        key: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /assets/*
+        key: Cache-Control
+        value: public, max-age=3600  # 1 hour for staging
+      - path: /*
+        key: X-Frame-Options
+        value: SAMEORIGIN  # Less restrictive for testing
+      - path: /*
+        key: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        key: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      # Add staging banner header
+      - path: /*
+        key: X-Environment
+        value: STAGING
+    envs:
+      - key: VITE_API_URL
+        value: ${auzap-backend-api-staging.PUBLIC_URL}/api
+      - key: VITE_ENVIRONMENT
+        value: staging
+      - key: VITE_DEBUG_MODE
+        value: "true"
+
+# Managed Databases - Smaller for staging
+databases:
+  - name: auzap-postgres-staging
+    engine: PG
+    version: "16"
+    size: db-s-1vcpu-1gb  # Smaller for staging
+    num_nodes: 1
+    production: false
+    trusted_sources:
+      - type: app_component
+        name: auzap-backend-api-staging
+
+  - name: auzap-redis-staging
+    engine: REDIS
+    version: "7"
+    size: db-s-1vcpu-512mb  # Smaller for staging
+    num_nodes: 1
+    production: false
+    trusted_sources:
+      - type: app_component
+        name: auzap-backend-api-staging
+
+# Domain Configuration - Staging subdomain
+domains:
+  - domain: staging.auzap-ai.com
+    type: PRIMARY
+    wildcard: false
+    certificate:
+      type: LETS_ENCRYPT
+  - domain: api-staging.auzap-ai.com
+    type: ALIAS
+    wildcard: false
+
+# Development Features
+jobs:
+  # Database seeding job for staging
+  - name: staging-db-seed
+    source_dir: backend
+    build_command: |
+      npm ci --only=production
+      npm run build
+    run_command: npm run db:seed:staging
+    environment_slug: node-js
+    kind: PRE_DEPLOY
+    envs:
+      - key: NODE_ENV
+        value: staging
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+
+# Alerts - Less strict for staging
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+  - rule: CPU_UTILIZATION
+    value: 90  # Higher threshold for staging
+  - rule: MEM_UTILIZATION
+    value: 90  # Higher threshold for staging

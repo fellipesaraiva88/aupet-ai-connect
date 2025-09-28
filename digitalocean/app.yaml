@@ -1,0 +1,132 @@
+name: auzap-ai-connect
+region: nyc1
+
+services:
+  # Backend API Service
+  - name: auzap-backend-api
+    size: professional-xs
+    instance_count: 2
+    instance_size_slug: professional-xs
+    source_dir: backend
+    github:
+      repo: ia_auzap/aupet-ai-connect
+      branch: main
+      deploy_on_push: true
+    build_command: |
+      npm ci --only=production
+      npm run build
+    run_command: npm start
+    environment_slug: node-js
+    http_port: 3001
+    routes:
+      - path: /api
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 60
+      period_seconds: 10
+      timeout_seconds: 5
+      failure_threshold: 5
+      success_threshold: 2
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+      - key: REDIS_URL
+        value: ${redis.REDIS_URL}
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}
+      - key: OPENAI_API_KEY
+        value: ${OPENAI_API_KEY}
+      - key: EVOLUTION_API_URL
+        value: ${EVOLUTION_API_URL}
+      - key: EVOLUTION_API_KEY
+        value: ${EVOLUTION_API_KEY}
+      - key: FRONTEND_URL
+        value: ${_self.URL}
+      - key: WEBHOOK_URL
+        value: ${_self.URL}/api/webhook
+
+  # Frontend Static Site
+  - name: auzap-frontend
+    size: static
+    source_dir: frontend
+    github:
+      repo: ia_auzap/aupet-ai-connect
+      branch: main
+      deploy_on_push: true
+    build_command: |
+      npm ci
+      VITE_API_URL=${auzap-backend-api.PUBLIC_URL}/api npm run build
+    output_dir: dist
+    routes:
+      - path: /
+    headers:
+      - path: /
+        key: Cache-Control
+        value: no-cache, no-store, must-revalidate, proxy-revalidate
+      - path: /index.html
+        key: Cache-Control
+        value: no-cache, no-store, must-revalidate, proxy-revalidate
+      - path: /assets/*
+        key: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        key: X-Frame-Options
+        value: DENY
+      - path: /*
+        key: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        key: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        key: Permissions-Policy
+        value: geolocation=(), microphone=(), camera=()
+    envs:
+      - key: VITE_API_URL
+        value: ${auzap-backend-api.PUBLIC_URL}/api
+
+# Managed Databases
+databases:
+  - name: auzap-postgres
+    engine: PG
+    version: "16"
+    size: db-s-1vcpu-2gb
+    num_nodes: 1
+    production: true
+    trusted_sources:
+      - type: app_component
+        name: auzap-backend-api
+
+  - name: auzap-redis
+    engine: REDIS
+    version: "7"
+    size: db-s-1vcpu-1gb
+    num_nodes: 1
+    production: true
+    trusted_sources:
+      - type: app_component
+        name: auzap-backend-api
+
+# Domain Configuration
+domains:
+  - domain: auzap-ai.com
+    type: PRIMARY
+    wildcard: false
+    certificate:
+      type: LETS_ENCRYPT
+  - domain: api.auzap-ai.com
+    type: ALIAS
+    wildcard: false
+
+# Alerts
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+  - rule: CPU_UTILIZATION
+    value: 80
+  - rule: MEM_UTILIZATION  
+    value: 80

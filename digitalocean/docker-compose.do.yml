@@ -1,0 +1,401 @@
+version: '3.8'
+
+# Auzap AI Connect - DigitalOcean Production Docker Compose
+# Complete multi-doctor WhatsApp AI pet care platform
+
+networks:
+  auzap-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  # SSL certificates volume
+  letsencrypt-certs:
+    driver: local
+  letsencrypt-www:
+    driver: local
+
+services:
+  # Nginx Reverse Proxy with SSL
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: auzap-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx configurations
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      
+      # SSL certificates
+      - letsencrypt-certs:/etc/letsencrypt:ro
+      - letsencrypt-www:/var/www/certbot:ro
+      
+      # Cache and logs
+      - nginx-cache:/var/cache/nginx
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - auzap-network
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+      - NGINX_WORKER_CONNECTIONS=1024
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Certbot for SSL certificate management
+  certbot:
+    image: certbot/certbot:latest
+    container_name: auzap-certbot
+    restart: "no"
+    volumes:
+      - letsencrypt-certs:/etc/letsencrypt
+      - letsencrypt-www:/var/www/certbot
+      - nginx-logs:/var/log/letsencrypt
+    command: certonly --webroot --webroot-path=/var/www/certbot --email ${CERT_EMAIL} --agree-tos --no-eff-email --domains ${DOMAIN_NAME} --domains www.${DOMAIN_NAME}
+    depends_on:
+      - nginx
+    networks:
+      - auzap-network
+
+  # Backend API Service
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.production
+      args:
+        NODE_ENV: production
+    container_name: auzap-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EVOLUTION_API_URL=${EVOLUTION_API_URL}
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - FRONTEND_URL=https://${DOMAIN_NAME}
+      - WEBHOOK_URL=https://${DOMAIN_NAME}/api/webhook
+      # DigitalOcean Spaces (S3-compatible)
+      - SPACES_KEY=${SPACES_KEY}
+      - SPACES_SECRET=${SPACES_SECRET}
+      - SPACES_ENDPOINT=${SPACES_ENDPOINT}
+      - SPACES_BUCKET=${SPACES_BUCKET}
+      # Monitoring and logging
+      - DATADOG_API_KEY=${DATADOG_API_KEY}
+      - LOGTAIL_SOURCE_TOKEN=${LOGTAIL_SOURCE_TOKEN}
+      # Performance optimizations
+      - NODE_OPTIONS=--max-old-space-size=1024
+      - UV_THREADPOOL_SIZE=8
+    volumes:
+      - backend-logs:/app/logs
+      - backend-uploads:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - auzap-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Frontend Static Files (served via Nginx)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.production
+      args:
+        VITE_API_URL=https://${DOMAIN_NAME}/api
+        VITE_ENVIRONMENT=production
+    container_name: auzap-frontend
+    volumes:
+      - frontend-build:/app/dist
+    networks:
+      - auzap-network
+    restart: "no"  # Exit after build
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: auzap-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-auzap_production}
+      - POSTGRES_USER=${POSTGRES_USER:-auzap_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-backups:/backups
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - auzap-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-auzap_user} -d ${POSTGRES_DB:-auzap_production}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    # PostgreSQL performance tuning
+    command: [
+      "postgres",
+      "-c", "shared_buffers=256MB",
+      "-c", "effective_cache_size=1GB",
+      "-c", "maintenance_work_mem=64MB",
+      "-c", "checkpoint_completion_target=0.9",
+      "-c", "wal_buffers=16MB",
+      "-c", "default_statistics_target=100",
+      "-c", "random_page_cost=1.1",
+      "-c", "effective_io_concurrency=200",
+      "-c", "work_mem=4MB",
+      "-c", "min_wal_size=1GB",
+      "-c", "max_wal_size=4GB",
+      "-c", "max_connections=200",
+      "-c", "log_statement=none",
+      "-c", "log_min_duration_statement=1000"
+    ]
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: auzap-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    networks:
+      - auzap-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # Database Backup Service
+  db-backup:
+    image: postgres:16-alpine
+    container_name: auzap-db-backup
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-auzap_production}
+      - POSTGRES_USER=${POSTGRES_USER:-auzap_user}
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - BACKUP_RETENTION_DAYS=7
+    volumes:
+      - postgres-backups:/backups
+      - ./scripts/backup.sh:/backup.sh
+    command: /bin/sh -c "chmod +x /backup.sh && crond -f"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - auzap-network
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: auzap-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - auzap-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: auzap-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-dashboard.json:/var/lib/grafana/dashboards/auzap-dashboard.json
+      - ./monitoring/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - auzap-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Log Management - Loki
+  loki:
+    image: grafana/loki:latest
+    container_name: auzap-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - auzap-network
+
+  # Log Collection - Promtail
+  promtail:
+    image: grafana/promtail:latest
+    container_name: auzap-promtail
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - backend-logs:/app/backend-logs:ro
+      - nginx-logs:/app/nginx-logs:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - auzap-network
+
+# Persistent Volumes
+volumes:
+  postgres-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/data/postgres
+  
+  redis-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/data/redis
+  
+  postgres-backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/backups/postgres
+  
+  backend-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/logs/backend
+  
+  nginx-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/logs/nginx
+  
+  nginx-cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/cache/nginx
+  
+  frontend-build:
+    driver: local
+  
+  backend-uploads:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/uploads
+  
+  prometheus-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/data/prometheus
+  
+  grafana-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/data/grafana
+  
+  loki-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/auzap/data/loki
+
+# Networks
+networks:
+  auzap-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

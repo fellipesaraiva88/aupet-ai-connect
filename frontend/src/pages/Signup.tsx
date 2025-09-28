@@ -6,9 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, User, Building, Mail, Lock, Eye, EyeOff, Heart, Sparkles } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://auzap-backend.onrender.com';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2, User, Building, Mail, Lock, Eye, EyeOff, Heart, Sparkles, ArrowRight } from 'lucide-react';
 
 interface SignupData {
   email: string;
@@ -16,32 +15,6 @@ interface SignupData {
   fullName: string;
   organizationName: string;
   subscriptionTier: 'free' | 'pro' | 'enterprise';
-}
-
-interface SignupResponse {
-  success: boolean;
-  data?: {
-    user: {
-      id: string;
-      email: string;
-      fullName: string;
-      role: string;
-      organizationId: string;
-      organization: {
-        id: string;
-        name: string;
-        slug: string;
-        subscription_tier: string;
-      };
-    };
-    tokens: {
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-    };
-    needsEmailVerification?: boolean;
-  };
-  error?: string;
 }
 
 const Signup: React.FC = () => {
@@ -72,7 +45,7 @@ const Signup: React.FC = () => {
       newErrors.password = 'Senha é obrigatória';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Senha deve ter pelo menos 8 caracteres';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
       newErrors.password = 'Senha deve conter: maiúscula, minúscula e número';
     }
 
@@ -107,260 +80,257 @@ const Signup: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      // Usar Supabase Auth diretamente - mais simples e confiável
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            organization_name: formData.organizationName,
+            subscription_tier: formData.subscriptionTier
+          }
+        }
       });
 
-      const data: SignupResponse = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar conta');
+      if (error) {
+        throw new Error(error.message);
       }
 
-      if (data.success && data.data) {
-        // Armazenar tokens no localStorage
-        localStorage.setItem('accessToken', data.data.tokens.accessToken);
-        localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-
+      if (data.user) {
         toast({
           title: 'Conta criada com sucesso! 🎉',
-          description: `Bem-vindo(a) à ${data.data.user.organization.name}!`,
+          description: data.user.email_confirmed_at
+            ? 'Redirecionando para o dashboard...'
+            : 'Verifique seu email para ativar a conta.',
         });
 
-        if (data.data.needsEmailVerification) {
+        // Se email já confirmado, redirecionar para dashboard
+        if (data.user.email_confirmed_at) {
+          navigate('/');
+        } else {
+          // Aguardar confirmação de email
           toast({
-            title: 'Verificação de email',
-            description: 'Por favor, verifique seu email para ativar sua conta.',
-            variant: 'default',
+            title: 'Confirmação necessária',
+            description: 'Verifique seu email e clique no link de confirmação para ativar sua conta.',
           });
         }
-
-        // Redirecionar para o dashboard
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
-      } else {
-        throw new Error('Resposta inválida do servidor');
       }
-
     } catch (error) {
       console.error('Signup error:', error);
       toast({
-        title: 'Erro ao criar conta',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
+        title: 'Erro no cadastro',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado',
+        variant: 'destructive'
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof SignupData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: keyof SignupData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const subscriptionOptions = [
-    { value: 'free', label: 'Plano Gratuito - Básico para começar' },
-    { value: 'pro', label: 'Plano Pro - Recursos avançados' },
-    { value: 'enterprise', label: 'Plano Enterprise - Solução completa' }
-  ];
+  // Quick fill for development
+  const handleQuickFill = () => {
+    setFormData({
+      email: 'novousuario@empresa.com',
+      password: 'MinhaSenh@123',
+      fullName: 'Novo Usuário',
+      organizationName: 'Minha Empresa Pet',
+      subscriptionTier: 'free'
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-100 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Enhanced pet-themed background */}
-      <div className="absolute inset-0 paw-pattern opacity-[0.03] pointer-events-none" />
-      <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-primary/20 to-purple-400/20 rounded-full glass-morphism animate-glass-float" />
-      <div className="absolute bottom-20 right-20 w-16 h-16 bg-gradient-to-br from-pink-400/20 to-accent/20 rounded-full glass-morphism animate-pet-bounce delay-1000" />
-      <div className="absolute top-1/3 right-10 w-12 h-12 bg-gradient-to-br from-secondary/20 to-blue-400/20 rounded-full glass-morphism animate-glass-float delay-500" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-pink-600/5" />
+      <div className="absolute top-16 left-8 animate-pulse">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-pink-300/20 blur-xl"></div>
+      </div>
+      <div className="absolute bottom-16 right-16 animate-pulse delay-1000">
+        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-300/20 to-primary/20 blur-xl"></div>
+      </div>
 
-      <Card className="w-full max-w-lg shadow-2xl glass-morphism bg-gradient-card border-0 relative">
-        {/* Magical pet particles */}
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-br from-primary to-purple-600 rounded-full animate-pulse" />
-        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-br from-pink-500 to-red-500 rounded-full animate-pulse delay-300" />
-
-        <CardHeader className="text-center space-y-4 pb-6">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="p-4 bg-gradient-to-br from-primary to-purple-600 rounded-2xl shadow-xl pet-glow">
-                <Heart className="h-10 w-10 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-pink-500 to-red-500 rounded-full animate-pulse" />
-            </div>
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white/90 backdrop-blur-sm relative">
+        <CardHeader className="space-y-4 text-center pb-6">
+          <div className="mx-auto p-3 bg-gradient-to-br from-primary to-pink-600 rounded-xl shadow-lg w-fit">
+            <Heart className="h-8 w-8 text-white" />
           </div>
+
           <div className="space-y-2">
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Criar Conta
+            <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Crie sua conta
             </CardTitle>
-            <CardDescription className="text-muted-foreground text-lg">
-              Crie sua organização e comece a cuidar dos pets com amor digital
+            <CardDescription className="text-base text-muted-foreground">
+              Comece a transformar o cuidado pet com inteligência artificial
             </CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nome Completo */}
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
-                Nome Completo
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Seu nome completo"
-                  value={formData.fullName}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  className={`pl-10 ${errors.fullName ? 'border-red-500' : ''}`}
-                  disabled={isLoading}
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-sm font-medium">Nome Completo</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Seu nome"
+                    value={formData.fullName}
+                    onChange={handleInputChange('fullName')}
+                    className={`pl-10 h-11 ${errors.fullName ? 'border-destructive' : ''}`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.fullName && (
+                  <p className="text-sm text-destructive">{errors.fullName}</p>
+                )}
               </div>
-              {errors.fullName && (
-                <p className="text-sm text-red-600">{errors.fullName}</p>
-              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="organizationName" className="text-sm font-medium">Nome da Empresa</Label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="organizationName"
+                    type="text"
+                    placeholder="Sua empresa"
+                    value={formData.organizationName}
+                    onChange={handleInputChange('organizationName')}
+                    className={`pl-10 h-11 ${errors.organizationName ? 'border-destructive' : ''}`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.organizationName && (
+                  <p className="text-sm text-destructive">{errors.organizationName}</p>
+                )}
+              </div>
             </div>
 
-            {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email
-              </Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                  onChange={handleInputChange('email')}
+                  className={`pl-10 h-11 ${errors.email ? 'border-destructive' : ''}`}
                   disabled={isLoading}
                 />
               </div>
               {errors.email && (
-                <p className="text-sm text-red-600">{errors.email}</p>
+                <p className="text-sm text-destructive">{errors.email}</p>
               )}
             </div>
 
-            {/* Senha */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Senha
-              </Label>
+              <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 8 caracteres (maiúscula, minúscula, número)"
+                  placeholder="••••••••"
                   value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`pl-10 pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                  onChange={handleInputChange('password')}
+                  className={`pl-10 pr-10 h-11 ${errors.password ? 'border-destructive' : ''}`}
                   disabled={isLoading}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 h-9 w-9 p-0"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-600">{errors.password}</p>
+                <p className="text-sm text-destructive">{errors.password}</p>
               )}
             </div>
 
-            {/* Nome da Organização */}
             <div className="space-y-2">
-              <Label htmlFor="organizationName" className="text-sm font-medium text-gray-700">
-                Nome da Organização
-              </Label>
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="organizationName"
-                  type="text"
-                  placeholder="Nome da sua empresa/clínica"
-                  value={formData.organizationName}
-                  onChange={(e) => handleInputChange('organizationName', e.target.value)}
-                  className={`pl-10 ${errors.organizationName ? 'border-red-500' : ''}`}
-                  disabled={isLoading}
-                />
-              </div>
-              {errors.organizationName && (
-                <p className="text-sm text-red-600">{errors.organizationName}</p>
-              )}
-            </div>
-
-            {/* Plano de Assinatura */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Plano de Assinatura
-              </Label>
+              <Label htmlFor="subscriptionTier" className="text-sm font-medium">Plano</Label>
               <Select
                 value={formData.subscriptionTier}
-                onValueChange={(value: 'free' | 'pro' | 'enterprise') =>
-                  handleInputChange('subscriptionTier', value)
-                }
+                onValueChange={(value) => setFormData(prev => ({ ...prev, subscriptionTier: value as 'free' | 'pro' | 'enterprise' }))}
                 disabled={isLoading}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Selecione um plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subscriptionOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="free">Gratuito - Até 100 mensagens/mês</SelectItem>
+                  <SelectItem value="pro">Pro - Até 1000 mensagens/mês</SelectItem>
+                  <SelectItem value="enterprise">Enterprise - Ilimitado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Enhanced Submit Button */}
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary via-purple-600 to-pink-600 hover:from-primary/90 hover:via-purple-600/90 hover:to-pink-600/90 text-white font-medium py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] relative overflow-hidden"
+              className="w-full h-11 bg-gradient-to-r from-primary to-pink-600 hover:from-primary/90 hover:to-pink-600/90 text-white font-medium shadow-lg"
               disabled={isLoading}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Criando sua conta com carinho...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando conta...
                 </>
               ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Sparkles className="h-5 w-5" />
-                  Criar Conta
-                  <Heart className="h-5 w-5" />
-                </div>
+                <>
+                  Criar conta
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
               )}
             </Button>
+          </form>
 
-            {/* Link para Login */}
-            <div className="text-center text-sm text-gray-600">
-              Já tem uma conta?{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+          {/* Development Helper */}
+          {import.meta.env.DEV && (
+            <div className="pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={handleQuickFill}
+                className="w-full text-sm"
                 disabled={isLoading}
               >
-                Fazer login
-              </button>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Preencher Rápido (Dev)
+              </Button>
             </div>
-          </form>
+          )}
+
+          <div className="text-center pt-4">
+            <p className="text-sm text-muted-foreground">
+              Já tem uma conta?{' '}
+              <Button
+                variant="link"
+                className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
+                onClick={() => navigate('/login')}
+              >
+                Entrar
+              </Button>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
