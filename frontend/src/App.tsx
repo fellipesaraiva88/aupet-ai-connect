@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,18 +11,23 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { ToastContainer } from "@/components/ui/enhanced-toast";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
+
+// Core pages loaded immediately
 import Index from "./pages/Index";
 import Login from "./pages/Login";
-import Conversations from "./pages/Conversations";
-import AIConfig from "./pages/AIConfig";
-import Pets from "./pages/Pets";
-import Customers from "./pages/Customers";
-import Appointments from "./pages/Appointments";
-import Catalog from "./pages/Catalog";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+
+// Lazy load secondary pages for better performance
+const Conversations = lazy(() => import("./pages/Conversations"));
+const AIConfig = lazy(() => import("./pages/AIConfig"));
+const Pets = lazy(() => import("./pages/Pets"));
+const Customers = lazy(() => import("./pages/Customers"));
+const ClientsPets = lazy(() => import("./pages/ClientsPets"));
+const Appointments = lazy(() => import("./pages/Appointments"));
+const Catalog = lazy(() => import("./pages/Catalog"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Signup = lazy(() => import("./pages/Signup"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +37,16 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Loading component for lazy-loaded pages
+const PageLoadingComponent = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
+    <div className="text-center space-y-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+      <p className="text-muted-foreground">Carregando página...</p>
+    </div>
+  </div>
+);
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -100,37 +115,58 @@ const AppRoutes = () => {
       } />
       <Route path="/conversations" element={
         <ProtectedRoute>
-          <Conversations />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Conversations />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/conversations/:id/history" element={
         <ProtectedRoute>
-          <Conversations />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Conversations />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/ai-config" element={
         <ProtectedRoute>
-          <AIConfig />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <AIConfig />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/pets" element={
         <ProtectedRoute>
-          <Pets />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Pets />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/pets/new" element={
         <ProtectedRoute>
-          <Pets />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Pets />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/customers" element={
         <ProtectedRoute>
-          <Customers />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Customers />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/customers/new" element={
         <ProtectedRoute>
-          <Customers />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Customers />
+          </Suspense>
+        </ProtectedRoute>
+      } />
+      <Route path="/clients-pets" element={
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoadingComponent />}>
+            <ClientsPets />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/appointments" element={

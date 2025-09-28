@@ -14,6 +14,7 @@ import {
   Bot,
   Heart,
   Sparkles,
+  Activity,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -35,6 +36,13 @@ const menuItems = [
     icon: MessageSquare,
     href: "/conversations",
     badge: 5,
+  },
+  {
+    id: "clients-pets",
+    label: "Clientes & Pets",
+    icon: Activity,
+    href: "/clients-pets",
+    badge: "Nova",
   },
   {
     id: "customers",
@@ -148,7 +156,10 @@ export function Sidebar({
                 {item.label}
               </span>
               {item.badge && (
-                <span className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white font-medium animate-apple-pulse">
+                <span className={cn(
+                  "ml-auto flex items-center justify-center rounded-full text-[10px] text-white font-medium animate-apple-pulse",
+                  typeof item.badge === 'string' ? "h-5 px-2 bg-gradient-to-r from-green-500 to-blue-500" : "h-4 w-4 bg-primary"
+                )}>
                   {item.badge}
                 </span>
               )}
