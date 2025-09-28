@@ -56,14 +56,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       .from('pets')
       .select(`
         *,
-        customers (id, name, phone),
-        health_records (
-          id,
-          type,
-          date,
-          description,
-          veterinarian
-        )
+        customers (id, name, phone)
       `, { count: 'exact' })
       .eq('organization_id', organizationId)
       .eq('is_active', true);
