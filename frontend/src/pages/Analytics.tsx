@@ -108,7 +108,13 @@ const Analytics = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
+      {/* Analytics-themed floating elements */}
+      <div className="absolute inset-0 paw-pattern opacity-[0.02] pointer-events-none" />
+      <div className="absolute top-20 right-20 w-24 h-24 bg-gradient-to-br from-success/20 to-emerald-400/20 rounded-full glass-morphism animate-glass-float" />
+      <div className="absolute top-1/3 left-10 w-16 h-16 bg-gradient-to-br from-warning/20 to-yellow-400/20 rounded-full glass-morphism animate-pet-bounce delay-700" />
+      <div className="absolute bottom-20 right-1/4 w-12 h-12 bg-gradient-to-br from-primary/20 to-blue-400/20 rounded-full glass-morphism animate-glass-float delay-1500" />
+
       <Navbar />
 
       <div className="flex h-[calc(100vh-4rem)]">
@@ -116,23 +122,29 @@ const Analytics = () => {
           activeItem={activeMenuItem}
         />
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto relative">
           <div className="p-8 space-y-6">
-            {/* Page Header */}
+            {/* Enhanced Analytics Header */}
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary flex items-center gap-3">
-                  <BarChart3 className="h-8 w-8" />
-                  Relatórios
-                </h1>
-                <p className="text-muted-foreground font-secondary">
-                  Análise completa do desempenho do seu negócio
-                </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 bg-gradient-to-br from-success to-emerald-600 rounded-2xl shadow-xl pet-glow">
+                    <BarChart3 className="h-10 w-10 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-primary font-bold tracking-tight bg-gradient-to-r from-success via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                      Relatórios
+                    </h1>
+                    <p className="text-muted-foreground font-secondary text-lg">
+                      Análise completa de como você está crescendo e cuidando dos pets
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[200px] glass-morphism bg-white/80 border-primary/20">
                     <SelectValue placeholder="Período" />
                   </SelectTrigger>
                   <SelectContent>
@@ -143,14 +155,14 @@ const Analytics = () => {
                   </SelectContent>
                 </Select>
 
-                <Button variant="outline">
+                <Button variant="outline" className="glass-morphism hover:bg-gradient-to-r hover:from-primary/10 hover:to-blue-500/10 transition-all duration-300">
                   <Filter className="h-4 w-4 mr-2" />
                   Filtros
                 </Button>
 
-                <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                <Button className="bg-gradient-to-r from-success to-emerald-600 text-white hover:shadow-xl hover:scale-105 transition-all duration-300 px-6 py-3">
                   <Download className="h-4 w-4 mr-2" />
-                  Exportar
+                  Exportar Relatório
                 </Button>
               </div>
             </div>
