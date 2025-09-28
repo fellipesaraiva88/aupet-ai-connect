@@ -63,7 +63,7 @@ export function Navbar({
   const userEmail = userProfile?.email || user?.email || 'usuario@exemplo.com';
   const currentOrganizationName = organizationName || userProfile?.organization?.name || "Meu Pet VIP";
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/20 bg-white/85 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-border/30 bg-white/95 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between px-6">
         {/* Área de Busca Apple-style */}
         <div className="flex items-center gap-4 flex-1 max-w-xs">

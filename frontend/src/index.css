@@ -10,7 +10,7 @@
 @layer base {
   :root {
     /* Apple-Style Design System */
-    --background: 0 0% 100%; /* Pure White #FFFFFF */
+    --background: 0 0% 98%; /* Light Gray #FAFAFA */
     --foreground: 0 0% 11%; /* Near Black #1D1D1F */
 
     --card: 0 0% 100%; /* Pure White */

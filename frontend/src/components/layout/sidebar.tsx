@@ -96,7 +96,7 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "flex h-full w-64 flex-col bg-white/80 backdrop-blur-xl border-r border-border/30",
+        "flex h-full w-64 flex-col bg-white/95 backdrop-blur-xl border-r border-border/40",
         className
       )}
     >
@@ -159,7 +159,7 @@ export function Sidebar({
 
       {/* Apple-style Footer */}
       <div className="p-3">
-        <div className="rounded-[12px] bg-secondary/40 backdrop-blur-sm p-3 text-center border border-border/20">
+        <div className="rounded-[12px] bg-secondary/60 backdrop-blur-sm p-3 text-center border border-border/30">
           <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-[8px] mx-auto mb-2 animate-apple-gentle-hover">
             <Bot className="h-4 w-4 text-primary" />
           </div>

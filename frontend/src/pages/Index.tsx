@@ -99,7 +99,7 @@ const Index = () => {
 
             {/* Quick Actions Apple-style */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="rounded-[20px] bg-white/90 backdrop-blur-sm border-border/30 shadow-sm">
+              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Sparkles className="h-4 w-4 text-primary" />
@@ -145,7 +145,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[20px] bg-white/90 backdrop-blur-sm border-border/30 shadow-sm">
+              <Card className="rounded-[20px] bg-white border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Clock className="h-4 w-4 text-primary" />

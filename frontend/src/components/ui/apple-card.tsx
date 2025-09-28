@@ -29,11 +29,11 @@ export function AppleCard({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-[20px] border border-border/30 bg-white/95 p-6 transition-all duration-300",
+        "group relative overflow-hidden rounded-[20px] border border-border/40 bg-white p-6 transition-all duration-300",
         "hover:border-primary/30 hover:shadow-[0_8px_32px_rgba(0,122,255,0.1)] hover:-translate-y-0.5",
-        "backdrop-blur-sm animate-apple-spring",
-        variant === "gradient" && "bg-gradient-to-br from-primary/3 to-secondary/50",
-        variant === "elevated" && "shadow-[0_4px_20px_rgba(0,0,0,0.08)]",
+        "shadow-[0_2px_8px_rgba(0,0,0,0.04)] animate-apple-spring",
+        variant === "gradient" && "bg-gradient-to-br from-primary/5 to-secondary/30",
+        variant === "elevated" && "shadow-[0_4px_20px_rgba(0,0,0,0.12)]",
         className
       )}
     >
