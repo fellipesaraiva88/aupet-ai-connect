@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createPrometheusMetrics } from 'prometheus-api-metrics';
+import createPrometheusMetrics from 'prometheus-api-metrics';
 import client from 'prom-client';
 import os from 'os';
 import { logger } from '../utils/logger';

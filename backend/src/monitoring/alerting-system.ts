@@ -169,7 +169,7 @@ export class AlertingSystem {
     };
 
     if (emailConfig.auth.user && emailConfig.auth.pass) {
-      this.emailTransporter = nodemailer.createTransporter(emailConfig);
+      this.emailTransporter = nodemailer.createTransport(emailConfig);
 
       // Verify connection
       await this.emailTransporter.verify();

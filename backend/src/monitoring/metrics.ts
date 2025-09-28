@@ -9,7 +9,6 @@ import { EnhancedLogger } from './logger';
 
 // Initialize Prometheus metrics collection
 promClient.collectDefaultMetrics({
-  timeout: 5000,
   prefix: 'auzap_',
   gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5]
 });
