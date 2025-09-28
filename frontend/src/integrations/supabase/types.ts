@@ -3258,6 +3258,7 @@ export type Database = {
           content: string | null
           conversation_id: string | null
           created_at: string | null
+          direction: string | null
           forwarded: boolean | null
           from_number: string
           id: string
@@ -3269,6 +3270,7 @@ export type Database = {
           message_id: string
           message_type: string | null
           metadata: Json | null
+          notes: string | null
           organization_id: string | null
           quoted_message_id: string | null
           status: string | null
@@ -3281,6 +3283,7 @@ export type Database = {
           content?: string | null
           conversation_id?: string | null
           created_at?: string | null
+          direction?: string | null
           forwarded?: boolean | null
           from_number: string
           id?: string
@@ -3292,6 +3295,7 @@ export type Database = {
           message_id: string
           message_type?: string | null
           metadata?: Json | null
+          notes?: string | null
           organization_id?: string | null
           quoted_message_id?: string | null
           status?: string | null
@@ -3304,6 +3308,7 @@ export type Database = {
           content?: string | null
           conversation_id?: string | null
           created_at?: string | null
+          direction?: string | null
           forwarded?: boolean | null
           from_number?: string
           id?: string
@@ -3315,6 +3320,7 @@ export type Database = {
           message_id?: string
           message_type?: string | null
           metadata?: Json | null
+          notes?: string | null
           organization_id?: string | null
           quoted_message_id?: string | null
           status?: string | null
