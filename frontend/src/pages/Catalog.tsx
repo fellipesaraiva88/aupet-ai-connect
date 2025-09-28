@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
@@ -48,6 +48,18 @@ import {
   TrendingUp,
   Image as ImageIcon,
   Loader2,
+  Star,
+  Heart,
+  Eye,
+  Grid3X3,
+  List,
+  SortAsc,
+  SortDesc,
+  ShoppingCart,
+  Calendar,
+  Award,
+  Zap,
+  Sparkles,
 } from "lucide-react";
 import {
   useCatalogItems,
@@ -73,6 +85,26 @@ interface CatalogItemForm {
   is_active: boolean;
 }
 
+// View mode type
+type ViewMode = 'grid' | 'list';
+
+// Sort option type
+type SortOption = 'name' | 'price' | 'category' | 'created' | 'popular';
+
+// Sort direction type
+type SortDirection = 'asc' | 'desc';
+
+// Filter state interface
+interface FilterState {
+  search: string;
+  category: string;
+  status: string;
+  sortBy: SortOption;
+  sortDirection: SortDirection;
+  viewMode: ViewMode;
+  showFavoritesOnly: boolean;
+}
+
 // Empty form data
 const emptyFormData: CatalogItemForm = {
   name: "",
@@ -90,10 +122,16 @@ const Catalog = () => {
   const activeMenuItem = useActiveNavigation();
   const organizationId = useOrganizationId();
 
-  // State for filters
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
+  // Advanced filter state
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    category: "all",
+    status: "all",
+    sortBy: "name",
+    sortDirection: "asc",
+    viewMode: "grid",
+    showFavoritesOnly: false,
+  });
 
   // State for modals
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -101,32 +139,79 @@ const Catalog = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  // Form state
+  // Form and interaction state
   const [formData, setFormData] = useState<CatalogItemForm>(emptyFormData);
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [favoriteItems, setFavoriteItems] = useState<Set<string>>(new Set());
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Create filters object for API
-  const filters = useMemo(() => {
-    const apiFilters: any = {
-      search: searchTerm || undefined,
-      category: filterCategory === "all" ? undefined : filterCategory,
-      is_active: filterStatus === "all" ? undefined : filterStatus,
+  // Create filters object for API with memoization
+  const apiFilters = useMemo(() => {
+    const baseFilters: any = {
+      search: filters.search || undefined,
+      category: filters.category === "all" ? undefined : filters.category,
+      is_active: filters.status === "all" ? undefined : filters.status,
     };
 
     // Remove undefined values
-    Object.keys(apiFilters).forEach(key => {
-      if (apiFilters[key] === undefined) {
-        delete apiFilters[key];
+    Object.keys(baseFilters).forEach(key => {
+      if (baseFilters[key] === undefined) {
+        delete baseFilters[key];
       }
     });
 
-    return apiFilters;
-  }, [searchTerm, filterCategory, filterStatus]);
+    return baseFilters;
+  }, [filters.search, filters.category, filters.status]);
 
-  // API hooks
-  const { data: catalogItems = [], isLoading: isLoadingItems, error: itemsError } = useCatalogItems(organizationId, filters);
+  // API hooks - moved before usage
+  const { data: catalogItems = [], isLoading: isLoadingItems, error: itemsError } = useCatalogItems(organizationId, apiFilters);
   const { data: catalogStats, isLoading: isLoadingStats } = useCatalogStats(organizationId);
   const { data: categories = [], isLoading: isLoadingCategories } = useCatalogCategories(organizationId);
+
+  // Filter and sort items with memoization
+  const processedItems = useMemo(() => {
+    let items = [...catalogItems];
+
+    // Apply favorites filter
+    if (filters.showFavoritesOnly) {
+      items = items.filter(item => favoriteItems.has(item.id));
+    }
+
+    // Apply sorting
+    items.sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (filters.sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'price':
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case 'category':
+          aValue = a.category.toLowerCase();
+          bValue = b.category.toLowerCase();
+          break;
+        case 'popular':
+          aValue = a.popular ? 1 : 0;
+          bValue = b.popular ? 1 : 0;
+          break;
+        case 'created':
+        default:
+          aValue = new Date(a.created_at || 0).getTime();
+          bValue = new Date(b.created_at || 0).getTime();
+          break;
+      }
+
+      if (aValue < bValue) return filters.sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return filters.sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return items;
+  }, [catalogItems, filters.sortBy, filters.sortDirection, filters.showFavoritesOnly, favoriteItems]);
 
   // Mutation hooks
   const createItemMutation = useCreateCatalogItem();
@@ -136,36 +221,67 @@ const Catalog = () => {
 
   // Prepare categories for select dropdown
   const categoriesForSelect = useMemo(() => {
-    const defaultCategories = [{ name: "Todos", count: 0, slug: "all" }];
+    const defaultCategories = [{ name: "Todas as Categorias", count: 0, slug: "all" }];
     return defaultCategories.concat(categories);
   }, [categories]);
 
-  // Calculate local stats for display (with fallback for loading)
+  // Filter update handlers with useCallback
+  const updateFilters = useCallback((newFilters: Partial<FilterState>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
+  const toggleFavorite = useCallback((itemId: string) => {
+    setFavoriteItems(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(itemId)) {
+        newFavorites.delete(itemId);
+        toast.success("Removido dos favoritos 💙");
+      } else {
+        newFavorites.add(itemId);
+        toast.success("Adicionado aos favoritos ⭐");
+      }
+      return newFavorites;
+    });
+  }, []);
+
+  const toggleSort = useCallback((sortBy: SortOption) => {
+    setFilters(prev => ({
+      ...prev,
+      sortBy,
+      sortDirection: prev.sortBy === sortBy && prev.sortDirection === 'asc' ? 'desc' : 'asc',
+    }));
+  }, []);
+
+  // Calculate enhanced stats with filtered items
   const displayStats = useMemo(() => {
+    const baseStats = {
+      total: processedItems.length,
+      services: processedItems.filter(item => item.requires_appointment).length,
+      products: processedItems.filter(item => !item.requires_appointment).length,
+      popular: processedItems.filter(item => item.popular).length,
+      favorites: favoriteItems.size,
+      active: processedItems.filter(item => item.is_active).length,
+      revenue: processedItems.reduce((sum, item) => sum + (item.price || 0), 0),
+    };
+
+    // Add global stats if available
     if (catalogStats) {
       return {
-        total: catalogStats.total_items,
-        services: catalogItems.filter(item => item.requires_appointment).length,
-        products: catalogItems.filter(item => !item.requires_appointment).length,
-        popular: catalogItems.filter(item => item.popular).length,
+        ...baseStats,
+        totalGlobal: catalogStats.total_items,
+        appointmentRequired: catalogStats.appointment_required_items || 0,
       };
     }
 
-    // Fallback calculation from current items
-    return {
-      total: catalogItems.length,
-      services: catalogItems.filter(item => item.requires_appointment).length,
-      products: catalogItems.filter(item => !item.requires_appointment).length,
-      popular: catalogItems.filter(item => item.popular).length,
-    };
-  }, [catalogStats, catalogItems]);
+    return baseStats;
+  }, [processedItems, favoriteItems.size, catalogStats]);
 
-  // Form handlers
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  // Form handlers with enhanced UX
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.category.trim() || formData.price <= 0) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
+      toast.error("Por favor, preencha todos os campos obrigatórios 🐾");
       return;
     }
 
@@ -178,11 +294,10 @@ const Catalog = () => {
           id: selectedItem.id,
           updates: {
             ...formData,
-            // Convert duration from minutes if provided
             duration_minutes: formData.duration_minutes || undefined,
           }
         });
-        toast.success("Item atualizado com sucesso!");
+        toast.success(`${formData.name} foi atualizado com carinho! ✨`);
         setIsEditDialogOpen(false);
       } else {
         // Create new item
@@ -190,7 +305,7 @@ const Catalog = () => {
           ...formData,
           duration_minutes: formData.duration_minutes || undefined,
         });
-        toast.success("Item criado com sucesso!");
+        toast.success(`${formData.name} foi adicionado ao catálogo! 🎉`);
         setIsCreateDialogOpen(false);
       }
 
@@ -199,11 +314,11 @@ const Catalog = () => {
       setSelectedItem(null);
     } catch (error: any) {
       console.error('Form submission error:', error);
-      toast.error(error.message || "Erro ao salvar item");
+      toast.error(error.message || "Ops, algo deu errado! Vamos tentar novamente? 🐾");
     } finally {
       setIsFormSubmitting(false);
     }
-  };
+  }, [formData, selectedItem, updateItemMutation, createItemMutation]);
 
   const handleEdit = (item: any) => {
     setSelectedItem(item);
@@ -221,19 +336,25 @@ const Catalog = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!selectedItem) return;
 
     try {
       await deleteItemMutation.mutateAsync(selectedItem.id);
-      toast.success("Item excluído com sucesso!");
+      toast.success(`${selectedItem.name} foi removido do catálogo 💙`);
       setIsDeleteDialogOpen(false);
       setSelectedItem(null);
+      // Remove from favorites if it was favorited
+      setFavoriteItems(prev => {
+        const newFavorites = new Set(prev);
+        newFavorites.delete(selectedItem.id);
+        return newFavorites;
+      });
     } catch (error: any) {
       console.error('Delete error:', error);
-      toast.error(error.message || "Erro ao excluir item");
+      toast.error(error.message || "Ops, não conseguimos remover o item 🐾");
     }
-  };
+  }, [selectedItem, deleteItemMutation]);
 
   const openDeleteDialog = (item: any) => {
     setSelectedItem(item);
@@ -246,33 +367,57 @@ const Catalog = () => {
     setIsCreateDialogOpen(true);
   };
 
-  const getStatusBadge = (isActive: boolean) => {
+  // Enhanced component functions with pet-themed design
+  const getStatusBadge = useCallback((isActive: boolean) => {
     return isActive ? (
-      <Badge variant="secondary" className="text-success">Ativo</Badge>
+      <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+        ✅ Ativo
+      </Badge>
     ) : (
-      <Badge variant="outline">Inativo</Badge>
+      <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+        ⏸️ Pausado
+      </Badge>
     );
-  };
+  }, []);
 
-  const getTypeIcon = (requiresAppointment: boolean) => {
+  const getTypeIcon = useCallback((requiresAppointment: boolean) => {
     return requiresAppointment ? (
-      <Clock className="h-4 w-4 text-primary" />
+      <div className="flex items-center gap-1 text-blue-600">
+        <Calendar className="h-4 w-4" />
+        <span className="text-xs font-medium">Serviço</span>
+      </div>
     ) : (
-      <Package className="h-4 w-4 text-secondary" />
+      <div className="flex items-center gap-1 text-purple-600">
+        <ShoppingCart className="h-4 w-4" />
+        <span className="text-xs font-medium">Produto</span>
+      </div>
     );
-  };
+  }, []);
 
-  const formatDuration = (minutes?: number) => {
-    if (!minutes) return "";
+  const formatPrice = useCallback((price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  }, []);
+
+  const formatDuration = useCallback((minutes?: number) => {
+    if (!minutes) return "⏱️ Não definido";
     if (minutes >= 1440) {
-      return `${Math.floor(minutes / 1440)} dia(s)`;
+      const days = Math.floor(minutes / 1440);
+      return `📅 ${days} dia${days > 1 ? 's' : ''}`;
     }
-    return `${minutes} min`;
-  };
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `⏰ ${hours}h${mins > 0 ? ` ${mins}min` : ''}`;
+    }
+    return `⏱️ ${minutes}min`;
+  }, []);
 
-  // Loading skeleton component
+  // Enhanced loading skeleton component
   const ItemSkeleton = () => (
-    <Card>
+    <Card className="glass-morphism">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
@@ -286,16 +431,19 @@ const Catalog = () => {
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-6 w-20" />
           </div>
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-20" />
+          <div className="grid grid-cols-2 gap-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
           </div>
           <div className="flex items-center justify-between pt-4 border-t">
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-9 w-24" />
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-9" />
+              <Skeleton className="h-9 w-9" />
+            </div>
           </div>
         </div>
       </CardContent>
@@ -311,157 +459,243 @@ const Catalog = () => {
           activeItem={activeMenuItem}
         />
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-gradient-to-br from-blue-50/30 to-purple-50/20">
           <div className="p-8 space-y-6">
-            {/* Page Header */}
+            {/* Enhanced Page Header */}
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary flex items-center gap-3">
-                  <Package className="h-8 w-8" />
-                  Catálogo
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent flex items-center gap-4">
+                  <div className="p-3 bg-gradient-primary rounded-2xl shadow-lg">
+                    <Package className="h-8 w-8 text-white" />
+                  </div>
+                  Catálogo Especial 🐾
                 </h1>
-                <p className="text-muted-foreground font-secondary">
-                  Gerencie seus produtos e serviços
+                <p className="text-muted-foreground text-lg">
+                  Gerencie seus produtos e serviços com carinho para pets e famílias
                 </p>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="h-4 w-4" />
+                    {displayStats.total} itens no catálogo
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Heart className="h-4 w-4" />
+                    {displayStats.favorites} favoritos
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <DollarSign className="h-4 w-4" />
+                    {formatPrice(displayStats.revenue)} em produtos
+                  </span>
+                </div>
               </div>
 
-              <Button
-                onClick={openCreateDialog}
-                className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                size="lg"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Novo Item
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => updateFilters({ showFavoritesOnly: !filters.showFavoritesOnly })}
+                  className={`glass-morphism ${filters.showFavoritesOnly ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : ''}`}
+                >
+                  <Star className={`h-4 w-4 mr-2 ${filters.showFavoritesOnly ? 'fill-current' : ''}`} />
+                  Favoritos
+                </Button>
+                <Button
+                  onClick={openCreateDialog}
+                  className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-lg px-6 py-3"
+                  size="lg"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Novo Item Especial
+                </Button>
+              </div>
             </div>
 
-            {/* Stats Cards */}
+            {/* Enhanced Stats Cards */}
             <div className="grid gap-6 md:grid-cols-4">
-              <Card>
+              <Card className="glass-morphism hover:shadow-lg transition-all duration-300 group">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3">
-                      <Package className="h-6 w-6 text-primary" />
+                    <div className="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 group-hover:scale-110 transition-transform">
+                      <Package className="h-6 w-6 text-white" />
                     </div>
                     <div>
                       {isLoadingStats ? (
                         <Skeleton className="h-8 w-12 mb-1" />
                       ) : (
-                        <p className="text-2xl font-bold">{displayStats.total}</p>
+                        <p className="text-3xl font-bold text-blue-700">{displayStats.total}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Total Itens</p>
+                      <p className="text-sm text-muted-foreground font-medium">🎯 Total no Catálogo</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-morphism hover:shadow-lg transition-all duration-300 group">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-secondary/10 p-3">
-                      <Clock className="h-6 w-6 text-secondary" />
+                    <div className="rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 p-3 group-hover:scale-110 transition-transform">
+                      <Calendar className="h-6 w-6 text-white" />
                     </div>
                     <div>
                       {isLoadingStats ? (
                         <Skeleton className="h-8 w-12 mb-1" />
                       ) : (
-                        <p className="text-2xl font-bold">{displayStats.services}</p>
+                        <p className="text-3xl font-bold text-purple-700">{displayStats.services}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Serviços</p>
+                      <p className="text-sm text-muted-foreground font-medium">📅 Serviços Especiais</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-morphism hover:shadow-lg transition-all duration-300 group">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-warning/10 p-3">
-                      <Tag className="h-6 w-6 text-warning" />
+                    <div className="rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 p-3 group-hover:scale-110 transition-transform">
+                      <ShoppingCart className="h-6 w-6 text-white" />
                     </div>
                     <div>
                       {isLoadingStats ? (
                         <Skeleton className="h-8 w-12 mb-1" />
                       ) : (
-                        <p className="text-2xl font-bold">{displayStats.products}</p>
+                        <p className="text-3xl font-bold text-pink-700">{displayStats.products}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Produtos</p>
+                      <p className="text-sm text-muted-foreground font-medium">🛒 Produtos Pet</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-morphism hover:shadow-lg transition-all duration-300 group">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-success/10 p-3">
-                      <TrendingUp className="h-6 w-6 text-success" />
+                    <div className="rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 p-3 group-hover:scale-110 transition-transform">
+                      <Star className="h-6 w-6 text-white" />
                     </div>
                     <div>
                       {isLoadingStats ? (
                         <Skeleton className="h-8 w-12 mb-1" />
                       ) : (
-                        <p className="text-2xl font-bold">{catalogStats?.appointment_required_items || 0}</p>
+                        <p className="text-3xl font-bold text-yellow-700">{displayStats.favorites}</p>
                       )}
-                      <p className="text-sm text-muted-foreground">Com Agendamento</p>
+                      <p className="text-sm text-muted-foreground font-medium">⭐ Favoritos</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Filters */}
-            <Card>
+            {/* Enhanced Filters */}
+            <Card className="glass-morphism">
               <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      placeholder="Buscar produtos e serviços..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold bg-gradient-primary bg-clip-text text-transparent">
+                      🔍 Filtros Inteligentes
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateFilters({ viewMode: filters.viewMode === 'grid' ? 'list' : 'grid' })}
+                        className="glass-morphism"
+                      >
+                        {filters.viewMode === 'grid' ? (
+                          <List className="h-4 w-4" />
+                        ) : (
+                          <Grid3X3 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                        className="glass-morphism"
+                      >
+                        <Filter className="h-4 w-4 mr-2" />
+                        {showAdvancedFilters ? 'Menos' : 'Mais'} Filtros
+                      </Button>
+                    </div>
                   </div>
 
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingCategories ? (
-                        <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                      ) : (
-                        categoriesForSelect.map((category) => (
-                          <SelectItem key={category.slug} value={category.slug}>
-                            {category.name} {category.count > 0 && `(${category.count})`}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Buscar produtos e serviços para pets... 🐾"
+                        value={filters.search}
+                        onChange={(e) => updateFilters({ search: e.target.value })}
+                        className="pl-10 glass-morphism border-blue-200 focus:border-blue-400"
+                      />
+                    </div>
 
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os status</SelectItem>
-                      <SelectItem value="true">Ativos</SelectItem>
-                      <SelectItem value="false">Inativos</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Select value={filters.category} onValueChange={(value) => updateFilters({ category: value })}>
+                      <SelectTrigger className="w-[200px] glass-morphism">
+                        <SelectValue placeholder="Categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingCategories ? (
+                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                        ) : (
+                          categoriesForSelect.map((category) => (
+                            <SelectItem key={category.slug} value={category.slug}>
+                              {category.name} {category.count > 0 && `(${category.count})`}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
 
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Mais Filtros
-                  </Button>
+                    <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
+                      <SelectTrigger className="w-[180px] glass-morphism">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">🌟 Todos os status</SelectItem>
+                        <SelectItem value="true">✅ Ativos</SelectItem>
+                        <SelectItem value="false">⏸️ Pausados</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {showAdvancedFilters && (
+                    <div className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-4 mb-3">
+                        <span className="text-sm font-medium text-blue-700">Ordenar por:</span>
+                        <div className="flex gap-2 flex-wrap">
+                          {[
+                            { value: 'name', label: 'Nome', icon: Tag },
+                            { value: 'price', label: 'Preço', icon: DollarSign },
+                            { value: 'category', label: 'Categoria', icon: Package },
+                            { value: 'popular', label: 'Popularidade', icon: TrendingUp },
+                          ].map(({ value, label, icon: Icon }) => (
+                            <Button
+                              key={value}
+                              variant={filters.sortBy === value ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => toggleSort(value as SortOption)}
+                              className="text-xs"
+                            >
+                              <Icon className="h-3 w-3 mr-1" />
+                              {label}
+                              {filters.sortBy === value && (
+                                filters.sortDirection === 'asc' ? (
+                                  <SortAsc className="h-3 w-3 ml-1" />
+                                ) : (
+                                  <SortDesc className="h-3 w-3 ml-1" />
+                                )
+                              )}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Items Grid */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Enhanced Items Grid */}
+            <div className={`gap-6 ${filters.viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'}`}>
               {isLoadingItems ? (
                 // Show loading skeletons
                 Array.from({ length: 6 }).map((_, index) => (
@@ -470,89 +704,162 @@ const Catalog = () => {
               ) : itemsError ? (
                 // Show error state
                 <div className="col-span-full text-center py-12">
-                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Erro ao carregar itens</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Ocorreu um erro ao carregar os itens do catálogo.
-                  </p>
-                  <Button variant="outline" onClick={() => window.location.reload()}>
-                    Tentar Novamente
-                  </Button>
+                  <div className="p-6 bg-red-50 rounded-xl border border-red-200 max-w-md mx-auto">
+                    <Package className="h-16 w-16 text-red-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-red-700 mb-2">Ops! Algo deu errado 🐾</h3>
+                    <p className="text-red-600 mb-4">
+                      Não conseguimos carregar os itens do catálogo. Vamos tentar novamente?
+                    </p>
+                    <Button variant="outline" onClick={() => window.location.reload()} className="bg-red-50 hover:bg-red-100">
+                      <Zap className="h-4 w-4 mr-2" />
+                      Tentar Novamente
+                    </Button>
+                  </div>
                 </div>
-              ) : catalogItems.length === 0 ? (
+              ) : processedItems.length === 0 ? (
                 // Show empty state
                 <div className="col-span-full text-center py-12">
-                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhum item encontrado</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchTerm || filterCategory !== "all" || filterStatus !== "all"
-                      ? "Tente ajustar os filtros para encontrar itens."
-                      : "Comece adicionando seus primeiros produtos e serviços."}
-                  </p>
-                  <Button variant="outline" onClick={openCreateDialog}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Primeiro Item
-                  </Button>
+                  <div className="p-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border border-blue-200 max-w-lg mx-auto">
+                    <Package className="h-20 w-20 text-blue-400 mx-auto mb-6" />
+                    <h3 className="text-2xl font-bold text-blue-700 mb-3">
+                      {filters.search || filters.category !== "all" || filters.status !== "all" || filters.showFavoritesOnly
+                        ? "Nenhum item encontrado 🔍"
+                        : "Catálogo vazio 📦"}
+                    </h3>
+                    <p className="text-blue-600 mb-6">
+                      {filters.search || filters.category !== "all" || filters.status !== "all" || filters.showFavoritesOnly
+                        ? "Tente ajustar os filtros para encontrar itens especiais para pets."
+                        : "Comece adicionando seus primeiros produtos e serviços para pets queridos."}
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      {(filters.search || filters.category !== "all" || filters.status !== "all" || filters.showFavoritesOnly) && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setFilters({
+                            search: "",
+                            category: "all",
+                            status: "all",
+                            sortBy: "name",
+                            sortDirection: "asc",
+                            viewMode: "grid",
+                            showFavoritesOnly: false,
+                          })}
+                          className="glass-morphism"
+                        >
+                          <Filter className="h-4 w-4 mr-2" />
+                          Limpar Filtros
+                        </Button>
+                      )}
+                      <Button onClick={openCreateDialog} className="bg-gradient-primary hover:bg-gradient-primary/90">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Primeiro Item
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 // Show actual items
-                catalogItems.map((item) => (
-                <Card key={item.id} className="relative">
-                  {item.popular && (
-                    <Badge className="absolute top-3 right-3 bg-secondary text-secondary-foreground">
-                      Popular
-                    </Badge>
-                  )}
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
+                processedItems.map((item) => (
+                <Card
+                  key={item.id}
+                  className={`relative glass-morphism hover:shadow-lg transition-all duration-300 group ${
+                    favoriteItems.has(item.id) ? 'ring-2 ring-yellow-200 bg-yellow-50/30' : ''
+                  }`}
+                >
+                  {/* Item badges */}
+                  <div className="absolute top-3 right-3 flex gap-2 z-10">
+                    {item.popular && (
+                      <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        Popular
+                      </Badge>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleFavorite(item.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 bg-white/80 hover:bg-white"
+                    >
+                      <Star
+                        className={`h-4 w-4 ${
+                          favoriteItems.has(item.id)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-400'
+                        }`}
+                      />
+                    </Button>
+                  </div>
+
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3 flex-1">
                         {getTypeIcon(item.requires_appointment)}
-                        <CardTitle className="text-lg">{item.name}</CardTitle>
+                        <div className="flex-1">
+                          <CardTitle className="text-lg text-foreground group-hover:text-blue-700 transition-colors">
+                            {item.name}
+                          </CardTitle>
+                          {getStatusBadge(item.is_active)}
+                        </div>
                       </div>
-                      {getStatusBadge(item.is_active)}
                     </div>
-                    <CardDescription>{item.description}</CardDescription>
+                    <CardDescription className="text-muted-foreground line-clamp-2">
+                      {item.description || "Descrição não disponível"}
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
+
+                  <CardContent className="pt-0">
                     <div className="space-y-4">
+                      {/* Price and category */}
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold font-secondary text-primary">
-                          R$ {item.price.toFixed(2)}
+                        <span className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                          {formatPrice(item.price)}
                         </span>
-                        <Badge variant="outline">{item.category}</Badge>
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          📁 {item.category}
+                        </Badge>
                       </div>
 
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      {/* Service/Product specific info */}
+                      <div className="grid grid-cols-2 gap-2 text-sm">
                         {item.requires_appointment ? (
                           <>
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1" />
-                              {formatDuration(item.duration_minutes) || "Não definido"}
+                            <div className="flex items-center gap-1 p-2 bg-blue-50 rounded-lg">
+                              <Clock className="h-4 w-4 text-blue-600" />
+                              <span className="text-blue-700 font-medium">
+                                {formatDuration(item.duration_minutes)}
+                              </span>
                             </div>
-                            <div className="flex items-center">
-                              <Users className="h-4 w-4 mr-1" />
-                              {item.bookings || 0} agendamentos
+                            <div className="flex items-center gap-1 p-2 bg-green-50 rounded-lg">
+                              <Users className="h-4 w-4 text-green-600" />
+                              <span className="text-green-700 font-medium">
+                                {item.bookings || 0} agend.
+                              </span>
                             </div>
                           </>
                         ) : (
                           <>
-                            <div className="flex items-center">
-                              <Package className="h-4 w-4 mr-1" />
-                              {item.stock || 0} em estoque
+                            <div className="flex items-center gap-1 p-2 bg-purple-50 rounded-lg">
+                              <Package className="h-4 w-4 text-purple-600" />
+                              <span className="text-purple-700 font-medium">
+                                {item.stock || 0} estoque
+                              </span>
                             </div>
-                            <div className="flex items-center">
-                              <DollarSign className="h-4 w-4 mr-1" />
-                              {item.sales || 0} vendas
+                            <div className="flex items-center gap-1 p-2 bg-pink-50 rounded-lg">
+                              <TrendingUp className="h-4 w-4 text-pink-600" />
+                              <span className="text-pink-700 font-medium">
+                                {item.sales || 0} vendas
+                              </span>
                             </div>
                           </>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between pt-4 border-t">
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2 pt-3 border-t border-border">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 mr-2"
+                          className="flex-1 glass-morphism hover:bg-blue-50"
                           onClick={() => handleEdit(item)}
                         >
                           <Edit className="h-4 w-4 mr-1" />
@@ -561,10 +868,18 @@ const Catalog = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-destructive"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
                           onClick={() => openDeleteDialog(item)}
                         >
                           <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2"
+                          title="Visualizar detalhes"
+                        >
+                          <Eye className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
