@@ -76,54 +76,23 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
       throw createError('Erro ao criar usuário', 500);
     }
 
-    // Criar organização primeiro
-    const organizationSlug = organizationName.toLowerCase()
-      .replace(/[^a-zA-Z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-      .substring(0, 50);
-
-    const { data: organization, error: orgError } = await supabaseService.supabase
-      .from('organizations')
-      .insert({
-        name: organizationName,
-        slug: organizationSlug,
-        subscription_tier: subscriptionTier
-      })
-      .select()
-      .single();
-
-    if (orgError || !organization) {
-      logger.error('Erro ao criar organização:', orgError);
-      throw createError('Erro ao criar organização', 500);
-    }
-
-    // Criar perfil do usuário
-    const { data: profile, error: profileError } = await supabaseService.supabase
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
+    // Usar função RPC para criar organização e perfil de forma transacional
+    const { data: result, error: rpcError } = await supabaseService.supabase
+      .rpc('create_user_with_organization', {
         user_id: authData.user.id,
-        email: authData.user.email,
+        user_email: authData.user.email,
         full_name: fullName,
-        role: 'admin',
-        organization_id: organization.id,
-        is_active: true,
-        onboarding_completed: false
-      })
-      .select(`
-        id,
-        email,
-        full_name,
-        role,
-        organization_id
-      `)
-      .single();
+        organization_name: organizationName,
+        subscription_tier: subscriptionTier
+      });
 
-    if (profileError || !profile) {
-      logger.error('Erro ao criar profile:', profileError);
+    if (rpcError || !result?.success) {
+      logger.error('Erro ao criar usuário e organização:', rpcError || result?.error);
       throw createError('Database error saving new user', 500);
     }
+
+    const profile = result.profile;
+    const organization = result.organization;
 
     // Gerar tokens JWT
     const tokenPair = jwtService.generateTokenPair({
