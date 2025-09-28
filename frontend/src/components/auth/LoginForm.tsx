@@ -189,12 +189,19 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
 
           <Button
             type="submit"
-            className="w-full bg-primary text-white hover:bg-primary/90"
+            className="w-full bg-red-600 text-white hover:bg-red-700"
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {mode === 'login' ? 'Entrar' : 'Criar Conta'}
+            {mode === 'login' ? 'Entrar' : 'Criar Conta VERSÃO 2.0'}
           </Button>
+
+          {/* INDICADOR VISUAL DE VERSÃO - DEVE APARECER SE DEPLOY FUNCIONOU */}
+          <div className="text-center mt-2">
+            <div className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
+              🚀 VERSÃO 2.0 - DEPLOYED {new Date().toLocaleString('pt-BR')}
+            </div>
+          </div>
         </form>
 
         <div className="mt-6 text-center">

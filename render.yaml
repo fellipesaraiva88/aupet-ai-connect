@@ -49,8 +49,10 @@ services:
     region: oregon
     buildCommand: |
       cd frontend &&
+      rm -rf dist node_modules/.cache .vite &&
       npm ci &&
-      VITE_API_URL=https://auzap-backend-api.onrender.com/api npm run build
+      VITE_API_URL=https://auzap-backend-api.onrender.com/api npm run build &&
+      echo '{"version":"'$(date +%s)'","timestamp":"'$(date)'"}' > dist/version.json
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
@@ -63,6 +65,12 @@ services:
     domains:
       - auzap-frontend.onrender.com
     headers:
+      - path: /
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate, proxy-revalidate
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate, proxy-revalidate
       - path: /*
         name: X-Frame-Options
         value: DENY
