@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ConversationSkeleton, MessageSkeleton, ChatHeaderSkeleton, CustomerInfoSkeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { useConversations, useOrganizationId } from "@/hooks/useApiData";
 import { useRealTimeSubscriptions, useMessageRealTime } from "@/hooks/useRealTime";
@@ -243,10 +244,13 @@ const Conversations = () => {
   }, [transformedConversations, searchQuery, filters, favoriteConversations]);
 
   // Load messages for selected conversation
+  const [messagesLoading, setMessagesLoading] = useState(false);
+
   useEffect(() => {
     if (!selectedConversation) return;
 
     const loadMessages = async () => {
+      setMessagesLoading(true);
       try {
         const { data: messages, error } = await supabase
           .from('whatsapp_messages')
@@ -278,6 +282,8 @@ const Conversations = () => {
           description: "Não conseguimos carregar o papo com essa família",
           variant: "destructive",
         });
+      } finally {
+        setMessagesLoading(false);
       }
     };
 
@@ -473,17 +479,17 @@ const Conversations = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen-mobile bg-background">
       <Navbar />
-      
-      <div className="flex h-[calc(100vh-4rem)]">
+
+      <div className="flex h-[calc(100vh-4rem)] h-[calc(100dvh-4rem)] md:flex-row">
         <Sidebar
           activeItem={activeMenuItem}
         />
-        
-        <div className="flex-1 flex">
+
+        <div className="flex-1 flex flex-col md:flex-row">
           {/* Conversations List */}
-          <div className="w-80 border-r border-border bg-card/50 glass-morphism">
+          <div className="w-full md:w-80 border-r border-border bg-card/50 glass-morphism mobile-scroll">
             <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -495,7 +501,7 @@ const Conversations = () => {
                 <div className="flex gap-1">
                   <Dialog open={showWhatsAppSetup} onOpenChange={setShowWhatsAppSetup}>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Configurar WhatsApp">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 touch-target" title="Configurar WhatsApp">
                         <Smartphone className="h-4 w-4 text-blue-600" />
                       </Button>
                     </DialogTrigger>
@@ -672,10 +678,11 @@ const Conversations = () => {
 
             <div className="overflow-auto">
               {conversationsLoading ? (
-                <div className="flex items-center justify-center p-8">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="ml-2">Carregando conversas...</span>
-                </div>
+                <>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <ConversationSkeleton key={index} />
+                  ))}
+                </>
               ) : conversationsError ? (
                 <div className="p-4 text-center text-red-500">
                   <p>Erro ao carregar conversas</p>
@@ -917,7 +924,13 @@ const Conversations = () => {
 
                 {/* Messages */}
                 <div className="flex-1 overflow-auto p-4 space-y-4 bg-gradient-to-b from-whatsapp-light/20 to-background">
-                  {conversationMessages.length === 0 ? (
+                  {messagesLoading ? (
+                    <>
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <MessageSkeleton key={index} isFromMe={index % 2 === 0} />
+                      ))}
+                    </>
+                  ) : conversationMessages.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-muted-foreground">
                       <div className="text-center">
                         <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -966,7 +979,7 @@ const Conversations = () => {
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                    className="pr-12 glass-morphism border-blue-200 focus:border-blue-400 focus:ring-blue-400 min-h-[44px]"
+                    className="pr-12 glass-morphism border-blue-200 focus:border-blue-400 focus:ring-blue-400 min-h-[44px] message-input-mobile touch-target"
                     disabled={isTyping}
                   />
                   <Button
@@ -1038,7 +1051,7 @@ const Conversations = () => {
 
           {/* Customer Info Panel */}
           {selectedConversation && (
-            <div className="w-80 border-l border-border bg-gradient-to-b from-blue-50/30 to-purple-50/20 glass-morphism p-4 space-y-6">
+            <div className="w-full md:w-80 border-l-0 md:border-l border-t md:border-t-0 border-border bg-gradient-to-b from-blue-50/30 to-purple-50/20 glass-morphism p-4 space-y-6 mobile-customer-info mobile-scroll">
               <div className="text-center">
                 <h3 className="font-bold text-lg mb-4 bg-gradient-primary bg-clip-text text-transparent">
                   Nosso Cliente Especial 💝
