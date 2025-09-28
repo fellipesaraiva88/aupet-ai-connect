@@ -77,7 +77,7 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
     }
 
     // Aguardar um momento para o trigger processar (melhor prática)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Buscar dados completos do usuário criado (profile + organization) após trigger
     const { data: profile, error: profileError } = await supabaseService.supabase
