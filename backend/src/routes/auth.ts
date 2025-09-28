@@ -76,23 +76,32 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
       throw createError('Erro ao criar usuário', 500);
     }
 
-    // Usar função RPC para criar organização e perfil de forma transacional
-    const { data: result, error: rpcError } = await supabaseService.supabase
-      .rpc('create_user_with_organization', {
-        user_id: authData.user.id,
-        user_email: authData.user.email,
-        full_name: fullName,
-        organization_name: organizationName,
-        subscription_tier: subscriptionTier
-      });
+    // Aguardar um momento para o trigger processar (melhor prática)
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (rpcError || !result?.success) {
-      logger.error('Erro ao criar usuário e organização:', rpcError || result?.error);
+    // Buscar dados completos do usuário criado (profile + organization) após trigger
+    const { data: profile, error: profileError } = await supabaseService.supabase
+      .from('profiles')
+      .select(`
+        id,
+        email,
+        full_name,
+        role,
+        organization_id,
+        organizations (
+          id,
+          name,
+          slug,
+          subscription_tier
+        )
+      `)
+      .eq('user_id', authData.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      logger.error('Erro ao buscar profile após signup:', profileError);
       throw createError('Database error saving new user', 500);
     }
-
-    const profile = result.profile;
-    const organization = result.organization;
 
     // Gerar tokens JWT
     const tokenPair = jwtService.generateTokenPair({
@@ -117,12 +126,7 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
           fullName: profile.full_name,
           role: profile.role,
           organizationId: profile.organization_id,
-          organization: {
-            id: organization.id,
-            name: organization.name,
-            slug: organization.slug,
-            subscription_tier: organization.subscription_tier
-          }
+          organization: profile.organizations
         },
         tokens: tokenPair,
         needsEmailVerification: !authData.user.email_confirmed_at
