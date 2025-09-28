@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import axios from "axios";
 
 // Configure axios with base URL
@@ -10,12 +11,23 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and tenant isolation
 api.interceptors.request.use(
-  (config) => {
-    // For development mode, use API key
-    if (import.meta.env.VITE_DEV_MODE === 'true') {
-      config.headers['x-api-key'] = 'auzap_dev_api_key_2024_secure_development';
+  async (config) => {
+    // Get current Supabase session for multi-tenant auth
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        config.headers['Authorization'] = `Bearer ${session.access_token}`;
+
+        // Add organization/tenant context from user metadata
+        const organizationId = session.user?.user_metadata?.organization_id;
+        if (organizationId) {
+          config.headers['x-organization-id'] = organizationId;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get Supabase session:', error);
     }
     return config;
   },
@@ -329,10 +341,10 @@ export function useUpdateAppointment() {
 
 // Organization ID hook
 export function useOrganizationId() {
-  const { userProfile, user } = useAuthContext();
+  const { user } = useAuthContext();
 
-  // Return organization_id from userProfile or fallback for development
-  return userProfile?.organization_id || user?.user_metadata?.organization_id || 'dev-org-id';
+  // Return organization_id from user metadata or fallback for development
+  return user?.user_metadata?.organization_id || 'default-org-id';
 }
 
 // Evolution API Status Hook
