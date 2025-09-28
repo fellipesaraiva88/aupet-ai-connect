@@ -344,7 +344,7 @@ export function useOrganizationId() {
   const { user } = useAuthContext();
 
   // Return organization_id from user metadata or fallback for development
-  return user?.user_metadata?.organization_id || 'default-org-id';
+  return user?.user_metadata?.organization_id || '00000000-0000-0000-0000-000000000001';
 }
 
 // Evolution API Status Hook
