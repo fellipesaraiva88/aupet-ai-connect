@@ -80,7 +80,7 @@ export const corsConfig = {
       'http://localhost:8080',
       'http://localhost:3000',
       'http://localhost:5173',
-      // Production Render URLs
+      // Production Render URLs - Frontend
       'https://auzap-frontend-final.onrender.com',
       'https://auzap-frontend-v3.onrender.com',
       'https://auzap-frontend-v2.onrender.com',
@@ -88,7 +88,11 @@ export const corsConfig = {
       'https://test-experimental-fix.onrender.com',
       'https://test-visual-indicators.onrender.com',
       'https://test-render-cache.onrender.com',
-      'https://test-signup-form.onrender.com'
+      'https://test-signup-form.onrender.com',
+      // Production Render URLs - Backend
+      'https://auzap-backend.onrender.com',
+      'https://aupet-ai-connect.onrender.com',
+      'https://darkzone-md-oxcx.onrender.com'
     ];
 
     // Allow requests with no origin (mobile apps, etc.)

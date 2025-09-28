@@ -26,7 +26,7 @@ export const authMiddleware = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw createError(401, 'Token de autorização necessário');
+      throw createError('Token de autorização necessário', 401);
     }
 
     const token = authHeader.substring(7);
@@ -37,14 +37,14 @@ export const authMiddleware = async (
 
     if (error || !user) {
       logger.warn(`Invalid token: ${error?.message}`);
-      throw createError(401, 'Token inválido ou expirado');
+      throw createError('Token inválido ou expirado', 401);
     }
 
     // Add user info to request for multi-tenant isolation
     req.user = {
       id: user.id,
       email: user.email || '',
-      organizationId: user.user_metadata?.organization_id || 'default-org-id',
+      organizationId: user.user_metadata?.organization_id || '00000000-0000-0000-0000-000000000000',
       role: user.user_metadata?.role || 'user'
     };
 
@@ -55,7 +55,7 @@ export const authMiddleware = async (
       return next(error);
     }
     logger.error('Auth middleware error:', error);
-    return next(createError(401, 'Falha na autenticação'));
+    return next(createError('Falha na autenticação', 401));
   }
 };
 
@@ -64,11 +64,11 @@ export const authMiddleware = async (
 export const requireRole = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return next(createError(401, 'Usuário não autenticado'));
+      return next(createError('Usuário não autenticado', 401));
     }
 
     if (!roles.includes(req.user.role)) {
-      return next(createError(403, 'Permissão insuficiente'));
+      return next(createError('Permissão insuficiente', 403));
     }
 
     next();
@@ -78,13 +78,13 @@ export const requireRole = (roles: string[]) => {
 // Middleware to check organization access
 export const requireOrganization = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
-    return next(createError(401, 'Usuário não autenticado'));
+    return next(createError('Usuário não autenticado', 401));
   }
 
   const { organizationId } = req.params;
 
   if (organizationId && organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
-    return next(createError(403, 'Acesso negado para esta organização'));
+    return next(createError('Acesso negado para esta organização', 403));
   }
 
   next();

@@ -61,8 +61,8 @@ const updatePetSchema = createPetSchema.partial().omit({ customer_id: true });
 
 // Pet search and filter schema
 const petSearchSchema = z.object({
-  page: z.string().transform(val => parseInt(val) || 1),
-  limit: z.string().transform(val => Math.min(parseInt(val) || 20, 100)),
+  page: z.string().optional().transform(val => parseInt(val || '1') || 1),
+  limit: z.string().optional().transform(val => Math.min(parseInt(val || '20') || 20, 100)),
   customer_id: z.string().uuid().optional(),
   species: z.string().optional(),
   breed: z.string().optional(),
@@ -77,7 +77,7 @@ const petSearchSchema = z.object({
 // GET /pets - List all pets with advanced filtering
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   try {
     const filters = petSearchSchema.parse(req.query);
@@ -235,7 +235,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // POST /pets - Create new pet profile
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   try {
     const validatedData = createPetSchema.parse(req.body);
@@ -289,7 +289,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // GET /pets/:id - Get specific pet details
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -339,7 +339,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 // PUT /pets/:id - Update pet information
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -387,7 +387,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 // DELETE /pets/:id - Soft delete pet
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -442,7 +442,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 // POST /pets/:id/photo - Upload pet photo
 router.post('/:id/photo', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
   const { photo_url } = req.body;
 
@@ -491,7 +491,7 @@ router.post('/:id/photo', asyncHandler(async (req: Request, res: Response) => {
 // GET /pets/:id/health-records - Get pet's health history
 router.get('/:id/health-records', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -536,7 +536,7 @@ router.get('/:id/health-records', asyncHandler(async (req: Request, res: Respons
 // POST /pets/:id/health-records - Add health record
 router.post('/:id/health-records', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const healthRecordSchema = z.object({
@@ -606,7 +606,7 @@ router.post('/:id/health-records', asyncHandler(async (req: Request, res: Respon
 // GET /pets/:id/appointments - Get pet's appointments
 router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -655,7 +655,7 @@ router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response)
 // GET /pets/stats - Pet statistics
 router.get('/stats/overview', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   try {
     const supabase = getSupabaseService();
@@ -765,7 +765,7 @@ router.get('/stats/overview', asyncHandler(async (req: Request, res: Response) =
 // GET /pets/breeds - Get popular breeds by species
 router.get('/breeds/popular', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const species = req.query.species as string;
 
   try {
@@ -814,7 +814,7 @@ router.get('/breeds/popular', asyncHandler(async (req: Request, res: Response) =
 // POST /pets/bulk-import - Bulk import pets from CSV
 router.post('/bulk-import', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   const bulkImportSchema = z.object({
     pets: z.array(createPetSchema).min(1, 'Pelo menos um pet é obrigatório').max(100, 'Máximo 100 pets por importação')

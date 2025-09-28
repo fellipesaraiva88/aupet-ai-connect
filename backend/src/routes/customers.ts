@@ -38,7 +38,7 @@ const updateCustomerSchema = createCustomerSchema.partial();
 // GET /customers - List all customers with filtering and pagination
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -107,7 +107,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // POST /customers - Create new customer
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   try {
     const validatedData = createCustomerSchema.parse(req.body);
@@ -148,7 +148,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/:id - Get specific customer details
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -200,7 +200,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 // PUT /customers/:id - Update customer information
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -244,7 +244,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 // DELETE /customers/:id - Soft delete customer
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -299,7 +299,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/:id/pets - Get all pets for a customer
 router.get('/:id/pets', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -331,7 +331,7 @@ router.get('/:id/pets', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/:id/appointments - Get all appointments for a customer
 router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -366,7 +366,7 @@ router.get('/:id/appointments', asyncHandler(async (req: Request, res: Response)
 // GET /customers/:id/conversations - Get all conversations for a customer
 router.get('/:id/conversations', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   try {
@@ -407,7 +407,7 @@ router.get('/:id/conversations', asyncHandler(async (req: Request, res: Response
 // POST /customers/:id/notes - Add note to customer
 router.post('/:id/notes', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
   const { note } = req.body;
 
@@ -468,7 +468,7 @@ router.post('/:id/notes', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/search - Advanced customer search
 router.get('/search/advanced', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   const {
     query: searchQuery,
@@ -533,7 +533,7 @@ router.get('/search/advanced', asyncHandler(async (req: Request, res: Response) 
 // GET /customers/stats - Customer statistics
 router.get('/stats/overview', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   try {
     const supabase = getSupabaseService();
@@ -609,7 +609,7 @@ router.get('/stats/overview', asyncHandler(async (req: Request, res: Response) =
 // GET /customers/:id/spending - Customer spending analysis
 router.get('/:id/spending', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
   const days = parseInt(req.query.days as string) || 365;
 
@@ -696,7 +696,7 @@ router.get('/:id/spending', asyncHandler(async (req: Request, res: Response) => 
 // POST /customers/:id/tags - Manage customer tags
 router.post('/:id/tags', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
   const { tags, action = 'replace' } = req.body;
 
@@ -776,7 +776,7 @@ router.post('/:id/tags', asyncHandler(async (req: Request, res: Response) => {
 // GET /customers/segmentation - Customer segmentation analysis
 router.get('/segmentation/analysis', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   try {
     const supabase = getSupabaseService();
@@ -871,7 +871,7 @@ router.get('/segmentation/analysis', asyncHandler(async (req: Request, res: Resp
 // POST /customers/bulk-action - Bulk actions on customers
 router.post('/bulk-action', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   const bulkActionSchema = z.object({
     customer_ids: z.array(z.string().uuid()).min(1, 'Pelo menos um cliente é obrigatório').max(100, 'Máximo 100 clientes por ação'),

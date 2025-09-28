@@ -18,7 +18,7 @@ const getSupabaseService = () => {
 // GET /conversations - List WhatsApp conversations
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -37,8 +37,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         whatsapp_contacts (
           id,
           name,
-          phone,
-          customers (id, name, email)
+          phone
         ),
         latest_message:whatsapp_messages (
           id,
@@ -109,7 +108,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // GET /conversations/:id - Get conversation details with messages
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const page = parseInt(req.query.page as string) || 1;
@@ -126,13 +125,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
         whatsapp_contacts (
           id,
           name,
-          phone,
-          customers (
-            id,
-            name,
-            email,
-            pets (id, name, species)
-          )
+          phone
         )
       `)
       .eq('id', id)
@@ -188,7 +181,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 // PUT /conversations/:id - Update conversation (assign, priority, tags)
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const updateSchema = z.object({
@@ -244,7 +237,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 // POST /conversations/:id/messages - Send message in conversation
 router.post('/:id/messages', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const messageSchema = z.object({
@@ -321,7 +314,7 @@ router.post('/:id/messages', asyncHandler(async (req: Request, res: Response) =>
 // GET /conversations/:id/messages - Get conversation messages
 router.get('/:id/messages', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const page = parseInt(req.query.page as string) || 1;
@@ -393,7 +386,7 @@ router.get('/:id/messages', asyncHandler(async (req: Request, res: Response) => 
 // POST /conversations/:id/escalate - Escalate conversation to human
 router.post('/:id/escalate', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const escalateSchema = z.object({
@@ -453,7 +446,7 @@ router.post('/:id/escalate', asyncHandler(async (req: Request, res: Response) =>
 // POST /conversations/:id/resolve - Mark conversation as resolved
 router.post('/:id/resolve', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const resolveSchema = z.object({
@@ -512,7 +505,7 @@ router.post('/:id/resolve', asyncHandler(async (req: Request, res: Response) => 
 // POST /conversations/:id/assign - Assign conversation to staff member
 router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
   const { id } = req.params;
 
   const assignSchema = z.object({
@@ -569,7 +562,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 // GET /conversations/pending - Get conversations pending human response
 router.get('/pending/human', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -626,7 +619,7 @@ router.get('/pending/human', asyncHandler(async (req: Request, res: Response) =>
 // GET /conversations/metrics - Conversation analytics and metrics
 router.get('/metrics/analytics', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
-  const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
   const days = parseInt(req.query.days as string) || 7;
 
