@@ -113,7 +113,8 @@ export const corsConfig = {
     'Content-Type',
     'Accept',
     'Authorization',
-    'x-api-key'
+    'x-api-key',
+    'x-organization-id'
   ],
   exposedHeaders: [
     'X-RateLimit-Limit',

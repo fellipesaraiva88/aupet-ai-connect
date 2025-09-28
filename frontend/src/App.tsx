@@ -1,9 +1,15 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { ToastContainer } from "@/components/ui/enhanced-toast";
+import { useLoading } from "@/contexts/LoadingContext";
+import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Conversations from "./pages/Conversations";
@@ -163,17 +169,36 @@ const AppRoutes = () => {
   );
 };
 
+const AppContent = () => {
+  const { isAnyLoading } = useLoading();
+  const toastInstance = useEnhancedToast();
+
+  React.useEffect(() => {
+    setGlobalToastInstance(toastInstance);
+  }, [toastInstance]);
+
+  return (
+    <>
+      <LoadingOverlay isVisible={isAnyLoading()} />
+      <ToastContainer toasts={toastInstance.toasts} />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <LoadingProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
+        <TooltipProvider>
           <Toaster />
           <Sonner />
-        </BrowserRouter>
+          <AppContent />
+        </TooltipProvider>
       </AuthProvider>
-    </TooltipProvider>
+    </LoadingProvider>
   </QueryClientProvider>
 );
 

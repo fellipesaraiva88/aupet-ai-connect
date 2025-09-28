@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { EnhancedProgress } from "@/components/ui/enhanced-progress";
+import { FeedbackButton, CounterAnimation, PulseIndicator } from "@/components/ui/micro-interactions";
+import { useLoading } from "@/contexts/LoadingContext";
+import { useGlobalToast } from "@/hooks/useEnhancedToast";
 import { useDashboardStats, useOrganizationId } from "@/hooks/useApiData";
 import { useRealTimeSubscriptions } from "@/hooks/useRealTime";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
@@ -16,10 +21,22 @@ const Index = () => {
   const activeMenuItem = useActiveNavigation();
   const organizationId = useOrganizationId();
   const { data: dashboardStats, isLoading, error } = useDashboardStats(organizationId);
+  const { setLoading } = useLoading();
+  const toast = useGlobalToast();
   const navigate = useNavigate();
 
   // Set up real-time subscriptions for live dashboard updates
   useRealTimeSubscriptions(organizationId);
+
+  const handleNavigateWithLoading = (path: string, message: string) => {
+    setLoading('navigation', true);
+    toast.info('Navegando...', message);
+
+    setTimeout(() => {
+      navigate(path);
+      setLoading('navigation', false);
+    }, 500);
+  };
   return <div className="min-h-screen bg-background">
       <Navbar />
 
@@ -38,14 +55,24 @@ const Index = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
-                <Button variant="outline" onClick={() => navigate('/analytics')} className="flex-1 sm:flex-none">
-                  <TrendingUp className="h-4 w-4 mr-2" />
+                <LoadingButton
+                  variant="outline"
+                  onClick={() => handleNavigateWithLoading('/analytics', 'Carregando analytics...')}
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  className="flex-1 sm:flex-none"
+                >
                   <span className="hidden sm:inline">Analytics</span>
-                </Button>
-                <Button onClick={() => navigate('/conversations')} className="flex-1 sm:flex-none">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Ver </span>Conversas
-                </Button>
+                </LoadingButton>
+                <FeedbackButton
+                  variant="info"
+                  onClick={() => handleNavigateWithLoading('/conversations', 'Carregando conversas...')}
+                  className="flex-1 sm:flex-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="hidden sm:inline">Ver </span>Conversas
+                  </div>
+                </FeedbackButton>
               </div>
             </div>
 
@@ -175,13 +202,21 @@ const Index = () => {
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-3 p-2 rounded-[12px] hover:bg-secondary/30 transition-colors duration-200">
-                        <div className="h-7 w-7 rounded-[8px] bg-primary/10 flex items-center justify-center">
-                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                      <div className="flex items-center justify-between p-2 rounded-[12px] hover:bg-secondary/30 transition-colors duration-200">
+                        <div className="flex items-center gap-3">
+                          <div className="h-7 w-7 rounded-[8px] bg-primary/10 flex items-center justify-center">
+                            <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-medium tracking-[-0.01em]">Famílias abraçadas hoje</p>
+                            <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 2 minutos</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[13px] font-medium tracking-[-0.01em]">Nova conversa iniciada</p>
-                          <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 2 minutos</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-primary font-bold">
+                            <CounterAnimation value={dashboardStats?.conversations_today || 0} />
+                          </Badge>
+                          <PulseIndicator size="sm" color="bg-primary" />
                         </div>
                       </div>
                       <div className="flex items-center gap-3 p-2 rounded-[12px] hover:bg-secondary/30 transition-colors duration-200">
@@ -197,9 +232,25 @@ const Index = () => {
                         <div className="h-7 w-7 rounded-[8px] bg-success/10 flex items-center justify-center">
                           <Users className="h-3.5 w-3.5 text-success" />
                         </div>
-                        <div>
-                          <p className="text-[13px] font-medium tracking-[-0.01em]">Novo cliente cadastrado</p>
-                          <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 10 minutos</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[13px] font-medium tracking-[-0.01em]">Taxa de eficiência IA</p>
+                            <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 10 minutos</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge variant="secondary" className="text-success font-bold">
+                              {dashboardStats?.response_rate_percent
+                                ? `${dashboardStats.response_rate_percent.toFixed(1)}%`
+                                : '87.5%'}
+                            </Badge>
+                            <EnhancedProgress
+                              value={dashboardStats?.response_rate_percent || 87.5}
+                              max={100}
+                              size="sm"
+                              variant="success"
+                              className="w-16"
+                            />
+                          </div>
                         </div>
                       </div>
                     </>
