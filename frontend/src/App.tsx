@@ -1,9 +1,15 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { ToastContainer } from "@/components/ui/enhanced-toast";
+import { useLoading } from "@/contexts/LoadingContext";
+import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Conversations from "./pages/Conversations";
@@ -19,13 +25,19 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+const AppContent = () => {
+  const { isAnyLoading } = useLoading();
+  const toastInstance = useEnhancedToast();
+
+  React.useEffect(() => {
+    setGlobalToastInstance(toastInstance);
+  }, [toastInstance]);
+
+  return (
+    <>
+      <LoadingOverlay isVisible={isAnyLoading()} />
+      <ToastContainer toasts={toastInstance.toasts} />
+      <BrowserRouter>
           <Routes>
             {/* Rotas públicas */}
             <Route path="/signup" element={<Signup />} />
@@ -55,8 +67,21 @@ const App = () => (
             } />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    </>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <LoadingProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AppContent />
+        </TooltipProvider>
+      </AuthProvider>
+    </LoadingProvider>
   </QueryClientProvider>
 );
 

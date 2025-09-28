@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { EnhancedProgress } from "@/components/ui/enhanced-progress";
+import { FeedbackButton, CounterAnimation, PulseIndicator } from "@/components/ui/micro-interactions";
+import { useLoading } from "@/contexts/LoadingContext";
+import { useGlobalToast } from "@/hooks/useEnhancedToast";
 import { useDashboardStats, useOrganizationId } from "@/hooks/useApiData";
 import { useRealTimeSubscriptions } from "@/hooks/useRealTime";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
@@ -20,10 +25,22 @@ const Index = () => {
   const activeMenuItem = useActiveNavigation();
   const organizationId = useOrganizationId();
   const { data: dashboardStats, isLoading, error } = useDashboardStats(organizationId);
+  const { setLoading } = useLoading();
+  const toast = useGlobalToast();
   const navigate = useNavigate();
 
   // Set up real-time subscriptions for live dashboard updates
   useRealTimeSubscriptions(organizationId);
+
+  const handleNavigateWithLoading = (path: string, message: string) => {
+    setLoading('navigation', true);
+    toast.info('Navegando...', message);
+
+    setTimeout(() => {
+      navigate(path);
+      setLoading('navigation', false);
+    }, 500);
+  };
   return <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden paw-pattern">
@@ -69,20 +86,22 @@ const Index = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <Button
+                <LoadingButton
                   variant="outline"
-                  onClick={() => navigate('/analytics/history')}
+                  onClick={() => handleNavigateWithLoading('/analytics/history', 'Carregando histórico completo...')}
+                  icon={<Calendar className="h-4 w-4" />}
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
                   Ver histórico completo
-                </Button>
-                <Button
-                  className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                  onClick={() => navigate('/analytics')}
+                </LoadingButton>
+                <FeedbackButton
+                  variant="info"
+                  onClick={() => handleNavigateWithLoading('/analytics', 'Carregando analytics...')}
                 >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Como estou crescendo?
-                </Button>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Como estou crescendo?
+                  </div>
+                </FeedbackButton>
               </div>
             </div>
 
@@ -182,9 +201,10 @@ const Index = () => {
                         <div className="flex items-center gap-2">
                           <MessageSquare className="h-4 w-4 text-primary" />
                           <span className="text-sm font-medium">Famílias abraçadas hoje</span>
+                          <PulseIndicator size="sm" color="bg-primary" />
                         </div>
                         <Badge variant="secondary" className="text-primary font-bold">
-                          {dashboardStats?.conversations_today || 0}
+                          <CounterAnimation value={dashboardStats?.conversations_today || 0} />
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
@@ -201,11 +221,20 @@ const Index = () => {
                           <Bot className="h-4 w-4 text-success" />
                           <span className="text-sm font-medium">Proteção total</span>
                         </div>
-                        <Badge variant="secondary" className="text-success font-bold">
-                          {dashboardStats?.response_rate_percent
-                            ? `${dashboardStats.response_rate_percent.toFixed(1)}%`
-                            : '87.5%'}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge variant="secondary" className="text-success font-bold">
+                            {dashboardStats?.response_rate_percent
+                              ? `${dashboardStats.response_rate_percent.toFixed(1)}%`
+                              : '87.5%'}
+                          </Badge>
+                          <EnhancedProgress
+                            value={dashboardStats?.response_rate_percent || 87.5}
+                            max={100}
+                            size="sm"
+                            variant="success"
+                            className="w-16"
+                          />
+                        </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
