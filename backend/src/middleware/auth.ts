@@ -41,11 +41,13 @@ export const authMiddleware = async (
     }
 
     // Add user info to request for multi-tenant isolation
+    // Try both user_metadata and raw_user_meta_data for compatibility
+    const userData = user.user_metadata || user.raw_user_meta_data || {};
     req.user = {
       id: user.id,
       email: user.email || '',
-      organizationId: user.user_metadata?.organization_id || '00000000-0000-0000-0000-000000000001',
-      role: user.user_metadata?.role || 'user'
+      organizationId: userData.organization_id || user.user_metadata?.organization_id || '00000000-0000-0000-0000-000000000001',
+      role: userData.role || user.user_metadata?.role || 'user'
     };
 
     logger.info(`User authenticated: ${user.email} (${req.user.organizationId})`);

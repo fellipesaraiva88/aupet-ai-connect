@@ -21,7 +21,10 @@ api.interceptors.request.use(
         config.headers['Authorization'] = `Bearer ${session.access_token}`;
 
         // Add organization/tenant context from user metadata
-        const organizationId = session.user?.user_metadata?.organization_id;
+        // Try both user_metadata and raw_user_meta_data for compatibility
+        const organizationId = session.user?.user_metadata?.organization_id ||
+                              session.user?.raw_user_meta_data?.organization_id ||
+                              '00000000-0000-0000-0000-000000000001'; // fallback
         if (organizationId) {
           config.headers['x-organization-id'] = organizationId;
         }
@@ -344,7 +347,10 @@ export function useOrganizationId() {
   const { user } = useAuthContext();
 
   // Return organization_id from user metadata or fallback for development
-  return user?.user_metadata?.organization_id || '00000000-0000-0000-0000-000000000001';
+  // Try both user_metadata and raw_user_meta_data for compatibility
+  return user?.user_metadata?.organization_id ||
+         user?.raw_user_meta_data?.organization_id ||
+         '00000000-0000-0000-0000-000000000001';
 }
 
 // Evolution API Status Hook
