@@ -13,6 +13,7 @@ import { Server } from 'socket.io';
 // Import routes
 import evolutionRoutes from './routes/evolution';
 import whatsappRoutes from './routes/whatsapp';
+import whatsappV2Routes from './routes/whatsapp-v2';
 import aiRoutes from './routes/ai';
 import webhookRoutes from './routes/webhook';
 import dashboardRoutes from './routes/dashboard';
@@ -42,6 +43,7 @@ import { tenantIsolationMiddleware } from './middleware/tenant-isolation';
 import { WebSocketService } from './services/websocket';
 import { SupabaseService } from './services/supabase';
 import { MonitoringService } from './services/monitoring';
+import { initializeWhatsAppService } from './services/WhatsAppService';
 import { logger } from './utils/logger';
 
 // Environment variables already loaded above
@@ -181,6 +183,7 @@ class AuzapServer {
     // Protected routes (auth + tenant isolation required)
     this.app.use('/api/evolution', authMiddleware, tenantIsolationMiddleware, evolutionRoutes);
     this.app.use('/api/whatsapp', authMiddleware, tenantIsolationMiddleware, whatsappRoutes);
+    this.app.use('/api/v2/whatsapp', authMiddleware, tenantIsolationMiddleware, whatsappV2Routes);
     this.app.use('/api/ai', authMiddleware, tenantIsolationMiddleware, aiRoutes);
     this.app.use('/api/dashboard', authMiddleware, tenantIsolationMiddleware, dashboardRoutes);
     this.app.use('/api/settings', authMiddleware, tenantIsolationMiddleware, settingsRoutes);
@@ -265,8 +268,37 @@ class AuzapServer {
     });
   }
 
-  public start(): void {
+  public async start(): Promise<void> {
     const port = process.env.PORT || 3001;
+
+    try {
+      // Initialize WhatsApp Service V2
+      logger.info('🔄 Initializing WhatsApp Service V2...');
+      await initializeWhatsAppService({
+        redis: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD,
+          db: parseInt(process.env.REDIS_DB || '0')
+        },
+        queue: {
+          concurrency: parseInt(process.env.QUEUE_CONCURRENCY || '10'),
+          rateLimiter: {
+            max: parseInt(process.env.QUEUE_RATE_LIMIT_MAX || '100'),
+            duration: parseInt(process.env.QUEUE_RATE_LIMIT_DURATION || '60000')
+          }
+        },
+        healthCheck: {
+          enabled: process.env.NODE_ENV !== 'test',
+          interval: parseInt(process.env.HEALTH_CHECK_INTERVAL || '30000')
+        }
+      });
+      logger.info('✅ WhatsApp Service V2 initialized successfully!');
+    } catch (error) {
+      logger.error('❌ Failed to initialize WhatsApp Service V2:', error);
+      // Não falhar o servidor se WhatsApp Service falhar
+      // O sistema pode funcionar sem ele
+    }
 
     this.server.listen(port, () => {
       logger.info(`🚀 Auzap Backend started successfully!`);
@@ -280,6 +312,7 @@ class AuzapServer {
       logger.info('   GET  /api - API information');
       logger.info('   POST /api/webhook/whatsapp - WhatsApp webhook');
       logger.info('   GET  /api/evolution/* - Evolution API routes');
+      logger.info('   GET  /api/v2/whatsapp/* - WhatsApp V2 API routes');
       logger.info('   POST /api/ai/* - AI service routes');
       logger.info('   GET  /api/dashboard/* - Dashboard routes');
       logger.info('   PUT  /api/settings/* - Settings routes');
@@ -289,6 +322,9 @@ class AuzapServer {
 
 // Start server
 const server = new AuzapServer();
-server.start();
+server.start().catch((error) => {
+  logger.error('Failed to start server:', error);
+  process.exit(1);
+});
 
 export default server;
