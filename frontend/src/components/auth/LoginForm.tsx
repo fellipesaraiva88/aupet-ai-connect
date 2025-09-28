@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -44,25 +46,9 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
           });
         }
       } else {
-        // Validação dos campos de signup
-        if (!fullName.trim()) {
-          setError('Nome completo é obrigatório');
-          return;
-        }
-        if (!organizationName.trim()) {
-          setError('Nome da organização é obrigatório');
-          return;
-        }
-
-        const { error } = await signUp(email, password, fullName, organizationName);
-        if (error) {
-          setError(error.message);
-        } else {
-          toast({
-            title: 'Bem-vindo à família Auzap! 🎉',
-            description: 'Que alegria ter você conosco! Verifique seu email para confirmar e começarmos juntos.',
-          });
-        }
+        // Redirecionar para página de signup completa
+        navigate('/signup');
+        return;
       }
     } catch (err) {
       setError((err as Error).message || 'Ocorreu um erro inesperado');
@@ -80,50 +66,12 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
         <CardDescription className="font-secondary">
           {mode === 'login'
             ? 'Faça login para acessar o dashboard'
-            : 'Crie sua conta para começar a usar o Auzap.ai'
+            : 'Você será redirecionado para a página de cadastro completo'
           }
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'signup' && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nome Completo</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Seu nome completo"
-                    required={mode === 'signup'}
-                    disabled={isLoading}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="organizationName">Nome da Organização</Label>
-                <div className="relative">
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="organizationName"
-                    type="text"
-                    value={organizationName}
-                    onChange={(e) => setOrganizationName(e.target.value)}
-                    placeholder="Nome da sua empresa/clínica"
-                    required={mode === 'signup'}
-                    disabled={isLoading}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -132,7 +80,7 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
-              required
+              required={mode === 'login'}
               disabled={isLoading}
             />
           </div>
@@ -191,7 +139,7 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {mode === 'login' ? 'Entrar' : 'Criar Conta'}
+            {mode === 'login' ? 'Entrar' : 'Ir para Cadastro Completo'}
           </Button>
         </form>
 
