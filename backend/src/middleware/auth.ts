@@ -41,8 +41,8 @@ export const authMiddleware = async (
     }
 
     // Add user info to request for multi-tenant isolation
-    // Try both user_metadata and raw_user_meta_data for compatibility
-    const userData = user.user_metadata || user.raw_user_meta_data || {};
+    // Use user_metadata for user data
+    const userData = user.user_metadata || {};
 
     // Buscar organização do usuário na tabela organization_users
     let organizationId = userData.organization_id || user.user_metadata?.organization_id;
