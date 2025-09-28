@@ -72,8 +72,8 @@ const Signup: React.FC = () => {
       newErrors.password = 'Senha é obrigatória';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Senha deve ter pelo menos 8 caracteres';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
-      newErrors.password = 'Senha deve conter: maiúscula, minúscula, número e símbolo';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+      newErrors.password = 'Senha deve conter: maiúscula, minúscula e número';
     }
 
     if (!formData.fullName) {
@@ -261,7 +261,7 @@ const Signup: React.FC = () => {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres (maiúscula, minúscula, número)"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   className={`pl-10 pr-10 ${errors.password ? 'border-red-500' : ''}`}

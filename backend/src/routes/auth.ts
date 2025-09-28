@@ -23,7 +23,7 @@ const supabaseService = new SupabaseService();
 
 const signupSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
   fullName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   organizationName: z.string().min(2, 'Nome da organização deve ter pelo menos 2 caracteres'),
   subscriptionTier: z.enum(['free', 'pro', 'enterprise']).default('free')
@@ -31,7 +31,7 @@ const signupSchema = z.object({
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres')
+  password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres')
 });
 
 const refreshTokenSchema = z.object({
@@ -76,31 +76,83 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
       throw createError('Erro ao criar usuário', 500);
     }
 
-    // Aguardar um momento para o trigger processar (melhor prática)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Criar organização e profile diretamente via função do Supabase
+    const { data: userData, error: userError } = await supabaseService.supabase
+      .rpc('create_user_with_organization', {
+        user_id: authData.user.id,
+        user_email: email,
+        user_full_name: fullName,
+        org_name: organizationName,
+        org_subscription_tier: subscriptionTier
+      });
 
-    // Buscar dados completos do usuário criado (profile + organization) após trigger
-    const { data: profile, error: profileError } = await supabaseService.supabase
-      .from('profiles')
-      .select(`
-        id,
-        email,
-        full_name,
-        role,
-        organization_id,
-        organizations (
+    let profile;
+
+    if (userError || !userData) {
+      logger.error('Erro ao criar usuário com organização:', {
+        error: userError,
+        userData,
+        userEmail: email,
+        orgName: organizationName
+      });
+
+      // Fallback: tentar criar manualmente
+      const organizationSlug = organizationName.toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      // Criar organização
+      const { data: org, error: orgError } = await supabaseService.supabase
+        .from('organizations')
+        .insert({
+          name: organizationName,
+          slug: organizationSlug,
+          subscription_tier: subscriptionTier,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (orgError || !org) {
+        logger.error('Erro ao criar organização:', orgError);
+        throw createError('Erro ao criar organização', 500);
+      }
+
+      // Criar profile
+      const { data: profileData, error: profileError } = await supabaseService.supabase
+        .from('profiles')
+        .insert({
+          user_id: authData.user.id,
+          email: email,
+          full_name: fullName,
+          role: 'admin',
+          organization_id: org.id,
+          is_active: true
+        })
+        .select(`
           id,
-          name,
-          slug,
-          subscription_tier
-        )
-      `)
-      .eq('user_id', authData.user.id)
-      .single();
+          email,
+          full_name,
+          role,
+          organization_id,
+          organizations (
+            id,
+            name,
+            slug,
+            subscription_tier
+          )
+        `)
+        .single();
 
-    if (profileError || !profile) {
-      logger.error('Erro ao buscar profile após signup:', profileError);
-      throw createError('Database error saving new user', 500);
+      if (profileError || !profileData) {
+        logger.error('Erro ao criar profile:', profileError);
+        throw createError('Erro ao criar perfil do usuário', 500);
+      }
+
+      profile = profileData;
+    } else {
+      profile = userData;
     }
 
     // Gerar tokens JWT
