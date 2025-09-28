@@ -1,21 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt, { SignOptions } from 'jsonwebtoken';
-import crypto from 'crypto';
 import { createError } from './errorHandler';
-import { AuthenticatedRequest } from '../types/index';
 import { logger } from '../utils/logger';
-import { envValidator } from '../config/env-validator';
-import { encryption } from '../utils/encryption';
-import { jwtService, validateToken } from '../services/jwt-service';
-
-interface JWTPayload {
-  id: string;
-  email: string;
-  organizationId: string;
-  role: string;
-  iat: number;
-  exp: number;
-}
+import { SupabaseService } from '../services/supabase';
 
 declare global {
   namespace Express {
@@ -36,88 +22,53 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Extract token from Authorization header or x-api-key header
+    // Extract token from Authorization header
     const authHeader = req.headers.authorization;
-    const apiKey = req.headers['x-api-key'] as string;
 
-    let token: string | undefined;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    } else if (apiKey) {
-      // Validate API key using secure environment configuration
-      const validApiKey = envValidator.get('API_KEY');
-
-      if (apiKey && apiKey === validApiKey) {
-        req.user = {
-          id: 'default-user',
-          email: 'dev@auzap.ai',
-          organizationId: '51cff6e5-0bd2-47bd-8840-ec65d5df265a',
-          role: 'admin'
-        };
-        return next();
-      } else {
-        throw createError('API Key inválida', 401);
-      }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw createError(401, 'Token de autorização necessário');
     }
 
-    if (!token) {
-      throw createError('Token de autenticação necessário', 401);
+    const token = authHeader.substring(7);
+
+    // Validate Supabase token
+    const supabaseService = new SupabaseService();
+    const { data: { user }, error } = await supabaseService.getClient().auth.getUser(token);
+
+    if (error || !user) {
+      logger.warn(`Invalid token: ${error?.message}`);
+      throw createError(401, 'Token inválido ou expirado');
     }
 
-    // Validate JWT token using advanced JWT service
-    const validation = validateToken(token, 'access');
-
-    if (!validation.valid || !validation.payload) {
-      if (validation.needsRefresh) {
-        throw createError('Token expirado - refresh necessário', 401);
-      }
-      throw createError(validation.error || 'Token inválido', 401);
-    }
-
-    // Add user info to request
+    // Add user info to request for multi-tenant isolation
     req.user = {
-      id: validation.payload.id,
-      email: validation.payload.email,
-      organizationId: validation.payload.organizationId,
-      role: validation.payload.role
+      id: user.id,
+      email: user.email || '',
+      organizationId: user.user_metadata?.organization_id || 'default-org-id',
+      role: user.user_metadata?.role || 'user'
     };
 
-    // Log warning if token needs refresh soon
-    if (validation.needsRefresh) {
-      logger.warn('Token expires soon - client should refresh', {
-        userId: validation.payload.id,
-        jti: validation.payload.jti
-      });
-    }
-
-    logger.debug('User authenticated with advanced JWT', {
-      userId: validation.payload.id,
-      organizationId: validation.payload.organizationId,
-      jti: validation.payload.jti
-    });
+    logger.info(`User authenticated: ${user.email} (${req.user.organizationId})`);
     next();
-
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return next(createError('Token inválido', 401));
+    if (error instanceof Error && error.message.includes('Token')) {
+      return next(error);
     }
-    if (error instanceof jwt.TokenExpiredError) {
-      return next(createError('Token expirado', 401));
-    }
-    next(error);
+    logger.error('Auth middleware error:', error);
+    return next(createError(401, 'Falha na autenticação'));
   }
 };
+
 
 // Middleware to check specific roles
 export const requireRole = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return next(createError('Usuário não autenticado', 401));
+      return next(createError(401, 'Usuário não autenticado'));
     }
 
     if (!roles.includes(req.user.role)) {
-      return next(createError('Permissão insuficiente', 403));
+      return next(createError(403, 'Permissão insuficiente'));
     }
 
     next();
@@ -127,26 +78,14 @@ export const requireRole = (roles: string[]) => {
 // Middleware to check organization access
 export const requireOrganization = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
-    return next(createError('Usuário não autenticado', 401));
+    return next(createError(401, 'Usuário não autenticado'));
   }
 
   const { organizationId } = req.params;
 
   if (organizationId && organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
-    return next(createError('Acesso negado para esta organização', 403));
+    return next(createError(403, 'Acesso negado para esta organização'));
   }
 
   next();
-};
-
-// Generate JWT token pair using advanced service
-export const generateToken = (payload: Omit<JWTPayload, 'iat' | 'exp'>): string => {
-  // Para compatibilidade, retorna apenas o access token
-  const tokenPair = jwtService.generateTokenPair(payload);
-  return tokenPair.accessToken;
-};
-
-// Generate complete token pair (recommended)
-export const generateTokenPair = (payload: Omit<JWTPayload, 'iat' | 'exp' | 'jti' | 'type'>) => {
-  return jwtService.generateTokenPair(payload);
 };

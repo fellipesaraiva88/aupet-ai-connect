@@ -60,12 +60,35 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
 // ===================================================================
 export const corsConfig = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // In development, allow all localhost origins and Lovable
+    if (process.env.NODE_ENV === 'development') {
+      if (!origin ||
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:') ||
+          origin.includes('lovableproject.com')) {
+        return callback(null, true);
+      }
+    }
+
     const frontendUrl = envValidator.get('FRONTEND_URL');
     const allowedOrigins = [
       frontendUrl,
+      // Local development
       'http://localhost:8083',
+      'http://localhost:8082',
+      'http://localhost:8081',
+      'http://localhost:8080',
       'http://localhost:3000',
-      'http://localhost:5173'
+      'http://localhost:5173',
+      // Production Render URLs
+      'https://auzap-frontend-final.onrender.com',
+      'https://auzap-frontend-v3.onrender.com',
+      'https://auzap-frontend-v2.onrender.com',
+      'https://auzap-frontend.onrender.com',
+      'https://test-experimental-fix.onrender.com',
+      'https://test-visual-indicators.onrender.com',
+      'https://test-render-cache.onrender.com',
+      'https://test-signup-form.onrender.com'
     ];
 
     // Allow requests with no origin (mobile apps, etc.)
@@ -74,6 +97,7 @@ export const corsConfig = {
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       return callback(new Error('Not allowed by CORS'), false);
     }
   },
