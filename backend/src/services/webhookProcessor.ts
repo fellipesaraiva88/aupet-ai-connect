@@ -208,12 +208,11 @@ export class WebhookProcessor {
           instance_id: instance.data.id,
           content: content.text,
           direction,
-          message_type: messageType,
+          message_type: messageType as "text" | "image" | "audio" | "document" | "video",
           external_id: messageData.key.id,
           organization_id: instance.data.organization_id,
           created_at: savedMessage.timestamp,
-          customerName: contact.name,
-          customerPhone: phoneNumber
+          customerName: contact.name
         });
       }
 

@@ -204,6 +204,19 @@ export class WebSocketService {
     });
   }
 
+  public notifyMessageUpdate(organizationId: string, data: { messageId: string; status: string }): void {
+    this.io.to(`org_${organizationId}`).emit('message_update', {
+      messageId: data.messageId,
+      status: data.status,
+      updatedAt: new Date().toISOString()
+    });
+
+    logger.websocket('MESSAGE_UPDATE_SENT', `org_${organizationId}`, {
+      messageId: data.messageId,
+      status: data.status
+    });
+  }
+
   private handleMessageRead(socket: Socket, data: { messageId: string; conversationId: string }): void {
     const client = this.connectedClients.get(socket.id);
     if (!client) return;

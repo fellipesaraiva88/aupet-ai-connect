@@ -18,6 +18,15 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   };
 }
 
+export interface ApiResponseWithPagination<T = any> extends ApiResponse<T> {
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 // Evolution API Types
 export interface EvolutionInstance {
   instanceName: string;

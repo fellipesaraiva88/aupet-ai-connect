@@ -349,7 +349,7 @@ router.get('/templates', asyncHandler(async (req: Request, res: Response) => {
 
     if (error) throw error;
 
-    const response: ApiResponse<any> = {
+    const response: any = {
       success: true,
       data: templates || [],
       message: 'Templates obtidos com sucesso',
@@ -542,7 +542,7 @@ router.get('/message-queue', asyncHandler(async (req: Request, res: Response) =>
 
     if (error) throw error;
 
-    const response: ApiResponse<any> = {
+    const response: any = {
       success: true,
       data: queue || [],
       message: 'Fila de mensagens obtida com sucesso',

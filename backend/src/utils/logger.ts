@@ -64,6 +64,10 @@ class Logger {
   supabase(operation: string, table: string, details?: any): void {
     this.info(`Supabase - ${operation} [${table}]`, details);
   }
+
+  webhook(action: string, event: string, details?: any): void {
+    this.info(`Webhook - ${action} [${event}]`, details);
+  }
 }
 
 export const logger = new Logger();
