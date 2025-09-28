@@ -1,0 +1,2 @@
+- não quero que você analise nunca no local, e sim no deployado... Você fez usando o MCP do Render, tendo front e backend.
+- não quero que você analise nunca no local, e sim no deployado... Você fez usando o MCP do Render, tendo front e backend.

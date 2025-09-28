@@ -11,6 +11,7 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { ToastContainer } from "@/components/ui/enhanced-toast";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Core pages loaded immediately
 import Index from "./pages/Index";
@@ -94,7 +95,8 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   return (
-    <Routes>
+    <ErrorBoundary>
+      <Routes>
       {/* Public Routes */}
       <Route path="/login" element={
         <PublicRoute>
@@ -171,38 +173,51 @@ const AppRoutes = () => {
       } />
       <Route path="/appointments" element={
         <ProtectedRoute>
-          <Appointments />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Appointments />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/appointments/new" element={
         <ProtectedRoute>
-          <Appointments />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Appointments />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/catalog" element={
         <ProtectedRoute>
-          <Catalog />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Catalog />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/analytics" element={
         <ProtectedRoute>
-          <Analytics />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Analytics />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/analytics/history" element={
         <ProtectedRoute>
-          <Analytics />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Analytics />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/settings" element={
         <ProtectedRoute>
-          <Settings />
+          <Suspense fallback={<PageLoadingComponent />}>
+            <Settings />
+          </Suspense>
         </ProtectedRoute>
       } />
 
       {/* 404 Route */}
       <Route path="*" element={<NotFound />} />
-    </Routes>
+      </Routes>
+    </ErrorBoundary>
   );
 };
 
