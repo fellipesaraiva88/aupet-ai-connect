@@ -49,28 +49,28 @@ const Index = () => {
             {/* Modern Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Central do Amor 🏠💝</h1>
                 <p className="text-muted-foreground text-sm sm:text-base">
-                  Visão geral do seu negócio de cuidados para pets
+                  Acompanhe toda a magia e carinho que você espalha cuidando dos nossos amiguinhos peludos
                 </p>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <LoadingButton
                   variant="outline"
-                  onClick={() => handleNavigateWithLoading('/analytics', 'Carregando analytics...')}
+                  onClick={() => handleNavigateWithLoading('/analytics', 'Carregando insights especiais...')}
                   icon={<TrendingUp className="h-4 w-4" />}
                   className="flex-1 sm:flex-none"
                 >
-                  <span className="hidden sm:inline">Analytics</span>
+                  <span className="hidden sm:inline">Insights do Coração 📊</span>
                 </LoadingButton>
                 <FeedbackButton
                   variant="info"
-                  onClick={() => handleNavigateWithLoading('/conversations', 'Carregando conversas...')}
+                  onClick={() => handleNavigateWithLoading('/conversations', 'Carregando conversas cheias de amor...')}
                   className="flex-1 sm:flex-none"
                 >
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    <span className="hidden sm:inline">Ver </span>Conversas
+                    <span className="hidden sm:inline">Ver </span>Conversas Especiais 💝
                   </div>
                 </FeedbackButton>
               </div>
@@ -79,9 +79,9 @@ const Index = () => {
             {/* Apple Stats Grid */}
             <AppleStatsGrid>
               <AppleCard
-                title="Conversas Hoje"
+                title="Corações Tocados Hoje 💝"
                 value={dashboardStats?.conversations_today || 0}
-                subtitle="Famílias atendidas"
+                subtitle="Famílias acolhidas com carinho"
                 icon={MessageSquare}
                 trend={{
                   value: "+12%",
@@ -90,9 +90,9 @@ const Index = () => {
                 variant="default"
               />
               <AppleCard
-                title="Agendamentos"
+                title="Encontros de Cuidado 🗓️"
                 value={dashboardStats?.daily_appointments || 0}
-                subtitle="Consultas marcadas"
+                subtitle="Momentos especiais agendados"
                 icon={Calendar}
                 trend={{
                   value: "+8%",
@@ -101,9 +101,9 @@ const Index = () => {
                 variant="gradient"
               />
               <AppleCard
-                title="Taxa de Resposta"
+                title="Magia da IA Auzap ✨"
                 value={`${dashboardStats?.response_rate_percent?.toFixed(1) || '87.5'}%`}
-                subtitle="Eficiência da IA"
+                subtitle="Amor em cada resposta"
                 icon={Bot}
                 trend={{
                   value: "+5%",
@@ -112,9 +112,9 @@ const Index = () => {
                 variant="elevated"
               />
               <AppleCard
-                title="Receita Hoje"
+                title="Prosperidade Compartilhada 💰"
                 value={`R$ ${dashboardStats?.daily_revenue?.toLocaleString('pt-BR') || '1.240'}`}
-                subtitle="Faturamento"
+                subtitle="Sucesso construído com amor"
                 icon={TrendingUp}
                 trend={{
                   value: "+15%",
@@ -130,10 +130,10 @@ const Index = () => {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    Ações Rápidas
+                    Acesso Carinhoso ⚡💕
                   </CardTitle>
                   <CardDescription className="text-[13px] text-muted-foreground tracking-[-0.005em]">
-                    Acesse rapidamente as principais funcionalidades
+                    Tudo que você precisa para espalhar amor pelos amiguinhos
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-3">
@@ -143,7 +143,7 @@ const Index = () => {
                     onClick={() => navigate('/conversations')}
                   >
                     <MessageSquare className="h-5 w-5 text-primary" />
-                    <span className="text-[12px] font-medium tracking-[-0.01em]">Conversas</span>
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Conversas 💬</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -151,7 +151,7 @@ const Index = () => {
                     onClick={() => navigate('/appointments')}
                   >
                     <Calendar className="h-5 w-5 text-primary" />
-                    <span className="text-[12px] font-medium tracking-[-0.01em]">Agendamentos</span>
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Agendamentos 📅</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -159,7 +159,7 @@ const Index = () => {
                     onClick={() => navigate('/customers')}
                   >
                     <Users className="h-5 w-5 text-primary" />
-                    <span className="text-[12px] font-medium tracking-[-0.01em]">Clientes</span>
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Famílias 👨‍👩‍👧‍👦</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -167,7 +167,7 @@ const Index = () => {
                     onClick={() => navigate('/pets')}
                   >
                     <Heart className="h-5 w-5 text-primary" />
-                    <span className="text-[12px] font-medium tracking-[-0.01em]">Pets</span>
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Pets 🐾</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -176,10 +176,10 @@ const Index = () => {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
                     <Clock className="h-4 w-4 text-primary" />
-                    Atividade Recente
+                    Momentos Especiais 🌟
                   </CardTitle>
                   <CardDescription className="text-[13px] text-muted-foreground tracking-[-0.005em]">
-                    Últimas atividades do sistema
+                    Últimos momentos de carinho e cuidado
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -208,7 +208,7 @@ const Index = () => {
                             <MessageSquare className="h-3.5 w-3.5 text-primary" />
                           </div>
                           <div>
-                            <p className="text-[13px] font-medium tracking-[-0.01em]">Famílias abraçadas hoje</p>
+                            <p className="text-[13px] font-medium tracking-[-0.01em]">Corações tocados hoje 💝</p>
                             <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 2 minutos</p>
                           </div>
                         </div>
@@ -224,7 +224,7 @@ const Index = () => {
                           <Calendar className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-[13px] font-medium tracking-[-0.01em]">Agendamento confirmado</p>
+                          <p className="text-[13px] font-medium tracking-[-0.01em]">Encontro de cuidado confirmado ✨</p>
                           <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 5 minutos</p>
                         </div>
                       </div>
@@ -234,7 +234,7 @@ const Index = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-[13px] font-medium tracking-[-0.01em]">Taxa de eficiência IA</p>
+                            <p className="text-[13px] font-medium tracking-[-0.01em]">Magia da IA em ação 🪄</p>
                             <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 10 minutos</p>
                           </div>
                           <div className="flex flex-col items-end gap-1">

@@ -26,51 +26,51 @@ interface SidebarProps {
 const menuItems = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    label: "Central do Amor 💝",
     icon: LayoutDashboard,
     href: "/",
   },
   {
     id: "conversations",
-    label: "Conversas",
+    label: "Conversas Especiais 💬",
     icon: MessageSquare,
     href: "/conversations",
     badge: 5,
   },
   {
     id: "clients-pets",
-    label: "Clientes & Pets",
+    label: "Famílias & Pets 🏠🐾",
     icon: Activity,
     href: "/clients-pets",
     badge: "Nova",
   },
   {
     id: "appointments",
-    label: "Agendamentos",
+    label: "Encontros de Cuidado 📅",
     icon: Calendar,
     href: "/appointments",
   },
   {
     id: "catalog",
-    label: "Catálogo",
+    label: "Lojinha do Amor 🛍️",
     icon: Package,
     href: "/catalog",
   },
   {
     id: "ai-config",
-    label: "Configuração IA",
+    label: "Configuração IA 🤖💕",
     icon: Bot,
     href: "/ai-config",
   },
   {
     id: "analytics",
-    label: "Analytics",
+    label: "Insights do Coração 📊",
     icon: BarChart3,
     href: "/analytics",
   },
   {
     id: "settings",
-    label: "Configurações",
+    label: "Preferências 🔧💝",
     icon: Settings,
     href: "/settings",
   },
@@ -104,10 +104,10 @@ export function Sidebar({
           </div>
           <div className="flex flex-col">
             <span className="font-semibold text-[15px] text-foreground tracking-[-0.01em]">
-              Auzap
+              Auzap 💝
             </span>
             <span className="text-[11px] text-muted-foreground font-medium tracking-[-0.005em]">
-              Pet Care AI
+              Cuidado com Amor & IA
             </span>
           </div>
         </div>
@@ -163,10 +163,10 @@ export function Sidebar({
             <Bot className="h-4 w-4 text-primary" />
           </div>
           <p className="text-[12px] font-semibold mb-0.5 text-foreground tracking-[-0.01em]">
-            Sistema Ativo
+            Cuidando com Amor ✨
           </p>
           <p className="text-[10px] text-muted-foreground tracking-[-0.005em]">
-            Monitoramento 24/7
+            Proteção & carinho 24/7
           </p>
         </div>
       </div>

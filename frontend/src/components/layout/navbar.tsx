@@ -54,8 +54,8 @@ export function Navbar({
       });
     } else {
       toast({
-        title: "Até logo! 👋",
-        description: "Obrigado por cuidar de tantas famílias hoje. Estamos aqui quando precisar!",
+        title: "Até logo! 👋💝",
+        description: "Obrigado por espalhar tanto amor e cuidado pelos nossos amiguinhos. Estamos aqui sempre que precisar!",
       });
     }
   };
@@ -82,7 +82,7 @@ export function Navbar({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 rounded-[12px] bg-primary/6 px-3 py-1.5 border border-primary/10">
             <div className="h-1.5 w-1.5 rounded-full bg-primary animate-apple-pulse" />
-            <span className="text-[12px] font-medium text-primary tracking-[-0.01em]">Sistema Ativo</span>
+            <span className="text-[12px] font-medium text-primary tracking-[-0.01em]">Cuidando com Amor ✨</span>
           </div>
         </div>
 

@@ -27,15 +27,15 @@ const Login: React.FC = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!formData.email) {
-      newErrors.email = 'Email é obrigatório';
+      newErrors.email = 'Precisamos do seu email para te encontrar 💌';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+      newErrors.email = 'Por favor, verifique se o email está correto 😊';
     }
 
     if (!formData.password) {
-      newErrors.password = 'Senha é obrigatória';
+      newErrors.password = 'Sua senha especial é necessária 🔐';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+      newErrors.password = 'Para sua segurança, use pelo menos 6 caracteres 🛡️';
     }
 
     setErrors(newErrors);
@@ -47,8 +47,8 @@ const Login: React.FC = () => {
 
     if (!validateForm()) {
       toast({
-        title: 'Erro de validação',
-        description: 'Por favor, corrija os erros abaixo.',
+        title: 'Opa! Vamos ajudar você 🤗',
+        description: 'Por favor, verifique as informações abaixo com carinho.',
         variant: 'destructive'
       });
       return;
@@ -62,8 +62,8 @@ const Login: React.FC = () => {
       if (error) {
         console.error('Login error:', error);
         toast({
-          title: 'Erro no login',
-          description: error.message || 'Credenciais inválidas',
+          title: 'Ops! Algo não deu certo 🥺',
+          description: 'Verifique suas credenciais com carinho. Estamos aqui para ajudar!',
           variant: 'destructive'
         });
         return;
@@ -71,8 +71,8 @@ const Login: React.FC = () => {
 
       if (data?.user) {
         toast({
-          title: 'Login realizado com sucesso!',
-          description: 'Redirecionando para o dashboard...',
+          title: 'Bem-vindo de volta! 🎉💝',
+          description: 'Que alegria ter você aqui! Vamos espalhar muito amor pelos pets.',
         });
 
         // Redirect to dashboard
@@ -81,8 +81,8 @@ const Login: React.FC = () => {
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: 'Erro no login',
-        description: 'Ocorreu um erro inesperado. Tente novamente.',
+        title: 'Ops! Precisamos de um minutinho 🤗',
+        description: 'Algo inesperado aconteceu, mas vamos resolver isso juntos!',
         variant: 'destructive'
       });
     } finally {
@@ -129,8 +129,8 @@ const Login: React.FC = () => {
         localStorage.setItem('auzap_dev_token', 'dev-token-' + Date.now());
 
         toast({
-          title: 'Login de desenvolvimento ativo',
-          description: 'Acesso liberado para desenvolvimento',
+          title: 'Modo desenvolvedores ativo! 💻💝',
+          description: 'Acesso especial liberado com muito carinho',
         });
 
         // Force navigation to dashboard
@@ -140,8 +140,8 @@ const Login: React.FC = () => {
 
       if (data?.user) {
         toast({
-          title: 'Login realizado com sucesso!',
-          description: 'Redirecionando para o dashboard...',
+          title: 'Bem-vindo de volta! 🎉💝',
+          description: 'Que alegria ter você aqui! Vamos espalhar muito amor pelos pets.',
         });
         navigate('/', { replace: true });
       }
@@ -160,8 +160,8 @@ const Login: React.FC = () => {
       localStorage.setItem('auzap_dev_token', 'dev-token-' + Date.now());
 
       toast({
-        title: 'Modo de desenvolvimento ativo',
-        description: 'Usando autenticação mock',
+        title: 'Modo desenvolvimento especial! 🚀💝',
+        description: 'Usando autenticação carinhosa para devs',
       });
 
       window.location.href = '/';
@@ -189,10 +189,10 @@ const Login: React.FC = () => {
 
           <div className="space-y-2">
             <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Bem-vindo de volta!
+              Que alegria ter você de volta! 💝
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
-              Entre na sua conta para cuidar dos pets com amor e tecnologia
+              Entre na sua conta e continue espalhando amor e cuidado pelos nossos amiguinhos peludos
             </CardDescription>
           </div>
         </CardHeader>
@@ -206,7 +206,7 @@ const Login: React.FC = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder="seu-email-especial@exemplo.com"
                   value={formData.email}
                   onChange={handleInputChange('email')}
                   className={`pl-10 h-11 ${errors.email ? 'border-destructive' : ''}`}
@@ -225,7 +225,7 @@ const Login: React.FC = () => {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="••••••••••"
                   value={formData.password}
                   onChange={handleInputChange('password')}
                   className={`pl-10 pr-10 h-11 ${errors.password ? 'border-destructive' : ''}`}
@@ -258,7 +258,7 @@ const Login: React.FC = () => {
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
                 <Label htmlFor="remember" className="text-sm">
-                  Lembrar de mim
+                  Lembrar de mim com carinho 💕
                 </Label>
               </div>
               <Button
@@ -266,7 +266,7 @@ const Login: React.FC = () => {
                 className="p-0 h-auto text-sm text-primary hover:text-primary/80"
                 onClick={() => navigate('/forgot-password')}
               >
-                Esqueceu a senha?
+                Esqueceu a senha? Não se preocupe! 🤗
               </Button>
             </div>
 
@@ -278,11 +278,11 @@ const Login: React.FC = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
+                  Entrando com carinho...
                 </>
               ) : (
                 <>
-                  Entrar
+                  Entrar com Amor 💝
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
@@ -299,20 +299,20 @@ const Login: React.FC = () => {
                 disabled={isLoading}
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Login Rápido (Dev)
+                Acesso Carinhoso para Desenvolvedores 💖
               </Button>
             </div>
           )}
 
           <div className="text-center pt-4">
             <p className="text-sm text-muted-foreground">
-              Não tem uma conta?{' '}
+              Ainda não faz parte da nossa família?{' '}
               <Button
                 variant="link"
                 className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
                 onClick={() => navigate('/signup')}
               >
-                Criar conta
+                Junte-se a nós com amor! 🐾💕
               </Button>
             </p>
           </div>
