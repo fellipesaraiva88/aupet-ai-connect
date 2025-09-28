@@ -123,10 +123,15 @@ export default {
         'medium': 'var(--shadow-medium)',
         'large': 'var(--shadow-large)',
         'glow': 'var(--shadow-glow)',
+        'glass': 'var(--glass-shadow)',
+        'neuro-light': 'var(--neuro-shadow-light)',
+        'neuro-dark': 'var(--neuro-shadow-dark)',
+        'pet-glow': 'var(--pet-glow)',
       },
       transitionTimingFunction: {
         'smooth': 'var(--transition-smooth)',
         'bounce': 'var(--transition-bounce)',
+        'glass': 'var(--transition-glass)',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -166,6 +171,30 @@ export default {
           "0%, 100%": { transform: "translateY(-5%)" },
           "50%": { transform: "translateY(0)" },
         },
+        "paw-walk": {
+          "0%": { transform: "translateX(-10px) scale(0)", opacity: "0" },
+          "20%": { transform: "translateX(0) scale(1)", opacity: "1" },
+          "80%": { transform: "translateX(0) scale(1)", opacity: "1" },
+          "100%": { transform: "translateX(10px) scale(0)", opacity: "0" },
+        },
+        "tail-wag": {
+          "0%, 100%": { transform: "rotate(-10deg)" },
+          "50%": { transform: "rotate(10deg)" },
+        },
+        "paw-print-reveal": {
+          "0%": { opacity: "0", transform: "scale(0.8)" },
+          "50%": { opacity: "0.3", transform: "scale(1.1)" },
+          "100%": { opacity: "0.1", transform: "scale(1)" },
+        },
+        "glass-float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-2px)" },
+        },
+        "pet-bounce": {
+          "0%, 20%, 50%, 80%, 100%": { transform: "translateY(0)" },
+          "40%": { transform: "translateY(-5px)" },
+          "60%": { transform: "translateY(-3px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -174,6 +203,11 @@ export default {
         "slide-up": "slide-up 0.3s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "bounce-gentle": "bounce-gentle 2s ease-in-out infinite",
+        "paw-walk": "paw-walk 3s ease-in-out infinite",
+        "tail-wag": "tail-wag 0.8s ease-in-out infinite",
+        "paw-print-reveal": "paw-print-reveal 2s ease-out",
+        "glass-float": "glass-float 3s ease-in-out infinite",
+        "pet-bounce": "pet-bounce 1.5s ease-in-out infinite",
       },
     },
   },

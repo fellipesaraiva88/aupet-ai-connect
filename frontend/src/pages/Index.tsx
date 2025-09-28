@@ -26,16 +26,31 @@ const Index = () => {
   useRealTimeSubscriptions(organizationId);
   return <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-hero opacity-90" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]" />
-        
+      <div className="relative overflow-hidden paw-pattern">
+        {/* Background gradient with glass effect */}
+        <div className="absolute inset-0 bg-gradient-hero opacity-95" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(240,247,255,0.2),transparent)]" />
+
+        {/* Floating elements animation */}
+        <div className="absolute top-20 left-10 animate-glass-float">
+          <div className="w-16 h-16 rounded-full glass-morphism opacity-20"></div>
+        </div>
+        <div className="absolute top-32 right-20 animate-pet-bounce delay-1000">
+          <div className="w-12 h-12 rounded-full glass-morphism opacity-15"></div>
+        </div>
+
         {/* Content */}
         <div className="relative">
           <Navbar />
-          
-          
+
+          {/* Welcome message with pet emoji */}
+          <div className="text-center py-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 glass-morphism rounded-full text-white mb-4">
+              <span className="animate-tail-wag">🐾</span>
+              <span className="text-sm font-medium">Bem-vindo ao Auzap Pet AI</span>
+              <span className="animate-tail-wag">🐕</span>
+            </div>
+          </div>
         </div>
       </div>
 
