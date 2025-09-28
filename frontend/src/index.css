@@ -1,121 +1,98 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Auzap.ai Design System - Atendimento humano, 100% automatizado */
+/* Auzap.ai Apple-Style Design System - Inspired by Apple's Human Interface Guidelines */
 
 @layer base {
   :root {
-    /* Minimalist White & Blue Design System */
-    --background: 0 0% 100%; /* Pure White */
-    --foreground: 220 100% 20%; /* Deep Blue */
+    /* Apple-Style Design System */
+    --background: 0 0% 100%; /* Pure White #FFFFFF */
+    --foreground: 0 0% 11%; /* Near Black #1D1D1F */
 
     --card: 0 0% 100%; /* Pure White */
-    --card-foreground: 220 100% 20%; /* Deep Blue */
+    --card-foreground: 0 0% 11%; /* Near Black */
 
     --popover: 0 0% 100%; /* Pure White */
-    --popover-foreground: 220 100% 20%; /* Deep Blue */
+    --popover-foreground: 0 0% 11%; /* Near Black */
 
-    /* Primary - Clean Blue Palette */
-    --primary: 220 100% 60%; /* #3366FF - Clean Blue */
+    /* Apple Blue System */
+    --primary: 211 100% 50%; /* Apple Blue #007AFF */
     --primary-foreground: 0 0% 100%; /* Pure White */
-    --primary-light: 220 100% 70%; /* Light Blue */
-    --primary-dark: 220 100% 50%; /* Dark Blue */
+    --primary-light: 211 100% 60%; /* Light Blue */
+    --primary-dark: 211 100% 40%; /* Dark Blue */
 
-    /* Secondary - Ultra Light Blue */
-    --secondary: 220 100% 98%; /* #F8FAFF - Ultra Light Blue */
-    --secondary-foreground: 220 100% 20%; /* Deep Blue */
-    --secondary-light: 220 100% 99%; /* Almost White */
-    --secondary-dark: 220 100% 95%; /* Light Blue */
+    /* Apple Gray System */
+    --secondary: 0 0% 96%; /* Light Gray #F5F5F7 */
+    --secondary-foreground: 0 0% 11%; /* Near Black */
+    --secondary-light: 0 0% 98%; /* Ultra Light Gray */
+    --secondary-dark: 0 0% 90%; /* Medium Light Gray */
 
-    /* Accent - Vibrant Blue */
-    --accent: 220 100% 55%; /* #1A53FF - Vibrant Blue */
-    --accent-foreground: 0 0% 100%; /* Pure White */
-    --accent-light: 220 100% 65%;
+    /* Apple Accent */
+    --accent: 0 0% 96%; /* Light Gray for accents */
+    --accent-foreground: 0 0% 11%; /* Near Black */
 
-    /* Neutral Colors - Clean & Minimal */
-    --muted: 220 30% 97%; /* #F7F8FA - Clean Gray */
-    --muted-foreground: 220 30% 40%; /* Medium Gray */
+    /* Apple Neutral Colors */
+    --muted: 0 0% 96%; /* #F5F5F7 - Apple Light Gray */
+    --muted-foreground: 0 0% 53%; /* #86868B - Apple Medium Gray */
 
-    --destructive: 0 84% 60%;
+    /* Apple System Colors */
+    --destructive: 4 90% 58%; /* Apple Red #FF3B30 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 50% 92%; /* #E8ECEF - Light Border */
-    --input: 220 30% 98%; /* #FAFBFC - Clean Input */
-    --ring: 220 100% 60%; /* #3366FF - Focus Ring */
+    --success: 142 76% 47%; /* Apple Green #34C759 */
+    --warning: 48 100% 50%; /* Apple Yellow #FFCC00 */
+    --info: 211 100% 50%; /* Apple Blue #007AFF */
 
-    --radius: 0.5rem; /* Smaller radius for cleaner look */
+    --border: 0 0% 89%; /* #E3E3E3 - Apple Border Gray */
+    --input: 0 0% 96%; /* #F5F5F7 - Apple Input Background */
+    --ring: 211 100% 50%; /* Apple Blue Focus Ring */
 
-    /* Minimalist Gradients */
-    --gradient-primary: linear-gradient(135deg, #3366FF, #1A53FF);
-    --gradient-secondary: linear-gradient(135deg, #F8FAFF, #FFFFFF);
-    --gradient-hero: linear-gradient(135deg, #3366FF 0%, #1A53FF 100%);
-    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 255, 0.6));
+    --radius: 1rem; /* Apple-style larger radius */
 
-    /* Clean Shadows */
-    --shadow-soft: 0 2px 8px rgba(51, 102, 255, 0.08);
-    --shadow-medium: 0 4px 16px rgba(51, 102, 255, 0.12);
-    --shadow-large: 0 8px 32px rgba(51, 102, 255, 0.16);
-    --shadow-glow: 0 0 24px rgba(51, 102, 255, 0.2);
+    /* Apple Shadows */
+    --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-large: 0 16px 32px rgba(0, 0, 0, 0.2);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-    /* Modern Design Tokens */
-    --glass-bg: rgba(255, 255, 255, 0.8);
-    --glass-border: rgba(51, 102, 255, 0.15);
-    --glass-blur: blur(16px);
-    --glass-shadow: 0 4px 24px rgba(51, 102, 255, 0.08);
+    /* Apple Backdrop Effects */
+    --backdrop-blur: blur(20px);
+    --backdrop-bg: rgba(255, 255, 255, 0.8);
+    --backdrop-border: rgba(0, 0, 0, 0.1);
 
-    /* Clean Neumorphism */
-    --neuro-light: #FFFFFF;
-    --neuro-dark: #F0F4F8;
-    --neuro-shadow-light: 0 4px 12px rgba(51, 102, 255, 0.08);
-    --neuro-shadow-dark: inset 1px 1px 3px rgba(51, 102, 255, 0.05);
-    --neuro-shadow-inset: inset -1px -1px 3px rgba(255, 255, 255, 0.9);
+    /* Apple Typography */
+    --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'SF Mono', ui-monospace, 'Monaco', monospace;
 
-    /* Typography - Modern & Clean */
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-secondary: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    /* Apple Transitions */
+    --transition-fast: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-standard: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-slow: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-    /* Smooth Transitions */
-    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    --transition-glass: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Apple Spacing Grid (8px base) */
+    --spacing-xs: 0.5rem; /* 8px */
+    --spacing-sm: 1rem; /* 16px */
+    --spacing-md: 1.5rem; /* 24px */
+    --spacing-lg: 2rem; /* 32px */
+    --spacing-xl: 3rem; /* 48px */
+    --spacing-2xl: 4rem; /* 64px */
 
-    /* Clean Patterns */
-    --dot-pattern: radial-gradient(circle, rgba(51, 102, 255, 0.1) 1px, transparent 1px);
-    --grid-pattern: linear-gradient(rgba(51, 102, 255, 0.05) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(51, 102, 255, 0.05) 1px, transparent 1px);
-    --minimal-glow: 0 0 16px rgba(51, 102, 255, 0.2);
-
-    /* WhatsApp Colors */
+    /* WhatsApp Colors (preserved) */
     --whatsapp-green: 142 70% 49%;
     --whatsapp-light: 142 70% 96%;
     --whatsapp-dark: 142 70% 39%;
 
-    /* Status Colors */
-    --success: 142 76% 36%;
-    --warning: 48 100% 67%; /* Usando amarelo da marca */
-    --error: 0 84% 60%;
-    --info: 223 86% 52%; /* Usando azul da marca */
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar Apple-style */
+    --sidebar-background: 0 0% 98%; /* #FAFAFA */
+    --sidebar-foreground: 0 0% 11%; /* Near Black */
+    --sidebar-border: 0 0% 89%; /* Apple Border Gray */
+    --sidebar-backdrop: rgba(250, 250, 250, 0.8);
   }
 
   .dark {
@@ -164,85 +141,110 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-primary);
-    letter-spacing: -0.02em;
-    line-height: 1.5;
+    font-family: var(--font-text);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.47; /* Apple standard line height */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Apple Typography Hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-primary);
+    font-family: var(--font-display);
+    font-weight: 600; /* Apple standard semibold */
+    color: hsl(var(--foreground));
+    letter-spacing: -0.03em; /* Tighter for display */
+    line-height: 1.1;
+  }
+
+  h1 { font-size: 2.5rem; font-weight: 700; } /* Large Title */
+  h2 { font-size: 2rem; font-weight: 600; }   /* Title 1 */
+  h3 { font-size: 1.5rem; font-weight: 600; } /* Title 2 */
+  h4 { font-size: 1.25rem; font-weight: 600; } /* Title 3 */
+  h5 { font-size: 1.125rem; font-weight: 600; } /* Headline */
+  h6 { font-size: 1rem; font-weight: 600; } /* Subheadline */
+
+  /* Apple Text Styles */
+  .text-display {
+    font-family: var(--font-display);
     font-weight: 700;
-    color: hsl(var(--primary));
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .text-body {
+    font-family: var(--font-text);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.47;
+  }
+
+  .text-caption {
+    font-family: var(--font-text);
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    line-height: 1.38;
   }
 
   .font-mono {
-    font-family: var(--font-secondary);
-    letter-spacing: -0.02em;
-    line-height: 1.02;
+    font-family: var(--font-mono);
+    letter-spacing: 0;
+    line-height: 1.45;
   }
 
-  .text-impact {
-    font-family: var(--font-secondary);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  /* Minimalist Animations */
-  @keyframes fade-in {
-    0% { opacity: 0; transform: translateY(8px); }
+  /* Apple-Style Animations - Refined and Subtle */
+  @keyframes apple-fade-in {
+    0% { opacity: 0; transform: translateY(4px); }
     100% { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes slide-in-right {
-    0% { opacity: 0; transform: translateX(16px); }
+  @keyframes apple-slide-in {
+    0% { opacity: 0; transform: translateX(8px); }
     100% { opacity: 1; transform: translateX(0); }
   }
 
-  @keyframes slide-in-left {
-    0% { opacity: 0; transform: translateX(-16px); }
-    100% { opacity: 1; transform: translateX(0); }
+  @keyframes apple-scale-in {
+    0% { opacity: 0; transform: scale(0.98); }
+    100% { opacity: 1; transform: scale(1); }
   }
 
-  @keyframes gentle-float {
+  @keyframes apple-gentle-hover {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-4px); }
+    50% { transform: translateY(-1px); }
   }
 
-  @keyframes pulse-soft {
+  @keyframes apple-subtle-pulse {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+    50% { opacity: 0.8; }
   }
 
-  @keyframes scale-in {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
+  @keyframes apple-spring {
+    0% { opacity: 0; transform: scale(0.95) translateY(8px); }
+    60% { opacity: 1; transform: scale(1.01) translateY(-1px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
   }
 
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+  @keyframes apple-shimmer {
+    0% { transform: translateX(-100%); opacity: 0; }
+    50% { opacity: 0.2; }
+    100% { transform: translateX(100%); opacity: 0; }
   }
 
-  @keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px rgba(51, 102, 255, 0.2); }
-    50% { box-shadow: 0 0 20px rgba(51, 102, 255, 0.4); }
+  @keyframes apple-glow {
+    0%, 100% { box-shadow: 0 0 0 rgba(0, 122, 255, 0); }
+    50% { box-shadow: 0 0 16px rgba(0, 122, 255, 0.1); }
   }
 
-  @keyframes slideUp {
-    0% { opacity: 0; transform: translateY(20px); }
+  @keyframes apple-slide-up {
+    0% { opacity: 0; transform: translateY(12px); }
     100% { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes bounceIn {
-    0% { opacity: 0; transform: scale(0.3); }
-    50% { opacity: 1; transform: scale(1.05); }
-    70% { transform: scale(0.9); }
+  @keyframes apple-bounce-soft {
+    0% { opacity: 0; transform: scale(0.96); }
+    60% { opacity: 1; transform: scale(1.005); }
     100% { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes slideInFromRight {
-    0% { opacity: 0; transform: translateX(30px); }
-    100% { opacity: 1; transform: translateX(0); }
   }
 
   .dot-pattern {
@@ -278,44 +280,40 @@
     box-shadow: var(--minimal-glow);
   }
 
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out;
+  .animate-apple-fade-in {
+    animation: apple-fade-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  .animate-slide-in-right {
-    animation: slide-in-right 0.5s ease-out;
+  .animate-apple-slide-in {
+    animation: apple-slide-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  .animate-slide-in-left {
-    animation: slide-in-left 0.5s ease-out;
+  .animate-apple-scale-in {
+    animation: apple-scale-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  .animate-gentle-float {
-    animation: gentle-float 3s ease-in-out infinite;
+  .animate-apple-gentle-hover {
+    animation: apple-gentle-hover 2s ease-in-out infinite;
   }
 
-  .animate-pulse-soft {
-    animation: pulse-soft 2s ease-in-out infinite;
+  .animate-apple-pulse {
+    animation: apple-subtle-pulse 2s ease-in-out infinite;
   }
 
-  .animate-scale-in {
-    animation: scale-in 0.3s ease-out;
+  .animate-apple-spring {
+    animation: apple-spring 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite;
+  .animate-apple-glow {
+    animation: apple-glow 3s ease-in-out infinite;
   }
 
-  .animate-slide-up {
-    animation: slideUp 0.6s ease-out;
+  .animate-apple-slide-up {
+    animation: apple-slide-up 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  .animate-bounce-in {
-    animation: bounceIn 0.8s ease-out;
-  }
-
-  .animate-slide-in-from-right {
-    animation: slideInFromRight 0.5s ease-out;
+  .animate-apple-bounce {
+    animation: apple-bounce-soft 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .text-gradient {

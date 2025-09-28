@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
-import { ModernCard, ModernStatsGrid } from "@/components/ui/modern-card";
+import { AppleCard, AppleStatsGrid } from "@/components/ui/apple-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,9 +49,9 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Modern Stats Grid */}
-            <ModernStatsGrid>
-              <ModernCard
+            {/* Apple Stats Grid */}
+            <AppleStatsGrid>
+              <AppleCard
                 title="Conversas Hoje"
                 value={dashboardStats?.conversations_today || 0}
                 subtitle="Famílias atendidas"
@@ -62,7 +62,7 @@ const Index = () => {
                 }}
                 variant="default"
               />
-              <ModernCard
+              <AppleCard
                 title="Agendamentos"
                 value={dashboardStats?.daily_appointments || 0}
                 subtitle="Consultas marcadas"
@@ -73,7 +73,7 @@ const Index = () => {
                 }}
                 variant="gradient"
               />
-              <ModernCard
+              <AppleCard
                 title="Taxa de Resposta"
                 value={`${dashboardStats?.response_rate_percent?.toFixed(1) || '87.5'}%`}
                 subtitle="Eficiência da IA"
@@ -82,9 +82,9 @@ const Index = () => {
                   value: "+5%",
                   isPositive: true
                 }}
-                variant="glass"
+                variant="elevated"
               />
-              <ModernCard
+              <AppleCard
                 title="Receita Hoje"
                 value={`R$ ${dashboardStats?.daily_revenue?.toLocaleString('pt-BR') || '1.240'}`}
                 subtitle="Faturamento"
@@ -95,67 +95,67 @@ const Index = () => {
                 }}
                 variant="default"
               />
-            </ModernStatsGrid>
+            </AppleStatsGrid>
 
-            {/* Quick Actions */}
+            {/* Quick Actions Apple-style */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="glass-morphism">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
+              <Card className="rounded-[20px] bg-white/90 backdrop-blur-sm border-border/30 shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
+                    <Sparkles className="h-4 w-4 text-primary" />
                     Ações Rápidas
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-[13px] text-muted-foreground tracking-[-0.005em]">
                     Acesse rapidamente as principais funcionalidades
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
+                <CardContent className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
-                    className="h-20 flex-col gap-2 hover:bg-primary/5 hover:border-primary/20 transition-all duration-200"
+                    className="h-16 flex-col gap-1.5 hover:bg-primary/6 hover:border-primary/20 transition-all duration-200 rounded-[12px] border-border/30"
                     onClick={() => navigate('/conversations')}
                   >
-                    <MessageSquare className="h-6 w-6 text-primary" />
-                    <span className="text-sm">Conversas</span>
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Conversas</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-20 flex-col gap-2 hover:bg-primary/5 hover:border-primary/20 transition-all duration-200"
+                    className="h-16 flex-col gap-1.5 hover:bg-primary/6 hover:border-primary/20 transition-all duration-200 rounded-[12px] border-border/30"
                     onClick={() => navigate('/appointments')}
                   >
-                    <Calendar className="h-6 w-6 text-primary" />
-                    <span className="text-sm">Agendamentos</span>
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Agendamentos</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-20 flex-col gap-2 hover:bg-primary/5 hover:border-primary/20 transition-all duration-200"
+                    className="h-16 flex-col gap-1.5 hover:bg-primary/6 hover:border-primary/20 transition-all duration-200 rounded-[12px] border-border/30"
                     onClick={() => navigate('/customers')}
                   >
-                    <Users className="h-6 w-6 text-primary" />
-                    <span className="text-sm">Clientes</span>
+                    <Users className="h-5 w-5 text-primary" />
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Clientes</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-20 flex-col gap-2 hover:bg-primary/5 hover:border-primary/20 transition-all duration-200"
+                    className="h-16 flex-col gap-1.5 hover:bg-primary/6 hover:border-primary/20 transition-all duration-200 rounded-[12px] border-border/30"
                     onClick={() => navigate('/pets')}
                   >
-                    <Heart className="h-6 w-6 text-primary" />
-                    <span className="text-sm">Pets</span>
+                    <Heart className="h-5 w-5 text-primary" />
+                    <span className="text-[12px] font-medium tracking-[-0.01em]">Pets</span>
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card className="glass-morphism">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
+              <Card className="rounded-[20px] bg-white/90 backdrop-blur-sm border-border/30 shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
+                    <Clock className="h-4 w-4 text-primary" />
                     Atividade Recente
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-[13px] text-muted-foreground tracking-[-0.005em]">
                     Últimas atividades do sistema
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
                   {isLoading ? (
                     <>
                       <div className="flex items-center gap-3">
@@ -175,31 +175,31 @@ const Index = () => {
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <MessageSquare className="h-4 w-4 text-primary" />
+                      <div className="flex items-center gap-3 p-2 rounded-[12px] hover:bg-secondary/30 transition-colors duration-200">
+                        <div className="h-7 w-7 rounded-[8px] bg-primary/10 flex items-center justify-center">
+                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">Nova conversa iniciada</p>
-                          <p className="text-xs text-muted-foreground">há 2 minutos</p>
+                          <p className="text-[13px] font-medium tracking-[-0.01em]">Nova conversa iniciada</p>
+                          <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 2 minutos</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center">
-                          <Calendar className="h-4 w-4 text-accent" />
+                      <div className="flex items-center gap-3 p-2 rounded-[12px] hover:bg-secondary/30 transition-colors duration-200">
+                        <div className="h-7 w-7 rounded-[8px] bg-primary/10 flex items-center justify-center">
+                          <Calendar className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">Agendamento confirmado</p>
-                          <p className="text-xs text-muted-foreground">há 5 minutos</p>
+                          <p className="text-[13px] font-medium tracking-[-0.01em]">Agendamento confirmado</p>
+                          <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 5 minutos</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center">
-                          <Users className="h-4 w-4 text-success" />
+                      <div className="flex items-center gap-3 p-2 rounded-[12px] hover:bg-secondary/30 transition-colors duration-200">
+                        <div className="h-7 w-7 rounded-[8px] bg-success/10 flex items-center justify-center">
+                          <Users className="h-3.5 w-3.5 text-success" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">Novo cliente cadastrado</p>
-                          <p className="text-xs text-muted-foreground">há 10 minutos</p>
+                          <p className="text-[13px] font-medium tracking-[-0.01em]">Novo cliente cadastrado</p>
+                          <p className="text-[11px] text-muted-foreground tracking-[-0.005em]">há 10 minutos</p>
                         </div>
                       </div>
                     </>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
-import { ModernCard, ModernStatsGrid } from "@/components/ui/modern-card";
+import { AppleCard, AppleStatsGrid } from "@/components/ui/apple-card";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,8 +152,8 @@ const Analytics = () => {
             </div>
 
             {/* KPI Cards */}
-            <ModernStatsGrid>
-              <ModernCard
+            <AppleStatsGrid>
+              <AppleCard
                 title="Receita Total"
                 value={`R$ ${stats.revenue.value.toLocaleString('pt-BR')}`}
                 subtitle="Faturamento mensal"
@@ -164,7 +164,7 @@ const Analytics = () => {
                 }}
                 variant="default"
               />
-              <ModernCard
+              <AppleCard
                 title="Novos Clientes"
                 value={stats.customers.value}
                 subtitle="Famílias cadastradas"
@@ -175,7 +175,7 @@ const Analytics = () => {
                 }}
                 variant="gradient"
               />
-              <ModernCard
+              <AppleCard
                 title="Agendamentos"
                 value={stats.appointments.value}
                 subtitle="Consultas marcadas"
@@ -184,9 +184,9 @@ const Analytics = () => {
                   value: `${stats.appointments.change > 0 ? '+' : ''}${stats.appointments.change}%`,
                   isPositive: stats.appointments.trend === 'up'
                 }}
-                variant="glass"
+                variant="elevated"
               />
-              <ModernCard
+              <AppleCard
                 title="Automação IA"
                 value={`${stats.automation.value}%`}
                 subtitle="Eficiência do sistema"
@@ -197,7 +197,7 @@ const Analytics = () => {
                 }}
                 variant="default"
               />
-            </ModernStatsGrid>
+            </AppleStatsGrid>
 
             {/* Charts Grid */}
             <div className="grid gap-6 lg:grid-cols-2">
