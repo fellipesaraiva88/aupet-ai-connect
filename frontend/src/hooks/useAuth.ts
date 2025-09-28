@@ -162,10 +162,17 @@ export function useAuth() {
     return { data, error };
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, organizationName?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName || 'Usuário',
+          organization_name: organizationName || 'Organização Padrão',
+          subscription_tier: 'free'
+        }
+      }
     });
     return { data, error };
   };
