@@ -77,12 +77,34 @@ export default {
         warning: "hsl(var(--warning))",
         error: "hsl(var(--error))",
         info: "hsl(var(--info))",
-        // Auzap Brand Colors
+        // Pet-Themed Blue Palette
+        ocean: {
+          DEFAULT: "#0066FF",
+          50: "#F0F7FF",
+          100: "#E8F3FF",
+          200: "#D6E9FF",
+          300: "#B8DBFF",
+          400: "#94C7FF",
+          500: "#007AFF",
+          600: "#0066FF",
+          700: "#0051D5",
+          800: "#003DA8",
+          900: "#001A4D",
+        },
+        glacier: {
+          DEFAULT: "#F0F7FF",
+          50: "#FAFCFF",
+          100: "#F0F7FF",
+          200: "#E8F3FF",
+          300: "#D6E9FF",
+          400: "#C4DFFF",
+        },
+        // Legacy Auzap Colors (for compatibility)
         auzap: {
-          blue: "#1E62EC",
+          blue: "#0066FF",
           yellow: "#FFDE59",
-          dark: "#1E1E1E",
-          light: "#F5F6FA",
+          dark: "#001A4D",
+          light: "#F0F7FF",
           gray: "#333333",
         },
       },
@@ -91,6 +113,10 @@ export default {
         'gradient-secondary': 'var(--gradient-secondary)',
         'gradient-hero': 'var(--gradient-hero)',
         'gradient-card': 'var(--gradient-card)',
+        'paw-pattern': 'var(--paw-pattern)',
+      },
+      backdropBlur: {
+        'glass': '20px',
       },
       boxShadow: {
         'soft': 'var(--shadow-soft)',
