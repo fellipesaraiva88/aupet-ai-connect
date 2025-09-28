@@ -76,28 +76,58 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
       throw createError('Erro ao criar usuário', 500);
     }
 
-    // Buscar dados completos do usuário criado (profile + organization)
+    // Criar organização primeiro
+    const organizationSlug = organizationName.toLowerCase()
+      .replace(/[^a-zA-Z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 50);
+
+    const { data: organization, error: orgError } = await supabaseService.supabase
+      .from('organizations')
+      .insert({
+        name: organizationName,
+        slug: organizationSlug,
+        subscription_tier: subscriptionTier
+      })
+      .select()
+      .single();
+
+    if (orgError || !organization) {
+      logger.error('Erro ao criar organização:', orgError);
+      // Se falhou, tentar deletar o usuário do Auth
+      await supabaseService.supabase.auth.admin.deleteUser(authData.user.id);
+      throw createError('Erro ao criar organização', 500);
+    }
+
+    // Criar perfil do usuário
     const { data: profile, error: profileError } = await supabaseService.supabase
       .from('profiles')
+      .insert({
+        id: authData.user.id,
+        user_id: authData.user.id,
+        email: authData.user.email,
+        full_name: fullName,
+        role: 'admin',
+        organization_id: organization.id,
+        is_active: true,
+        onboarding_completed: false
+      })
       .select(`
         id,
         email,
         full_name,
         role,
-        organization_id,
-        organizations (
-          id,
-          name,
-          slug,
-          subscription_tier
-        )
+        organization_id
       `)
-      .eq('user_id', authData.user.id)
       .single();
 
     if (profileError || !profile) {
-      logger.error('Erro ao buscar profile após signup:', profileError);
-      throw createError('Erro ao configurar conta', 500);
+      logger.error('Erro ao criar profile:', profileError);
+      // Cleanup: deletar organização e usuário
+      await supabaseService.supabase.from('organizations').delete().eq('id', organization.id);
+      await supabaseService.supabase.auth.admin.deleteUser(authData.user.id);
+      throw createError('Database error saving new user', 500);
     }
 
     // Gerar tokens JWT
@@ -123,7 +153,12 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
           fullName: profile.full_name,
           role: profile.role,
           organizationId: profile.organization_id,
-          organization: profile.organizations
+          organization: {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug,
+            subscription_tier: organization.subscription_tier
+          }
         },
         tokens: tokenPair,
         needsEmailVerification: !authData.user.email_confirmed_at

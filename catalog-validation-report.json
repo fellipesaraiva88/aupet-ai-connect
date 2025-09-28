@@ -1,0 +1,128 @@
+{
+  "timestamp": "2025-09-27T22:35:12.199Z",
+  "summary": {
+    "total": 17,
+    "passed": 2,
+    "failed": 15,
+    "successRate": 11.76470588235294
+  },
+  "results": [
+    {
+      "name": "Server Connectivity",
+      "status": "PASS",
+      "duration": 13,
+      "result": {
+        "success": true,
+        "message": "Auzap Backend is healthy! 💝",
+        "timestamp": "2025-09-27T22:35:10.452Z",
+        "uptime": 129.279908375,
+        "memory": {
+          "rss": 57131008,
+          "heapTotal": 23330816,
+          "heapUsed": 20810736,
+          "external": 3585401,
+          "arrayBuffers": 73021
+        },
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "Auth Without Token",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testAuthWithoutToken (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:84:7)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Auth With Invalid Token",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testAuthWithInvalidToken (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:96:7)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Create Catalog Item",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testCreateCatalogItem (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:124:22)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "List Catalog Items",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testListCatalogItems (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:146:22)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "List With Filters",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testListCatalogItemsWithFilters (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:177:22)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Get Item By ID",
+      "status": "FAIL",
+      "error": "No catalog item created for testing",
+      "stack": "Error: No catalog item created for testing\n    at CatalogValidator.testGetCatalogItemById (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:198:13)\n    at /Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:464:37\n    at CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:28)\n    at CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:18)"
+    },
+    {
+      "name": "Update Item",
+      "status": "FAIL",
+      "error": "No catalog item created for testing",
+      "stack": "Error: No catalog item created for testing\n    at CatalogValidator.testUpdateCatalogItem (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:219:13)\n    at /Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:465:34\n    at CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:28)\n    at CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:18)"
+    },
+    {
+      "name": "Upload Item Image",
+      "status": "FAIL",
+      "error": "No catalog item created for testing",
+      "stack": "Error: No catalog item created for testing\n    at CatalogValidator.testUploadItemImage (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:250:13)\n    at /Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:466:40\n    at CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:28)\n    at CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:18)"
+    },
+    {
+      "name": "Get Categories",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testGetCategories (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:278:22)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Get Popular Items",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testGetPopularItems (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:303:22)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Get Recommendations",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testGetRecommendations (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:323:22)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Get Catalog Stats",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testGetCatalogStats (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:339:22)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Create Invalid Item",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testCreateInvalidItem (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:374:7)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    },
+    {
+      "name": "Get Non-Existent Item",
+      "status": "PASS",
+      "duration": 2,
+      "result": {
+        "message": "404 handling working correctly"
+      }
+    },
+    {
+      "name": "Soft Delete Item",
+      "status": "FAIL",
+      "error": "No catalog item created for testing",
+      "stack": "Error: No catalog item created for testing\n    at CatalogValidator.testSoftDeleteItem (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:400:13)\n    at /Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:477:39\n    at CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:28)\n    at CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:18)"
+    },
+    {
+      "name": "Tenant Isolation",
+      "status": "FAIL",
+      "error": "Request failed with status code 404",
+      "stack": "AxiosError: Request failed with status code 404\n    at settle (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:2097:12)\n    at IncomingMessage.handleStreamEnd (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:3305:11)\n    at IncomingMessage.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\n    at Axios.request (/Users/saraiva/ia_auzap/aupet-ai-connect/node_modules/axios/dist/node/axios.cjs:4483:41)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async CatalogValidator.testTenantIsolation (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:435:7)\n    at async CatalogValidator.runTest (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:45:22)\n    at async CatalogValidator.runAllTests (/Users/saraiva/ia_auzap/aupet-ai-connect/catalog-validation-test.js:484:7)"
+    }
+  ]
+}

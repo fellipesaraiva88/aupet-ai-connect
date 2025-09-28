@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, User, Building, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader2, User, Building, Mail, Lock, Eye, EyeOff, Heart, Sparkles } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://auzap-backend.onrender.com';
 
@@ -70,8 +70,10 @@ const Signup: React.FC = () => {
 
     if (!formData.password) {
       newErrors.password = 'Senha é obrigatória';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Senha deve ter pelo menos 8 caracteres';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+      newErrors.password = 'Senha deve conter: maiúscula, minúscula, número e símbolo';
     }
 
     if (!formData.fullName) {
