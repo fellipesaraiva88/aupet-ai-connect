@@ -1,14 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-// Real-time hook for live data updates
+// Real-time hook for live data updates with enhanced cleanup
 export function useRealTimeSubscriptions(organizationId: string) {
   const queryClient = useQueryClient();
+  const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
+
+  // Enhanced cleanup function
+  const cleanup = useCallback(() => {
+    if (channelRef.current && isSubscribedRef.current) {
+      console.log('🧹 Cleaning up real-time subscriptions');
+      try {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        isSubscribedRef.current = false;
+      } catch (error) {
+        console.warn('Failed to cleanup real-time channel:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    if (!organizationId) return;
+    if (!organizationId) {
+      cleanup();
+      return;
+    }
+
+    // Cleanup any existing subscription first
+    cleanup();
 
     // Create a channel for all real-time updates
     const channel = supabase
@@ -22,15 +44,21 @@ export function useRealTimeSubscriptions(organizationId: string) {
           filter: `organization_id=eq.${organizationId}`,
         },
         (payload) => {
+          if (!isSubscribedRef.current) return;
+
           console.log('Conversation change:', payload);
           // Invalidate conversations to trigger refetch
-          queryClient.invalidateQueries({ queryKey: ['conversations', organizationId] });
+          try {
+            queryClient.invalidateQueries({ queryKey: ['conversations', organizationId] });
 
-          if (payload.eventType === 'INSERT') {
-            toast({
-              title: "Nova conversa",
-              description: "Uma nova conversa foi iniciada",
-            });
+            if (payload.eventType === 'INSERT') {
+              toast({
+                title: "Nova conversa",
+                description: "Uma nova conversa foi iniciada",
+              });
+            }
+          } catch (error) {
+            console.warn('Failed to handle conversation change:', error);
           }
         }
       )
@@ -110,22 +138,30 @@ export function useRealTimeSubscriptions(organizationId: string) {
         console.log('Real-time subscription status:', status);
         if (status === 'SUBSCRIBED') {
           console.log('✅ Real-time subscriptions active');
+          isSubscribedRef.current = true;
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Real-time subscription error');
+          isSubscribedRef.current = false;
           toast({
             title: "Erro de conexão em tempo real",
             description: "Algumas atualizações podem não aparecer automaticamente",
             variant: "destructive",
           });
+        } else if (status === 'CLOSED') {
+          console.log('Real-time subscription status: CLOSED');
+          isSubscribedRef.current = false;
         }
       });
 
+    // Store channel reference
+    channelRef.current = channel;
+
     // Cleanup subscription on unmount
-    return () => {
-      console.log('🧹 Cleaning up real-time subscriptions');
-      supabase.removeChannel(channel);
-    };
-  }, [organizationId, queryClient]);
+    return cleanup;
+  }, [organizationId, queryClient, cleanup]);
+
+  // Return cleanup function for manual cleanup
+  return { cleanup };
 }
 
 // Hook for message-specific real-time updates
