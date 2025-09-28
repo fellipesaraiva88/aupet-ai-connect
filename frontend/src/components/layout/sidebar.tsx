@@ -13,7 +13,7 @@ import {
   BarChart3,
   Bot,
   Heart,
-  Zap,
+  Sparkles,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -25,56 +25,56 @@ interface SidebarProps {
 const menuItems = [
   {
     id: "dashboard",
-    label: "Central de Amor",
+    label: "Dashboard",
     icon: LayoutDashboard,
     href: "/",
   },
   {
     id: "conversations",
-    label: "Papos com Famílias",
+    label: "Conversas",
     icon: MessageSquare,
     href: "/conversations",
     badge: 5,
   },
   {
     id: "customers",
-    label: "Famílias Pet",
+    label: "Clientes",
     icon: Users,
     href: "/customers",
   },
   {
     id: "pets",
-    label: "Nossos Amiguinhos",
+    label: "Pets",
     icon: Heart,
     href: "/pets",
   },
   {
     id: "appointments",
-    label: "Momentos de Cuidado",
+    label: "Agendamentos",
     icon: Calendar,
     href: "/appointments",
   },
   {
     id: "catalog",
-    label: "Mimos & Cuidados",
+    label: "Catálogo",
     icon: Package,
     href: "/catalog",
   },
   {
     id: "ai-config",
-    label: "Assistente Virtual Pet",
+    label: "Configuração IA",
     icon: Bot,
     href: "/ai-config",
   },
   {
     id: "analytics",
-    label: "Como Estamos Cuidando",
+    label: "Analytics",
     icon: BarChart3,
     href: "/analytics",
   },
   {
     id: "settings",
-    label: "Ajustes do Cantinho",
+    label: "Configurações",
     icon: Settings,
     href: "/settings",
   },
@@ -96,45 +96,59 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "flex h-full w-64 flex-col border-r border-border bg-card/50",
+        "flex h-full w-64 flex-col bg-white/95 backdrop-blur-sm border-r border-border/50",
         className
       )}
     >
       {/* Header */}
-      <div className="flex h-16 items-center border-b border-border px-6">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Zap className="h-4 w-4 text-white" />
+      <div className="flex h-16 items-center px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg animate-gentle-float">
+            <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <span className="font-primary font-bold text-lg text-primary">
-            Auzap.ai
-          </span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-lg text-foreground tracking-tight">
+              Auzap
+            </span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Pet Care AI
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
-        {menuItems.map((item) => {
+      <nav className="flex-1 px-4 py-6 space-y-2">
+        {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = activeItem === item.id;
 
           return (
             <Button
               key={item.id}
-              variant={isActive ? "secondary" : "ghost"}
+              variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-10",
-                isActive &&
-                  "bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 shadow-soft"
+                "w-full justify-start gap-3 h-11 px-3 rounded-xl font-medium transition-all duration-200",
+                "hover:bg-secondary/60 hover:shadow-sm hover:scale-[1.02]",
+                "animate-fade-in",
+                isActive && [
+                  "bg-primary text-primary-foreground shadow-lg",
+                  "hover:bg-primary hover:shadow-xl",
+                  "transform scale-[1.02]"
+                ]
               )}
+              style={{ animationDelay: `${index * 50}ms` }}
               onClick={() => handleItemClick(item)}
             >
-              <Icon className={cn("h-4 w-4", isActive && "text-primary")} />
-              <span className={cn(isActive && "font-medium text-primary")}>
+              <Icon className={cn(
+                "h-5 w-5 transition-transform duration-200",
+                isActive ? "scale-110" : "scale-100"
+              )} />
+              <span className="text-sm">
                 {item.label}
               </span>
               {item.badge && (
-                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs text-white">
+                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs text-white font-semibold animate-pulse-soft">
                   {item.badge}
                 </span>
               )}
@@ -144,14 +158,16 @@ export function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-border p-4">
-        <div className="rounded-lg bg-gradient-to-br from-primary/5 to-secondary/5 p-4 text-center">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-primary rounded-full mx-auto mb-2">
-            <Bot className="h-5 w-5 text-white" />
+      <div className="p-4">
+        <div className="rounded-xl bg-gradient-to-br from-secondary/30 to-secondary/10 p-4 text-center border border-border/30">
+          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full mx-auto mb-3 shadow-lg animate-gentle-float">
+            <Bot className="h-6 w-6 text-white" />
           </div>
-          <p className="text-sm font-medium mb-1 font-secondary">CUIDANDO 24/7</p>
+          <p className="text-sm font-semibold mb-1 text-foreground">
+            Sistema Ativo
+          </p>
           <p className="text-xs text-muted-foreground">
-            Sempre aqui para cuidar
+            Monitoramento 24/7
           </p>
         </div>
       </div>

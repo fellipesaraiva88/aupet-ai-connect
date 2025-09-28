@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,83 +9,86 @@
 
 @layer base {
   :root {
-    /* Apple-Inspired Blue Pet Design System */
-    --background: 0 0% 100%; /* #FFFFFF */
-    --foreground: 216 100% 15%; /* #001A4D - Midnight Blue */
+    /* Minimalist White & Blue Design System */
+    --background: 0 0% 100%; /* Pure White */
+    --foreground: 220 100% 20%; /* Deep Blue */
 
-    --card: 215 100% 97%; /* #F0F7FF - Glacier Blue */
-    --card-foreground: 216 100% 15%; /* #001A4D */
+    --card: 0 0% 100%; /* Pure White */
+    --card-foreground: 220 100% 20%; /* Deep Blue */
 
-    --popover: 215 100% 97%; /* #F0F7FF */
-    --popover-foreground: 216 100% 15%; /* #001A4D */
+    --popover: 0 0% 100%; /* Pure White */
+    --popover-foreground: 220 100% 20%; /* Deep Blue */
 
-    /* Primary - Ocean Blue Palette */
-    --primary: 220 100% 50%; /* #0066FF - Ocean Blue */
-    --primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --primary-light: 216 100% 56%; /* #007AFF - Sky Blue */
-    --primary-dark: 221 100% 42%; /* #0051D5 - Sapphire Glow */
+    /* Primary - Clean Blue Palette */
+    --primary: 220 100% 60%; /* #3366FF - Clean Blue */
+    --primary-foreground: 0 0% 100%; /* Pure White */
+    --primary-light: 220 100% 70%; /* Light Blue */
+    --primary-dark: 220 100% 50%; /* Dark Blue */
 
-    /* Secondary - Arctic Blue for subtle elements */
-    --secondary: 215 100% 91%; /* #E8F3FF - Arctic Blue */
-    --secondary-foreground: 216 100% 15%; /* #001A4D */
-    --secondary-light: 215 100% 95%; /* Lighter Arctic */
-    --secondary-dark: 215 100% 85%; /* Darker Arctic */
+    /* Secondary - Ultra Light Blue */
+    --secondary: 220 100% 98%; /* #F8FAFF - Ultra Light Blue */
+    --secondary-foreground: 220 100% 20%; /* Deep Blue */
+    --secondary-light: 220 100% 99%; /* Almost White */
+    --secondary-dark: 220 100% 95%; /* Light Blue */
 
-    /* Accent - Sky Blue for interactions */
-    --accent: 216 100% 56%; /* #007AFF - Sky Blue */
-    --accent-foreground: 0 0% 100%; /* #FFFFFF */
-    --accent-light: 216 100% 65%;
+    /* Accent - Vibrant Blue */
+    --accent: 220 100% 55%; /* #1A53FF - Vibrant Blue */
+    --accent-foreground: 0 0% 100%; /* Pure White */
+    --accent-light: 220 100% 65%;
 
-    /* Neutral Colors - Blue-tinted */
-    --muted: 215 100% 97%; /* #F0F7FF - Glacier Blue */
-    --muted-foreground: 216 50% 30%; /* Blue-tinted dark gray */
+    /* Neutral Colors - Clean & Minimal */
+    --muted: 220 30% 97%; /* #F7F8FA - Clean Gray */
+    --muted-foreground: 220 30% 40%; /* Medium Gray */
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 100% 91%; /* #E8F3FF - Arctic Blue */
-    --input: 215 100% 97%; /* #F0F7FF - Glacier Blue */
-    --ring: 220 100% 50%; /* #0066FF - Ocean Blue */
+    --border: 220 50% 92%; /* #E8ECEF - Light Border */
+    --input: 220 30% 98%; /* #FAFBFC - Clean Input */
+    --ring: 220 100% 60%; /* #3366FF - Focus Ring */
 
-    --radius: 0.75rem;
+    --radius: 0.5rem; /* Smaller radius for cleaner look */
 
-    /* Apple-Inspired Gradients */
-    --gradient-primary: linear-gradient(135deg, #0066FF, #007AFF);
-    --gradient-secondary: linear-gradient(135deg, #E8F3FF, #F0F7FF);
-    --gradient-hero: linear-gradient(135deg, #0066FF 0%, #007AFF 100%);
-    --gradient-card: linear-gradient(145deg, rgba(240, 247, 255, 0.8), rgba(232, 243, 255, 0.4));
+    /* Minimalist Gradients */
+    --gradient-primary: linear-gradient(135deg, #3366FF, #1A53FF);
+    --gradient-secondary: linear-gradient(135deg, #F8FAFF, #FFFFFF);
+    --gradient-hero: linear-gradient(135deg, #3366FF 0%, #1A53FF 100%);
+    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 255, 0.6));
 
-    /* Glassmorphism Shadows */
-    --shadow-soft: 0 4px 6px -1px rgba(0, 102, 255, 0.1), 0 2px 4px -1px rgba(0, 102, 255, 0.06);
-    --shadow-medium: 0 10px 15px -3px rgba(0, 102, 255, 0.1), 0 4px 6px -2px rgba(0, 102, 255, 0.05);
-    --shadow-large: 0 20px 25px -5px rgba(0, 102, 255, 0.1), 0 10px 10px -5px rgba(0, 102, 255, 0.04);
-    --shadow-glow: 0 0 30px rgba(0, 102, 255, 0.3);
+    /* Clean Shadows */
+    --shadow-soft: 0 2px 8px rgba(51, 102, 255, 0.08);
+    --shadow-medium: 0 4px 16px rgba(51, 102, 255, 0.12);
+    --shadow-large: 0 8px 32px rgba(51, 102, 255, 0.16);
+    --shadow-glow: 0 0 24px rgba(51, 102, 255, 0.2);
 
-    /* Glassmorphism Design Tokens */
-    --glass-bg: rgba(240, 247, 255, 0.15);
-    --glass-border: rgba(0, 102, 255, 0.2);
-    --glass-blur: blur(20px);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 102, 255, 0.1);
+    /* Modern Design Tokens */
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(51, 102, 255, 0.15);
+    --glass-blur: blur(16px);
+    --glass-shadow: 0 4px 24px rgba(51, 102, 255, 0.08);
 
-    /* Neumorphism Design Tokens */
-    --neuro-light: #F8FBFF;
-    --neuro-dark: #E0EFFF;
-    --neuro-shadow-light: 0 8px 16px 0 rgba(0, 102, 255, 0.1);
-    --neuro-shadow-dark: inset 2px 2px 5px rgba(0, 102, 255, 0.1);
-    --neuro-shadow-inset: inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+    /* Clean Neumorphism */
+    --neuro-light: #FFFFFF;
+    --neuro-dark: #F0F4F8;
+    --neuro-shadow-light: 0 4px 12px rgba(51, 102, 255, 0.08);
+    --neuro-shadow-dark: inset 1px 1px 3px rgba(51, 102, 255, 0.05);
+    --neuro-shadow-inset: inset -1px -1px 3px rgba(255, 255, 255, 0.9);
 
-    /* Typography */
-    --font-primary: 'Montserrat', sans-serif;
-    --font-secondary: 'IBM Plex Mono', monospace;
+    /* Typography - Modern & Clean */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-secondary: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    --transition-glass: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Smooth Transitions */
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-glass: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-    /* Pet-Themed Design Tokens */
-    --paw-pattern: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23007AFF' fill-opacity='0.05'%3E%3Cpath d='M4 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm12 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM2 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm16 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM10 15c2.2 0 4-1.8 4-4 0-1.1-.4-2.1-1.1-2.8-.4-.4-1-.6-1.6-.6h-2.6c-.6 0-1.2.2-1.6.6C6.4 8.9 6 9.9 6 11c0 2.2 1.8 4 4 4z'/%3E%3C/g%3E%3C/svg%3E");
-    --pet-glow: 0 0 20px rgba(0, 122, 255, 0.3);
+    /* Clean Patterns */
+    --dot-pattern: radial-gradient(circle, rgba(51, 102, 255, 0.1) 1px, transparent 1px);
+    --grid-pattern: linear-gradient(rgba(51, 102, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(51, 102, 255, 0.05) 1px, transparent 1px);
+    --minimal-glow: 0 0 16px rgba(51, 102, 255, 0.2);
 
     /* WhatsApp Colors */
     --whatsapp-green: 142 70% 49%;
@@ -184,40 +187,72 @@
     letter-spacing: -0.02em;
   }
 
-  /* Pet-Themed Animations */
-  @keyframes paw-walk {
-    0% { transform: translateX(-10px) scale(0); opacity: 0; }
-    20% { transform: translateX(0) scale(1); opacity: 1; }
-    80% { transform: translateX(0) scale(1); opacity: 1; }
-    100% { transform: translateX(10px) scale(0); opacity: 0; }
+  /* Minimalist Animations */
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes tail-wag {
-    0%, 100% { transform: rotate(-10deg); }
-    50% { transform: rotate(10deg); }
+  @keyframes slide-in-right {
+    0% { opacity: 0; transform: translateX(16px); }
+    100% { opacity: 1; transform: translateX(0); }
   }
 
-  @keyframes paw-print-reveal {
-    0% { opacity: 0; transform: scale(0.8); }
-    50% { opacity: 0.3; transform: scale(1.1); }
-    100% { opacity: 0.1; transform: scale(1); }
+  @keyframes slide-in-left {
+    0% { opacity: 0; transform: translateX(-16px); }
+    100% { opacity: 1; transform: translateX(0); }
   }
 
-  @keyframes glass-float {
+  @keyframes gentle-float {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-2px); }
+    50% { transform: translateY(-4px); }
   }
 
-  @keyframes pet-bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-5px); }
-    60% { transform: translateY(-3px); }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
 
-  .paw-pattern {
-    background-image: var(--paw-pattern);
-    background-repeat: repeat;
-    background-size: 40px 40px;
+  @keyframes scale-in {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(51, 102, 255, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(51, 102, 255, 0.4); }
+  }
+
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounceIn {
+    0% { opacity: 0; transform: scale(0.3); }
+    50% { opacity: 1; transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes slideInFromRight {
+    0% { opacity: 0; transform: translateX(30px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+
+  .dot-pattern {
+    background-image: var(--dot-pattern);
+    background-size: 20px 20px;
+  }
+
+  .grid-pattern {
+    background-image: var(--grid-pattern);
+    background-size: 20px 20px;
   }
 
   .glass-morphism {
@@ -236,9 +271,73 @@
 
   .neuro-morphism:hover {
     box-shadow: var(--neuro-shadow-dark), var(--neuro-shadow-light);
+    transform: translateY(-1px);
   }
 
-  .pet-glow {
-    box-shadow: var(--pet-glow);
+  .minimal-glow {
+    box-shadow: var(--minimal-glow);
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.5s ease-out;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.5s ease-out;
+  }
+
+  .animate-gentle-float {
+    animation: gentle-float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.8s ease-out;
+  }
+
+  .animate-slide-in-from-right {
+    animation: slideInFromRight 0.5s ease-out;
+  }
+
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease-out;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .hover-glow {
+    transition: box-shadow 0.3s ease-out;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 8px 32px rgba(51, 102, 255, 0.15);
   }
 }

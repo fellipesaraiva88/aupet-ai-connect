@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
+import { ModernCard, ModernStatsGrid } from "@/components/ui/modern-card";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -573,20 +574,17 @@ const Customers = () => {
             {/* Page Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary flex items-center gap-3">
-                  <Users className="h-8 w-8" />
-                  Famílias que Confiaram em Você
-                </h1>
-                <p className="text-muted-foreground font-secondary">
-                  Cada cliente é uma família que escolheu cuidar dos seus pets conosco. Vamos honrar essa confiança juntos.
+                <h1 className="text-3xl font-bold text-foreground mb-2">Clientes</h1>
+                <p className="text-muted-foreground">
+                  Gerencie todas as famílias que confiam em seus cuidados para seus pets
                 </p>
               </div>
 
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90" size="lg">
+                  <Button size="lg">
                     <Plus className="h-5 w-5 mr-2" />
-                    Acolher Nova Família
+                    Novo Cliente
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -663,84 +661,47 @@ const Customers = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-6 md:grid-cols-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-primary/10 p-3">
-                      <Users className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.total}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Famílias Cuidadas</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-success/10 p-3">
-                      <TrendingUp className="h-6 w-6 text-success" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.active}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Sempre Presentes</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-secondary/10 p-3">
-                      <User className="h-6 w-6 text-secondary" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-16 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold">{stats.vip}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Famílias Especiais</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-warning/10 p-3">
-                      <TrendingUp className="h-6 w-6 text-warning" />
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <Skeleton className="h-8 w-20 mb-1" />
-                      ) : (
-                        <p className="text-2xl font-bold font-secondary">
-                          R$ {stats.totalRevenue.toLocaleString('pt-BR')}
-                        </p>
-                      )}
-                      <p className="text-sm text-muted-foreground">Confiança Investida</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <ModernStatsGrid>
+              <ModernCard
+                title="Total de Clientes"
+                value={isLoading ? "..." : stats.total}
+                subtitle="Famílias cadastradas"
+                icon={Users}
+                variant="default"
+              />
+              <ModernCard
+                title="Clientes Ativos"
+                value={isLoading ? "..." : stats.active}
+                subtitle="Sempre presentes"
+                icon={TrendingUp}
+                trend={{
+                  value: "+12%",
+                  isPositive: true
+                }}
+                variant="gradient"
+              />
+              <ModernCard
+                title="Clientes VIP"
+                value={isLoading ? "..." : stats.vip}
+                subtitle="Famílias especiais"
+                icon={Star}
+                variant="glass"
+              />
+              <ModernCard
+                title="Receita Total"
+                value={isLoading ? "..." : `R$ ${stats.totalRevenue.toLocaleString('pt-BR')}`}
+                subtitle="Confiança investida"
+                icon={TrendingUp}
+                trend={{
+                  value: "+25%",
+                  isPositive: true
+                }}
+                variant="default"
+              />
+            </ModernStatsGrid>
 
             {/* Filters */}
-            <Card>
+            <Card className="glass-morphism">
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1 relative">
@@ -749,12 +710,12 @@ const Customers = () => {
                       placeholder="Buscar por nome, email ou telefone..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/50 border-border/50 focus:bg-white focus:border-primary/50"
                     />
                   </div>
 
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] bg-white/50 border-border/50">
                       <SelectValue placeholder="Todos os status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -765,7 +726,7 @@ const Customers = () => {
                     </SelectContent>
                   </Select>
 
-                  <Button variant="outline">
+                  <Button variant="outline" className="bg-white/50 border-border/50 hover:bg-white hover:border-primary/50">
                     <Filter className="h-4 w-4 mr-2" />
                     Mais Filtros
                   </Button>
@@ -774,7 +735,7 @@ const Customers = () => {
             </Card>
 
             {/* Customers Table */}
-            <Card>
+            <Card className="glass-morphism">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>

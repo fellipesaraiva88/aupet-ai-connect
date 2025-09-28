@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
+import { ModernCard, ModernStatsGrid } from "@/components/ui/modern-card";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,43 +109,26 @@ const Analytics = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
-      {/* Analytics-themed floating elements */}
-      <div className="absolute inset-0 paw-pattern opacity-[0.02] pointer-events-none" />
-      <div className="absolute top-20 right-20 w-24 h-24 bg-gradient-to-br from-success/20 to-emerald-400/20 rounded-full glass-morphism animate-glass-float" />
-      <div className="absolute top-1/3 left-10 w-16 h-16 bg-gradient-to-br from-warning/20 to-yellow-400/20 rounded-full glass-morphism animate-pet-bounce delay-700" />
-      <div className="absolute bottom-20 right-1/4 w-12 h-12 bg-gradient-to-br from-primary/20 to-blue-400/20 rounded-full glass-morphism animate-glass-float delay-1500" />
-
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       <div className="flex h-[calc(100vh-4rem)]">
-        <Sidebar
-          activeItem={activeMenuItem}
-        />
+        <Sidebar activeItem={activeMenuItem} />
 
-        <main className="flex-1 overflow-auto relative">
-          <div className="p-8 space-y-6">
-            {/* Enhanced Analytics Header */}
+        <main className="flex-1 overflow-auto">
+          <div className="p-8 space-y-8">
+            {/* Modern Analytics Header */}
             <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 bg-gradient-to-br from-success to-emerald-600 rounded-2xl shadow-xl pet-glow">
-                    <BarChart3 className="h-10 w-10 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-4xl font-primary font-bold tracking-tight bg-gradient-to-r from-success via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                      Relatórios
-                    </h1>
-                    <p className="text-muted-foreground font-secondary text-lg">
-                      Análise completa de como você está crescendo e cuidando dos pets
-                    </p>
-                  </div>
-                </div>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Analytics</h1>
+                <p className="text-muted-foreground">
+                  Acompanhe o desempenho e crescimento do seu negócio
+                </p>
               </div>
 
               <div className="flex items-center gap-4">
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
-                  <SelectTrigger className="w-[200px] glass-morphism bg-white/80 border-primary/20">
+                  <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Período" />
                   </SelectTrigger>
                   <SelectContent>
@@ -155,111 +139,70 @@ const Analytics = () => {
                   </SelectContent>
                 </Select>
 
-                <Button variant="outline" className="glass-morphism hover:bg-gradient-to-r hover:from-primary/10 hover:to-blue-500/10 transition-all duration-300">
+                <Button variant="outline">
                   <Filter className="h-4 w-4 mr-2" />
                   Filtros
                 </Button>
 
-                <Button className="bg-gradient-to-r from-success to-emerald-600 text-white hover:shadow-xl hover:scale-105 transition-all duration-300 px-6 py-3">
+                <Button>
                   <Download className="h-4 w-4 mr-2" />
-                  Exportar Relatório
+                  Exportar
                 </Button>
               </div>
             </div>
 
             {/* KPI Cards */}
-            <div className="grid gap-6 md:grid-cols-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Receita Total</p>
-                      <p className="text-2xl font-bold font-secondary text-primary">
-                        R$ {stats.revenue.value.toLocaleString('pt-BR')}
-                      </p>
-                    </div>
-                    <div className="rounded-lg bg-primary/10 p-3">
-                      <DollarSign className="h-6 w-6 text-primary" />
-                    </div>
-                  </div>
-                  <div className="flex items-center mt-4">
-                    {getTrendIcon(stats.revenue.trend, stats.revenue.change)}
-                    <span className={`text-sm font-medium ml-1 ${getTrendColor(stats.revenue.trend)}`}>
-                      {Math.abs(stats.revenue.change)}%
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-1">vs mês anterior</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Novos Clientes</p>
-                      <p className="text-2xl font-bold">{stats.customers.value}</p>
-                    </div>
-                    <div className="rounded-lg bg-secondary/10 p-3">
-                      <Users className="h-6 w-6 text-secondary" />
-                    </div>
-                  </div>
-                  <div className="flex items-center mt-4">
-                    {getTrendIcon(stats.customers.trend, stats.customers.change)}
-                    <span className={`text-sm font-medium ml-1 ${getTrendColor(stats.customers.trend)}`}>
-                      {Math.abs(stats.customers.change)}%
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-1">vs mês anterior</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Agendamentos</p>
-                      <p className="text-2xl font-bold">{stats.appointments.value}</p>
-                    </div>
-                    <div className="rounded-lg bg-warning/10 p-3">
-                      <Calendar className="h-6 w-6 text-warning" />
-                    </div>
-                  </div>
-                  <div className="flex items-center mt-4">
-                    {getTrendIcon(stats.appointments.trend, stats.appointments.change)}
-                    <span className={`text-sm font-medium ml-1 ${getTrendColor(stats.appointments.trend)}`}>
-                      {Math.abs(stats.appointments.change)}%
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-1">vs mês anterior</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Automação IA</p>
-                      <p className="text-2xl font-bold">{stats.automation.value}%</p>
-                    </div>
-                    <div className="rounded-lg bg-success/10 p-3">
-                      <MessageSquare className="h-6 w-6 text-success" />
-                    </div>
-                  </div>
-                  <div className="flex items-center mt-4">
-                    {getTrendIcon(stats.automation.trend, stats.automation.change)}
-                    <span className={`text-sm font-medium ml-1 ${getTrendColor(stats.automation.trend)}`}>
-                      {Math.abs(stats.automation.change)}%
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-1">vs mês anterior</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <ModernStatsGrid>
+              <ModernCard
+                title="Receita Total"
+                value={`R$ ${stats.revenue.value.toLocaleString('pt-BR')}`}
+                subtitle="Faturamento mensal"
+                icon={DollarSign}
+                trend={{
+                  value: `${stats.revenue.change > 0 ? '+' : ''}${stats.revenue.change}%`,
+                  isPositive: stats.revenue.trend === 'up'
+                }}
+                variant="default"
+              />
+              <ModernCard
+                title="Novos Clientes"
+                value={stats.customers.value}
+                subtitle="Famílias cadastradas"
+                icon={Users}
+                trend={{
+                  value: `${stats.customers.change > 0 ? '+' : ''}${stats.customers.change}%`,
+                  isPositive: stats.customers.trend === 'up'
+                }}
+                variant="gradient"
+              />
+              <ModernCard
+                title="Agendamentos"
+                value={stats.appointments.value}
+                subtitle="Consultas marcadas"
+                icon={Calendar}
+                trend={{
+                  value: `${stats.appointments.change > 0 ? '+' : ''}${stats.appointments.change}%`,
+                  isPositive: stats.appointments.trend === 'up'
+                }}
+                variant="glass"
+              />
+              <ModernCard
+                title="Automação IA"
+                value={`${stats.automation.value}%`}
+                subtitle="Eficiência do sistema"
+                icon={MessageSquare}
+                trend={{
+                  value: `${stats.automation.change > 0 ? '+' : ''}${stats.automation.change}%`,
+                  isPositive: stats.automation.trend === 'up'
+                }}
+                variant="default"
+              />
+            </ModernStatsGrid>
 
             {/* Charts Grid */}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Revenue Chart */}
-              <Card>
+              <Card className="glass-morphism">
                 <CardHeader>
                   <CardTitle>Receita Mensal</CardTitle>
                   <CardDescription>
@@ -289,7 +232,7 @@ const Analytics = () => {
               </Card>
 
               {/* Services Distribution */}
-              <Card>
+              <Card className="glass-morphism">
                 <CardHeader>
                   <CardTitle>Distribuição de Serviços</CardTitle>
                   <CardDescription>
@@ -320,7 +263,7 @@ const Analytics = () => {
               </Card>
 
               {/* Appointments Chart */}
-              <Card>
+              <Card className="glass-morphism">
                 <CardHeader>
                   <CardTitle>Agendamentos por Mês</CardTitle>
                   <CardDescription>
@@ -342,7 +285,7 @@ const Analytics = () => {
               </Card>
 
               {/* Automation Performance */}
-              <Card>
+              <Card className="glass-morphism">
                 <CardHeader>
                   <CardTitle>Performance da Automação</CardTitle>
                   <CardDescription>
@@ -367,7 +310,7 @@ const Analytics = () => {
 
             {/* Summary Cards */}
             <div className="grid gap-6 lg:grid-cols-3">
-              <Card>
+              <Card className="glass-morphism">
                 <CardHeader>
                   <CardTitle className="text-center">Eficiência da IA</CardTitle>
                 </CardHeader>
@@ -384,7 +327,7 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-morphism">
                 <CardHeader>
                   <CardTitle className="text-center">Tempo Médio de Resposta</CardTitle>
                 </CardHeader>
@@ -401,7 +344,7 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-morphism">
                 <CardHeader>
                   <CardTitle className="text-center">Taxa de Conversão</CardTitle>
                 </CardHeader>

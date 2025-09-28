@@ -20,7 +20,8 @@ import {
   User,
   LogOut,
   MessageSquare,
-  Zap,
+  Sparkles,
+  Search,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -62,33 +63,30 @@ export function Navbar({
   const userEmail = userProfile?.email || user?.email || 'usuario@exemplo.com';
   const currentOrganizationName = organizationName || userProfile?.organization?.name || "Meu Pet VIP";
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 border-b border-border/20 bg-white/80 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between px-6">
-        {/* Logo e Nome da Organização */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-primary font-bold text-lg text-primary">
-              Auzap.ai
-            </span>
-          </div>
-          <div className="hidden md:block text-sm font-secondary text-muted-foreground">
-            {currentOrganizationName}
+        {/* Área de Busca */}
+        <div className="flex items-center gap-4 flex-1 max-w-md">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className="w-full h-10 pl-10 pr-4 rounded-xl border border-border/50 bg-white/50 focus:bg-white focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+            />
           </div>
         </div>
 
-        {/* Centro - Status de Conexão */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-full bg-success/10 px-3 py-1">
-            <div className="h-2 w-2 rounded-full bg-success animate-pulse-soft" />
-            <span className="text-xs font-secondary font-medium text-success">NUNCA PERDE UM CLIENTE</span>
+        {/* Centro - Breadcrumb/Status */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-full bg-primary/5 px-4 py-2 border border-primary/10">
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
+            <span className="text-sm font-medium text-primary">Sistema Ativo</span>
           </div>
         </div>
 
         {/* Direita - Ações do Usuário */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Notificações */}
           <NotificationSystem
             notifications={notifications}
@@ -96,7 +94,6 @@ export function Navbar({
             onMarkAllAsRead={markAllAsRead}
             onRemove={removeNotification}
             onAction={(notification) => {
-              // Handle notification action based on type
               if (notification.actionUrl) {
                 window.location.href = notification.actionUrl;
               }
@@ -104,12 +101,9 @@ export function Navbar({
           />
 
           {/* Mensagens Ativas */}
-          <Button variant="ghost" size="sm" className="relative">
+          <Button variant="ghost" size="sm" className="relative h-10 w-10 rounded-xl hover:bg-secondary/60 transition-all duration-200">
             <MessageSquare className="h-4 w-4" />
-            <Badge
-              variant="secondary"
-              className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 text-xs"
-            >
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-accent animate-pulse-soft">
               5
             </Badge>
           </Button>
@@ -117,36 +111,44 @@ export function Navbar({
           {/* Menu do Usuário */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <Avatar className="h-9 w-9">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-xl hover:scale-105 transition-all duration-200">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={userProfile?.avatar_url || "/avatars/user.jpg"} alt={userName} />
-                  <AvatarFallback className="bg-gradient-primary text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white font-semibold">
                     {userName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userName}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {userEmail}
-                  </p>
+            <DropdownMenuContent className="w-64 rounded-xl border-border/50 shadow-lg animate-scale-in" align="end">
+              <DropdownMenuLabel className="font-normal p-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={userProfile?.avatar_url || "/avatars/user.jpg"} alt={userName} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white font-semibold">
+                      {userName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <p className="text-sm font-semibold leading-none">{userName}</p>
+                    <p className="text-xs leading-none text-muted-foreground mt-1">
+                      {userEmail}
+                    </p>
+                  </div>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
+              <DropdownMenuSeparator className="mx-2" />
+              <DropdownMenuItem className="mx-2 rounded-lg">
+                <User className="mr-3 h-4 w-4" />
                 <span>Perfil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
+              <DropdownMenuItem className="mx-2 rounded-lg">
+                <Settings className="mr-3 h-4 w-4" />
                 <span>Configurações</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
+              <DropdownMenuSeparator className="mx-2" />
+              <DropdownMenuItem className="mx-2 rounded-lg text-destructive focus:text-destructive" onClick={handleSignOut}>
+                <LogOut className="mr-3 h-4 w-4" />
                 <span>Sair</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
