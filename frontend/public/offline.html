@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Auzap AI Connect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .offline-container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .offline-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .offline-message {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .retry-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .retry-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .features-list {
+            margin-top: 3rem;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .features-list h3 {
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        .features-list ul {
+            list-style: none;
+        }
+
+        .features-list li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .offline-title {
+                font-size: 2rem;
+            }
+
+            .offline-message {
+                font-size: 1rem;
+            }
+
+            .features-list {
+                margin-top: 2rem;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+
+        <h1 class="offline-title">
+            <span class="status-indicator"></span>
+            Você está offline
+        </h1>
+
+        <p class="offline-message">
+            Não foi possível conectar à internet. Algumas funcionalidades podem estar limitadas,
+            mas você ainda pode navegar pelo conteúdo em cache.
+        </p>
+
+        <button class="retry-button" onclick="window.location.reload()">
+            🔄 Tentar Novamente
+        </button>
+
+        <div class="features-list">
+            <h3>🚀 Recursos disponíveis offline:</h3>
+            <ul>
+                <li>Visualização de dados em cache</li>
+                <li>Interface da aplicação</li>
+                <li>Configurações locais</li>
+                <li>Histórico de conversas (cache)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Detecta quando a conexão volta
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+
+        // Atualiza status da conexão
+        function updateConnectionStatus() {
+            const indicator = document.querySelector('.status-indicator');
+            if (navigator.onLine) {
+                indicator.style.background = '#4ade80';
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        }
+
+        // Verifica conexão periodicamente
+        setInterval(updateConnectionStatus, 3000);
+
+        // Service Worker communication
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'CACHE_UPDATED') {
+                    console.log('Cache updated, page can be refreshed');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

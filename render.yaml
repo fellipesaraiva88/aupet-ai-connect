@@ -49,10 +49,21 @@ services:
     region: oregon
     buildCommand: |
       cd frontend &&
-      rm -rf dist node_modules/.cache .vite &&
-      npm ci &&
-      VITE_API_URL=https://auzap-backend-api.onrender.com/api npm run build &&
-      echo '{"version":"'$(date +%s)'","timestamp":"'$(date)'"}' > dist/version.json
+      echo "🧹 Limpando cache e dependências..." &&
+      rm -rf dist node_modules/.cache .vite node_modules/.vite &&
+      echo "📦 Instalando dependências com cache..." &&
+      npm ci --prefer-offline --no-audit --no-fund &&
+      echo "🔧 Configurando variáveis de ambiente..." &&
+      export NODE_ENV=production &&
+      export VITE_API_URL=https://auzap-backend-api.onrender.com/api &&
+      echo "🚀 Executando build otimizado..." &&
+      npm run build &&
+      echo "📊 Gerando arquivo de versão..." &&
+      echo '{"version":"'$(date +%s)'","timestamp":"'$(date)'","build":"render-optimized"}' > dist/version.json &&
+      echo "📈 Análise do bundle (se disponível)..." &&
+      ls -la dist/ &&
+      du -sh dist/ &&
+      echo "✅ Build concluído com sucesso!"
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
@@ -65,12 +76,66 @@ services:
     domains:
       - auzap-frontend.onrender.com
     headers:
+      # HTML files - short cache for frequent updates
       - path: /
         name: Cache-Control
-        value: no-cache, no-store, must-revalidate, proxy-revalidate
+        value: public, max-age=0, s-maxage=3600, must-revalidate
       - path: /index.html
         name: Cache-Control
-        value: no-cache, no-store, must-revalidate, proxy-revalidate
+        value: public, max-age=0, s-maxage=3600, must-revalidate
+      - path: "*.html"
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=3600, must-revalidate
+
+      # Static assets - long cache with versioning
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.js"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.css"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.woff2"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.woff"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.ttf"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+      # Images - medium cache
+      - path: "*.png"
+        name: Cache-Control
+        value: public, max-age=2592000
+      - path: "*.jpg"
+        name: Cache-Control
+        value: public, max-age=2592000
+      - path: "*.jpeg"
+        name: Cache-Control
+        value: public, max-age=2592000
+      - path: "*.svg"
+        name: Cache-Control
+        value: public, max-age=2592000
+      - path: "*.webp"
+        name: Cache-Control
+        value: public, max-age=2592000
+      - path: "*.avif"
+        name: Cache-Control
+        value: public, max-age=2592000
+
+      # API and dynamic content - no cache
+      - path: /api/*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /version.json
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+
+      # Security headers
       - path: /*
         name: X-Frame-Options
         value: DENY
@@ -83,9 +148,14 @@ services:
       - path: /*
         name: Permissions-Policy
         value: geolocation=(), microphone=(), camera=()
-      - path: /assets/*
-        name: Cache-Control
-        value: public, max-age=31536000, immutable
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=63072000; includeSubDomains; preload
+
+      # Compression headers
+      - path: /*
+        name: Vary
+        value: Accept-Encoding
 
 databases:
   # Redis Cache for Sessions and Rate Limiting

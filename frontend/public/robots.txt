@@ -1,8 +1,11 @@
+# robots.txt para Auzap AI Connect
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +15,15 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://auzap-frontend.onrender.com/sitemap.xml
+
+# Bloquear crawling de assets para melhor cache
+Disallow: /assets/
+Disallow: /_vite/
+Disallow: /node_modules/
+Disallow: /dist/
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /*.map$
