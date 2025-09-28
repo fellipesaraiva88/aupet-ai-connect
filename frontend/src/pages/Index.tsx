@@ -24,32 +24,41 @@ const Index = () => {
 
   // Set up real-time subscriptions for live dashboard updates
   useRealTimeSubscriptions(organizationId);
-  return <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden paw-pattern">
-        {/* Background gradient with glass effect */}
-        <div className="absolute inset-0 bg-gradient-hero opacity-95" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(240,247,255,0.2),transparent)]" />
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 relative overflow-hidden">
+      {/* Enhanced Hero Section */}
+      <div className="relative overflow-hidden paw-pattern bg-gradient-hero">
+        {/* Enhanced background with pet elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-purple-600 opacity-95" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(240,247,255,0.3),transparent),radial-gradient(circle_at_70%_80%,rgba(255,240,247,0.2),transparent)]" />
 
-        {/* Floating elements animation */}
-        <div className="absolute top-20 left-10 animate-glass-float">
-          <div className="w-16 h-16 rounded-full glass-morphism opacity-20"></div>
+        {/* Enhanced floating elements */}
+        <div className="absolute top-16 left-8 animate-glass-float">
+          <div className="w-20 h-20 rounded-full glass-morphism opacity-25 bg-gradient-to-br from-white/30 to-pink-300/30"></div>
         </div>
-        <div className="absolute top-32 right-20 animate-pet-bounce delay-1000">
-          <div className="w-12 h-12 rounded-full glass-morphism opacity-15"></div>
+        <div className="absolute top-24 right-16 animate-pet-bounce delay-1000">
+          <div className="w-16 h-16 rounded-full glass-morphism opacity-20 bg-gradient-to-br from-white/30 to-blue-300/30"></div>
+        </div>
+        <div className="absolute bottom-16 left-1/3 animate-glass-float delay-500">
+          <div className="w-12 h-12 rounded-full glass-morphism opacity-15 bg-gradient-to-br from-white/30 to-purple-300/30"></div>
         </div>
 
         {/* Content */}
         <div className="relative">
           <Navbar />
 
-          {/* Welcome message with pet emoji */}
-          <div className="text-center py-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 glass-morphism rounded-full text-white mb-4">
-              <span className="animate-tail-wag">🐾</span>
-              <span className="text-sm font-medium">Bem-vindo ao Auzap Pet AI</span>
-              <span className="animate-tail-wag">🐕</span>
+          {/* Enhanced welcome message */}
+          <div className="text-center py-16">
+            <div className="inline-flex items-center gap-3 px-6 py-3 glass-morphism rounded-full text-white mb-6 border border-white/20 backdrop-blur-md">
+              <span className="animate-tail-wag text-xl">🐾</span>
+              <span className="font-medium text-lg">Bem-vindo ao Auzap Pet AI</span>
+              <span className="animate-tail-wag text-xl">❤️</span>
             </div>
+            <h2 className="text-3xl font-bold text-white mb-4 max-w-2xl mx-auto leading-relaxed">
+              Onde cada conversa se transforma em cuidado especial para os pets
+            </h2>
+            <p className="text-white/90 text-lg max-w-xl mx-auto">
+              Nunca perca um cliente. Cada pet merece o melhor atendimento.
+            </p>
           </div>
         </div>
       </div>
@@ -60,13 +69,22 @@ const Index = () => {
         
         <main className="flex-1 overflow-auto">
           <div className="p-8 space-y-6">
-            {/* Page Header */}
+            {/* Enhanced Page Header */}
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary">Seu Pet Shop Conectado</h1>
-                <p className="text-muted-foreground font-secondary">
-                  Enquanto você cuida dos pets, nós cuidamos de nunca perder um cliente. Cada conversa, cada agendamento, cada oportunidade é nossa responsabilidade.
-                </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-primary to-pink-600 rounded-xl shadow-lg pet-glow">
+                    <Heart className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-primary font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      Seu Pet Shop Conectado
+                    </h1>
+                    <p className="text-muted-foreground font-secondary text-lg max-w-3xl">
+                      Enquanto você cuida dos pets com amor, nós cuidamos de nunca perder um cliente. Cada conversa, cada agendamento, cada momento especial é nossa responsabilidade.
+                    </p>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
