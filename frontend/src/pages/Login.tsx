@@ -57,7 +57,7 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await signIn(formData.email, formData.password, rememberMe);
+      const { data, error } = await signIn(formData.email, formData.password);
 
       if (error) {
         console.error('Login error:', error);
