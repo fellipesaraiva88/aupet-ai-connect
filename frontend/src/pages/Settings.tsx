@@ -75,7 +75,12 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 relative overflow-hidden">
+      {/* Floating pet elements background */}
+      <div className="absolute inset-0 paw-pattern opacity-[0.02] pointer-events-none" />
+      <div className="absolute top-20 left-10 w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full glass-morphism animate-glass-float" />
+      <div className="absolute top-40 right-20 w-12 h-12 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-full glass-morphism animate-pet-bounce delay-1000" />
+
       <Navbar />
 
       <div className="flex h-[calc(100vh-4rem)]">
@@ -83,59 +88,72 @@ const Settings = () => {
           activeItem={activeMenuItem}
         />
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto relative">
           <div className="p-8 space-y-6">
-            {/* Page Header */}
+            {/* Enhanced Page Header */}
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-primary font-bold tracking-tight text-primary flex items-center gap-3">
-                  <SettingsIcon className="h-8 w-8" />
-                  Configurações
-                </h1>
-                <p className="text-muted-foreground font-secondary">
-                  Configure sua conta e preferências do sistema
-                </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-gradient-primary rounded-xl shadow-lg pet-glow">
+                    <SettingsIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-primary font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      Configurações
+                    </h1>
+                    <p className="text-muted-foreground font-secondary text-lg">
+                      Configure sua conta e preferências do sistema com carinho
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+              <Button className="glass-morphism bg-gradient-primary text-white hover:shadow-lg hover:scale-105 transition-all duration-300 px-6 py-3">
                 <Save className="h-4 w-4 mr-2" />
                 Salvar Alterações
               </Button>
             </div>
 
             <Tabs defaultValue="business" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="business" className="flex items-center gap-2">
+              <TabsList className="grid w-full grid-cols-5 glass-morphism bg-gradient-to-r from-white/80 to-blue-50/80 p-2 rounded-xl">
+                <TabsTrigger value="business" className="flex items-center gap-2 transition-all duration-300 hover:bg-gradient-primary hover:text-white rounded-lg">
                   <Building className="h-4 w-4" />
-                  Negócio
+                  <span className="hidden sm:inline">Negócio</span>
                 </TabsTrigger>
-                <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+                <TabsTrigger value="whatsapp" className="flex items-center gap-2 transition-all duration-300 hover:bg-gradient-primary hover:text-white rounded-lg">
                   <Smartphone className="h-4 w-4" />
-                  WhatsApp
+                  <span className="hidden sm:inline">WhatsApp</span>
                 </TabsTrigger>
-                <TabsTrigger value="ai" className="flex items-center gap-2">
+                <TabsTrigger value="ai" className="flex items-center gap-2 transition-all duration-300 hover:bg-gradient-primary hover:text-white rounded-lg">
                   <MessageSquare className="h-4 w-4" />
-                  IA
+                  <span className="hidden sm:inline">IA</span>
                 </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center gap-2">
+                <TabsTrigger value="notifications" className="flex items-center gap-2 transition-all duration-300 hover:bg-gradient-primary hover:text-white rounded-lg">
                   <Bell className="h-4 w-4" />
-                  Notificações
+                  <span className="hidden sm:inline">Notificações</span>
                 </TabsTrigger>
-                <TabsTrigger value="security" className="flex items-center gap-2">
+                <TabsTrigger value="security" className="flex items-center gap-2 transition-all duration-300 hover:bg-gradient-primary hover:text-white rounded-lg">
                   <Shield className="h-4 w-4" />
-                  Segurança
+                  <span className="hidden sm:inline">Segurança</span>
                 </TabsTrigger>
               </TabsList>
 
               {/* Business Settings */}
               <TabsContent value="business">
                 <div className="grid gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Informações do Negócio</CardTitle>
-                      <CardDescription>
-                        Configure os dados básicos do seu petshop
-                      </CardDescription>
+                  <Card className="glass-morphism bg-gradient-card border-0 shadow-lg">
+                    <CardHeader className="pb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gradient-primary rounded-lg">
+                          <Building className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl font-primary text-primary">Informações do Negócio</CardTitle>
+                          <CardDescription className="text-muted-foreground">
+                            Configure os dados básicos do seu petshop com amor
+                          </CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="grid grid-cols-2 gap-4">
