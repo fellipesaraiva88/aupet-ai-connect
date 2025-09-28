@@ -196,6 +196,24 @@ export function useUpdateCustomer() {
   });
 }
 
+export function useDeleteCustomer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete(`/customers/${id}`);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers-api'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats-api'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting customer:', error);
+    }
+  });
+}
+
 // Pets Hooks - Connected to Backend API
 export function usePets(organizationId?: string) {
   return useQuery({
