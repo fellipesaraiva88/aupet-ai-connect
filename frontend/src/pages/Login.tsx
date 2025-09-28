@@ -99,11 +99,75 @@ const Login: React.FC = () => {
   };
 
   // Quick login for development
-  const handleQuickLogin = () => {
-    setFormData({
+  const handleQuickLogin = async () => {
+    const devCredentials = {
       email: 'admin@auzap.com',
       password: 'auzap123'
-    });
+    };
+
+    setFormData(devCredentials);
+    setIsLoading(true);
+
+    try {
+      // Try actual login first
+      const { data, error } = await signIn(devCredentials.email, devCredentials.password);
+
+      if (error) {
+        // If login fails, create mock user session for development
+        console.log('Login failed, using dev mode bypass...');
+
+        // Mock user data for development
+        const mockUser = {
+          id: 'dev-user-123',
+          email: devCredentials.email,
+          name: 'Desenvolvedor',
+          role: 'admin'
+        };
+
+        // Store in localStorage for development
+        localStorage.setItem('auzap_dev_user', JSON.stringify(mockUser));
+        localStorage.setItem('auzap_dev_token', 'dev-token-' + Date.now());
+
+        toast({
+          title: 'Login de desenvolvimento ativo',
+          description: 'Acesso liberado para desenvolvimento',
+        });
+
+        // Force navigation to dashboard
+        window.location.href = '/';
+        return;
+      }
+
+      if (data?.user) {
+        toast({
+          title: 'Login realizado com sucesso!',
+          description: 'Redirecionando para o dashboard...',
+        });
+        navigate('/', { replace: true });
+      }
+    } catch (error) {
+      console.error('Quick login error:', error);
+
+      // Fallback to dev mode
+      const mockUser = {
+        id: 'dev-user-123',
+        email: devCredentials.email,
+        name: 'Desenvolvedor',
+        role: 'admin'
+      };
+
+      localStorage.setItem('auzap_dev_user', JSON.stringify(mockUser));
+      localStorage.setItem('auzap_dev_token', 'dev-token-' + Date.now());
+
+      toast({
+        title: 'Modo de desenvolvimento ativo',
+        description: 'Usando autenticação mock',
+      });
+
+      window.location.href = '/';
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

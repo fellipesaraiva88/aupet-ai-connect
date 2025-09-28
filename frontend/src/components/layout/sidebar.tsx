@@ -45,18 +45,6 @@ const menuItems = [
     badge: "Nova",
   },
   {
-    id: "customers",
-    label: "Clientes",
-    icon: Users,
-    href: "/customers",
-  },
-  {
-    id: "pets",
-    label: "Pets",
-    icon: Heart,
-    href: "/pets",
-  },
-  {
     id: "appointments",
     label: "Agendamentos",
     icon: Calendar,
