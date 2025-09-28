@@ -95,8 +95,6 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
 
     if (orgError || !organization) {
       logger.error('Erro ao criar organização:', orgError);
-      // Se falhou, tentar deletar o usuário do Auth
-      await supabaseService.supabase.auth.admin.deleteUser(authData.user.id);
       throw createError('Erro ao criar organização', 500);
     }
 
@@ -124,9 +122,6 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
 
     if (profileError || !profile) {
       logger.error('Erro ao criar profile:', profileError);
-      // Cleanup: deletar organização e usuário
-      await supabaseService.supabase.from('organizations').delete().eq('id', organization.id);
-      await supabaseService.supabase.auth.admin.deleteUser(authData.user.id);
       throw createError('Database error saving new user', 500);
     }
 
