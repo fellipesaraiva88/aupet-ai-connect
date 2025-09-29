@@ -46,7 +46,7 @@ export const WhatsAppConnectionCard: React.FC = () => {
   }, []);
 
   const setupWebSocket = () => {
-    const newSocket = io(process.env.REACT_APP_WEBSOCKET_URL || 'http://localhost:3001', {
+    const newSocket = io(import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:3001', {
       auth: {
         token: localStorage.getItem('authToken')
       }
