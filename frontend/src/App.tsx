@@ -70,9 +70,33 @@ const Signup = withChunkErrorBoundary(
   'signup-page'
 );
 
-// Mobile pages
+// Mobile pages with better error handling
 const MobileDashboard = withChunkErrorBoundary(
-  lazy(() => import("./pages/mobile/MobileDashboard")),
+  lazy(() =>
+    import("./pages/mobile/MobileDashboard").catch(error => {
+      console.error('Failed to load MobileDashboard:', error);
+      // Return fallback component
+      return {
+        default: () => (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center">
+            <div className="text-center space-y-4 p-8">
+              <div className="text-6xl mb-4">⚡</div>
+              <h1 className="text-2xl font-bold text-gray-900">Loading Error</h1>
+              <p className="text-gray-600 max-w-md">
+                Failed to load mobile dashboard. Refreshing...
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        )
+      };
+    })
+  ),
   'mobile-dashboard'
 );
 

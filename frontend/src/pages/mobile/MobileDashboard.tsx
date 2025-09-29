@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSwipeGestures } from '@/hooks/mobile/useMobileGestures';
+import { useMobileGestures } from '@/hooks/mobile/useMobileGestures';
 import { useBreakpoint } from '@/components/ui/responsive-grid';
 import {
   Heart,
@@ -87,7 +87,7 @@ export function MobileDashboard() {
   const { isMobile } = useBreakpoint();
 
   // Swipe gestures for card navigation
-  const swipeGestures = useSwipeGestures(
+  const swipeGestures = useMobileGestures(
     () => setActiveCard(prev => Math.min(prev + 1, 2)), // swipe left - next card
     () => setActiveCard(prev => Math.max(prev - 1, 0)), // swipe right - prev card
   );
