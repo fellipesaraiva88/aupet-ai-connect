@@ -26,14 +26,14 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",
     "allowJs": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/types/*": ["./src/types/*"],
       "@/services/*": ["./src/services/*"],
       "@/routes/*": ["./src/routes/*"],
       "@/middleware/*": ["./src/middleware/*"],
-      "@/utils/*": ["./src/utils/*"]
+      "@/utils/*": ["./src/utils/*"],
+      "*": ["./*"]
     }
   },
   "include": [
