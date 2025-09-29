@@ -1,27 +1,209 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auzap.AI</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
 
-    
-    <meta property="og:description" content="Lovable Generated Project" />
+    <!-- Mobile & PWA Meta Tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Auzap" />
+    <meta name="application-name" content="Auzap" />
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="theme-color" content="#007AFF" />
+    <meta name="msapplication-TileColor" content="#007AFF" />
+    <meta name="msapplication-navbutton-color" content="#007AFF" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Title and Description -->
+    <title>Auzap.ai - Pet Care Intelligence</title>
+    <meta name="description" content="Plataforma inteligente para cuidado de pets com WhatsApp Business Intelligence. Gerencie conversas, agende consultas e cuide melhor dos seus pets." />
+    <meta name="author" content="Auzap Team" />
+    <meta name="keywords" content="pet care, whatsapp business, veterinário, pets, inteligência artificial, agendamento, consultas veterinárias" />
+
+    <!-- Icons for different devices -->
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png" />
+
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/icons/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/icons/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/icons/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/icons/mstile-310x310.png" />
+
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/ZzqL5tlQtkd77XShQcFPp2bzkSi1/social-images/social-1758987107455-Captura de Tela 2025-09-27 às 12.31.35.png">
+    <meta property="og:title" content="Auzap.ai - Pet Care Intelligence" />
+    <meta property="og:description" content="Plataforma inteligente para cuidado de pets com WhatsApp Business Intelligence" />
+    <meta property="og:image" content="https://auzap-frontend.onrender.com/og-image.png" />
+    <meta property="og:url" content="https://auzap-frontend.onrender.com" />
+    <meta property="og:site_name" content="Auzap.ai" />
+    <meta property="og:locale" content="pt_BR" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/ZzqL5tlQtkd77XShQcFPp2bzkSi1/social-images/social-1758987107455-Captura de Tela 2025-09-27 às 12.31.35.png">
-    <meta property="og:title" content="Auzap.AI">
-  <meta name="twitter:title" content="Auzap.AI">
-  <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/ZzqL5tlQtkd77XShQcFPp2bzkSi1/uploads/1758987102192-Captura de Tela 2025-09-27 às 12.31.35.png">
-</head>
+    <meta name="twitter:title" content="Auzap.ai - Pet Care Intelligence" />
+    <meta name="twitter:description" content="Plataforma inteligente para cuidado de pets com WhatsApp Business Intelligence" />
+    <meta name="twitter:image" content="https://auzap-frontend.onrender.com/twitter-image.png" />
+    <meta name="twitter:site" content="@auzap_ai" />
+
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//auzap-backend-api.onrender.com" />
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+
+    <!-- Safe area support for devices with notch -->
+    <style>
+      :root {
+        --safe-area-inset-top: env(safe-area-inset-top, 0px);
+        --safe-area-inset-right: env(safe-area-inset-right, 0px);
+        --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-area-inset-left: env(safe-area-inset-left, 0px);
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Disable zoom on inputs (iOS) */
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      input[type="number"],
+      input[type="tel"],
+      textarea,
+      select {
+        font-size: 16px;
+      }
+
+      /* Loading spinner */
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #007AFF;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Initial loading screen */
+      .initial-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #fef7f7 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      .loading-logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+
+      .loading-text {
+        color: #374151;
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 10px;
+      }
+
+      .loading-subtext {
+        color: #6B7280;
+        font-size: 14px;
+      }
+    </style>
+  </head>
 
   <body>
+    <!-- Initial loading screen -->
+    <div id="initial-loading" class="initial-loading">
+      <div class="loading-logo">🐾</div>
+      <div class="loading-text">Auzap.ai</div>
+      <div class="loading-subtext">Preparando sua experiência pet...</div>
+      <div class="loading-spinner"></div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Remove loading screen after app loads -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loading = document.getElementById('initial-loading');
+          if (loading) {
+            loading.style.opacity = '0';
+            loading.style.transition = 'opacity 0.5s ease-out';
+            setTimeout(() => loading.remove(), 500);
+          }
+        }, 500);
+      });
+
+      // Prevent zoom on double tap (iOS)
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+
+      // Add viewport height custom property for mobile browsers
+      function setVH() {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      }
+
+      setVH();
+      window.addEventListener('resize', setVH);
+      window.addEventListener('orientationchange', setVH);
+    </script>
   </body>
 </html>

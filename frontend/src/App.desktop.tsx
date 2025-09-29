@@ -76,26 +76,6 @@ const MobileDashboard = withChunkErrorBoundary(
   'mobile-dashboard'
 );
 
-// Mobile placeholder component for pages under development
-const MobilePlaceholder = ({ pageName }: { pageName: string }) => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center">
-    <div className="text-center space-y-4 p-8">
-      <div className="text-6xl mb-4">🚧</div>
-      <h1 className="text-2xl font-bold text-gray-900">
-        {pageName} Mobile
-      </h1>
-      <p className="text-gray-600 max-w-md">
-        Estamos trabalhando na versão mobile desta página.
-        Em breve você terá acesso completo a todas as funcionalidades!
-      </p>
-      <div className="text-4xl mt-6">🐾</div>
-      <p className="text-sm text-gray-500">
-        Use a versão desktop por enquanto
-      </p>
-    </div>
-  </div>
-);
-
 // Enhanced QueryClient with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -171,9 +151,6 @@ const AppRoutes = () => {
   const isMobile = useIsMobile();
   const { isMobile: isBreakpointMobile } = useBreakpoint();
 
-  // Determine if we should use mobile layout
-  const shouldUseMobileLayout = isMobile || isBreakpointMobile;
-
   return (
     <ErrorBoundary>
       <Routes>
@@ -191,10 +168,10 @@ const AppRoutes = () => {
           </PublicRoute>
         } />
 
-        {/* Protected Routes - Mobile vs Desktop */}
+        {/* Protected Routes */}
         <Route path="/" element={
           <ProtectedRoute>
-            {shouldUseMobileLayout ? (
+            {isMobile || isBreakpointMobile ? (
               <Suspense fallback={<PageLoadingComponent />}>
                 <MobileDashboard />
               </Suspense>
@@ -203,179 +180,102 @@ const AppRoutes = () => {
             )}
           </ProtectedRoute>
         } />
-
         <Route path="/conversations" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Conversas" />
-              ) : (
-                <Conversations />
-              )}
+              <Conversations />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/conversations/:id/history" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Conversas" />
-              ) : (
-                <Conversations />
-              )}
+              <Conversations />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/ai-config" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="IA Config" />
-              ) : (
-                <AIConfig />
-              )}
+              <AIConfig />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/pets" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Pets" />
-              ) : (
-                <Pets />
-              )}
+              <Pets />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/pets/new" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Novo Pet" />
-              ) : (
-                <Pets />
-              )}
+              <Pets />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/customers" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Clientes" />
-              ) : (
-                <Customers />
-              )}
+              <Customers />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/customers/new" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Novo Cliente" />
-              ) : (
-                <Customers />
-              )}
+              <Customers />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/clients-pets" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Famílias & Pets" />
-              ) : (
-                <ClientsPets />
-              )}
+              <ClientsPets />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/appointments" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Agendamentos" />
-              ) : (
-                <Appointments />
-              )}
+              <Appointments />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/appointments/new" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Novo Agendamento" />
-              ) : (
-                <Appointments />
-              )}
+              <Appointments />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/catalog" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Catálogo" />
-              ) : (
-                <Catalog />
-              )}
+              <Catalog />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/analytics" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Analytics" />
-              ) : (
-                <Analytics />
-              )}
+              <Analytics />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/analytics/history" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Analytics" />
-              ) : (
-                <Analytics />
-              )}
+              <Analytics />
             </Suspense>
           </ProtectedRoute>
         } />
-
         <Route path="/settings" element={
           <ProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Configurações" />
-              ) : (
-                <Settings />
-              )}
+              <Settings />
             </Suspense>
-          </ProtectedRoute>
-        } />
-
-        {/* Special mobile routes */}
-        <Route path="/menu" element={
-          <ProtectedRoute>
-            <MobilePlaceholder pageName="Menu" />
           </ProtectedRoute>
         } />
 
@@ -429,70 +329,6 @@ const AppContent = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
-
-  // PWA Installation and Service Worker
-  React.useEffect(() => {
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('SW registered: ', registration);
-          })
-          .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
-          });
-      });
-    }
-
-    // Handle PWA install prompt
-    let deferredPrompt: any;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent Chrome 67 and earlier from automatically showing the prompt
-      e.preventDefault();
-      // Stash the event so it can be triggered later
-      deferredPrompt = e;
-
-      // Show install button or banner
-      const showInstallPromotion = () => {
-        // You can show a custom install UI here
-        console.log('PWA install prompt available');
-      };
-
-      showInstallPromotion();
-    });
-
-    // Handle successful PWA installation
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed');
-      deferredPrompt = null;
-    });
-
-    // Add viewport meta tags for mobile
-    if (!document.querySelector('meta[name="viewport"]')) {
-      const meta = document.createElement('meta');
-      meta.name = 'viewport';
-      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
-      document.getElementsByTagName('head')[0].appendChild(meta);
-    }
-
-    // Add theme color meta tags
-    if (!document.querySelector('meta[name="theme-color"]')) {
-      const themeColor = document.createElement('meta');
-      themeColor.name = 'theme-color';
-      themeColor.content = '#007AFF';
-      document.getElementsByTagName('head')[0].appendChild(themeColor);
-    }
-
-    // Add Apple touch icon
-    if (!document.querySelector('link[rel="apple-touch-icon"]')) {
-      const appleIcon = document.createElement('link');
-      appleIcon.rel = 'apple-touch-icon';
-      appleIcon.href = '/images/icons/icon-192x192.png';
-      document.getElementsByTagName('head')[0].appendChild(appleIcon);
-    }
   }, []);
 
   return (
