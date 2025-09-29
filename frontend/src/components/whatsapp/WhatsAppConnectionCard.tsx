@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppConnection } from './WhatsAppConnection';
+import { api } from '@/hooks/useApiData';
 import { io, Socket } from 'socket.io-client';
 import {
   MessageCircle,
@@ -97,17 +98,10 @@ export const WhatsAppConnectionCard: React.FC = () => {
 
   const checkWhatsAppStatus = async () => {
     try {
-      const response = await fetch('/api/whatsapp/status', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-
-      if (response.ok) {
-        const { data }: { data: WhatsAppStatusData } = await response.json();
-        setStatus(data.status);
-        setPhoneNumber(data.phoneNumber || '');
-      }
+      const response = await api.get('/whatsapp/status');
+      const { data }: { data: WhatsAppStatusData } = response.data;
+      setStatus(data.status);
+      setPhoneNumber(data.phoneNumber || '');
     } catch (error) {
       console.error('Erro ao verificar status:', error);
     } finally {
