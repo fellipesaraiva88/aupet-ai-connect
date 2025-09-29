@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,25 +11,72 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { ToastContainer } from "@/components/ui/enhanced-toast";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import { PawPrintsBackground } from "@/components/ui/paw-prints-background";
+
+// Enhanced error boundaries
+import {
+  ErrorBoundary,
+  withPageErrorBoundary,
+  withChunkErrorBoundary,
+  setupGlobalErrorHandling,
+} from "@/components/error-boundaries";
+
+// Store initialization
+import { initializeStores } from "@/stores";
+
+// Performance monitoring
+import performanceMonitor from "@/utils/performance";
+import { usePerformanceMonitoring } from "@/utils/performance";
+
+// Accessibility
+import { useSkipToContent } from "@/hooks/useA11y";
 
 // Core pages loaded immediately
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
-// Lazy load secondary pages for better performance
-const Conversations = lazy(() => import("./pages/Conversations"));
-const AIConfig = lazy(() => import("./pages/AIConfig"));
-const Pets = lazy(() => import("./pages/Pets"));
-const Customers = lazy(() => import("./pages/Customers"));
-const ClientsPets = lazy(() => import("./pages/ClientsPets"));
-const Appointments = lazy(() => import("./pages/Appointments"));
-const Catalog = lazy(() => import("./pages/Catalog"));
-const Analytics = lazy(() => import("./pages/Analytics"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Signup = lazy(() => import("./pages/Signup"));
+// Lazy load secondary pages with chunk error boundaries
+const Conversations = withChunkErrorBoundary(
+  lazy(() => import("./pages/Conversations")),
+  'conversations-page'
+);
+const AIConfig = withChunkErrorBoundary(
+  lazy(() => import("./pages/AIConfig")),
+  'ai-config-page'
+);
+const Pets = withChunkErrorBoundary(
+  lazy(() => import("./pages/Pets")),
+  'pets-page'
+);
+const Customers = withChunkErrorBoundary(
+  lazy(() => import("./pages/Customers")),
+  'customers-page'
+);
+const ClientsPets = withChunkErrorBoundary(
+  lazy(() => import("./pages/ClientsPets")),
+  'clients-pets-page'
+);
+const Appointments = withChunkErrorBoundary(
+  lazy(() => import("./pages/Appointments")),
+  'appointments-page'
+);
+const Catalog = withChunkErrorBoundary(
+  lazy(() => import("./pages/Catalog")),
+  'catalog-page'
+);
+const Analytics = withChunkErrorBoundary(
+  lazy(() => import("./pages/Analytics")),
+  'analytics-page'
+);
+const Settings = withChunkErrorBoundary(
+  lazy(() => import("./pages/Settings")),
+  'settings-page'
+);
+const Signup = withChunkErrorBoundary(
+  lazy(() => import("./pages/Signup")),
+  'signup-page'
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
