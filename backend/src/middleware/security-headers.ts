@@ -73,6 +73,9 @@ export const corsConfig = {
     const frontendUrl = envValidator.get('FRONTEND_URL');
     const allowedOrigins = [
       frontendUrl,
+      // Production Domain
+      'https://auzap.com.br',
+      'https://www.auzap.com.br',
       // Local development
       'http://localhost:8083',
       'http://localhost:8082',
