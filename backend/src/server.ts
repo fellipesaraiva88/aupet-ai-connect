@@ -13,8 +13,10 @@ import { Server } from 'socket.io';
 // Import routes
 import evolutionRoutes from './routes/evolution';
 import whatsappRoutes from './routes/whatsapp';
+import whatsappSimpleRoutes from './routes/whatsapp-simple';
 import aiRoutes from './routes/ai';
 import webhookRoutes from './routes/webhook';
+import webhookUserRoutes from './routes/webhook-user';
 import dashboardRoutes from './routes/dashboard';
 import settingsRoutes from './routes/settings';
 // import authRoutes from './routes/auth'; // Removido - usando apenas Supabase Auth
@@ -175,12 +177,14 @@ class AuzapServer {
   private setupRoutes(): void {
     // Public routes (no auth required)
     this.app.use('/api/webhook', rateLimitWebhook, webhookRoutes);
+    this.app.use('/api/webhook', rateLimitWebhook, webhookUserRoutes);
     // this.app.use('/api/auth', rateLimitAuth, authRoutes); // Removido - usando apenas Supabase Auth
     this.app.use('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
     // Protected routes (auth + tenant isolation required)
     this.app.use('/api/evolution', authMiddleware, tenantIsolationMiddleware, evolutionRoutes);
-    this.app.use('/api/whatsapp', authMiddleware, tenantIsolationMiddleware, whatsappRoutes);
+    this.app.use('/api/whatsapp', authMiddleware, tenantIsolationMiddleware, whatsappSimpleRoutes);
+    this.app.use('/api/whatsapp-legacy', authMiddleware, tenantIsolationMiddleware, whatsappRoutes);
     this.app.use('/api/ai', authMiddleware, tenantIsolationMiddleware, aiRoutes);
     this.app.use('/api/dashboard', authMiddleware, tenantIsolationMiddleware, dashboardRoutes);
     this.app.use('/api/settings', authMiddleware, tenantIsolationMiddleware, settingsRoutes);

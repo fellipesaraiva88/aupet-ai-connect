@@ -328,6 +328,34 @@ export class WebSocketService {
     });
   }
 
+  public notifyUserWhatsAppStatus(userId: string, organizationId: string, status: string, data?: any): void {
+    // Notificar usuário específico
+    const userSockets = Array.from(this.connectedClients.entries())
+      .filter(([_, client]) => client.userId === userId && client.organizationId === organizationId)
+      .map(([socketId]) => socketId);
+
+    userSockets.forEach(socketId => {
+      this.io.to(socketId).emit('user_whatsapp_status', {
+        status,
+        data,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // Também notificar toda a organização
+    this.io.to(`org_${organizationId}`).emit('whatsapp_status', {
+      instanceName: `user_${userId}`,
+      status,
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    logger.websocket('USER_WHATSAPP_STATUS_SENT', userId, {
+      status,
+      organizationId
+    });
+  }
+
   // Notification Events
   public sendNotification(organizationId: string, notification: {
     title: string;

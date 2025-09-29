@@ -115,6 +115,23 @@ export class SupabaseService {
     }
   }
 
+  async getInstanceByName(instanceName: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_instances')
+        .select('*')
+        .eq('instance_name', instanceName)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      return data;
+    } catch (error) {
+      logger.error('Error getting instance by name:', error);
+      return null;
+    }
+  }
+
   // WhatsApp Contacts
   async saveContact(contactData: {
     phone: string;
