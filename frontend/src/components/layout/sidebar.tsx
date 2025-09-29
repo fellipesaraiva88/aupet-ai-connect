@@ -15,6 +15,7 @@ import {
   Heart,
   Sparkles,
   Activity,
+  Zap,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -26,53 +27,69 @@ interface SidebarProps {
 const menuItems = [
   {
     id: "dashboard",
-    label: "Central do Amor 💝",
+    label: "Central do Amor",
+    description: "Visão geral",
     icon: LayoutDashboard,
     href: "/",
+    color: "from-purple-500 to-pink-500",
   },
   {
     id: "conversations",
-    label: "Conversas Especiais 💬",
+    label: "Conversas Especiais",
+    description: "Chat com clientes",
     icon: MessageSquare,
     href: "/conversations",
     badge: 5,
+    color: "from-blue-500 to-cyan-500",
   },
   {
     id: "clients-pets",
-    label: "Famílias & Pets 🏠🐾",
-    icon: Activity,
+    label: "Famílias & Pets",
+    description: "Gestão completa",
+    icon: Users,
     href: "/clients-pets",
     badge: "Nova",
+    color: "from-green-500 to-emerald-500",
   },
   {
     id: "appointments",
-    label: "Encontros de Cuidado 📅",
+    label: "Encontros de Cuidado",
+    description: "Agendamentos",
     icon: Calendar,
     href: "/appointments",
+    color: "from-orange-500 to-red-500",
   },
   {
     id: "catalog",
-    label: "Lojinha do Amor 🛍️",
+    label: "Lojinha do Amor",
+    description: "Produtos & serviços",
     icon: Package,
     href: "/catalog",
+    color: "from-indigo-500 to-purple-500",
   },
   {
     id: "ai-config",
-    label: "Configuração IA 🤖💕",
+    label: "Configuração IA",
+    description: "Assistente virtual",
     icon: Bot,
     href: "/ai-config",
+    color: "from-violet-500 to-purple-500",
   },
   {
     id: "analytics",
-    label: "Insights do Coração 📊",
+    label: "Insights do Coração",
+    description: "Relatórios & métricas",
     icon: BarChart3,
     href: "/analytics",
+    color: "from-pink-500 to-rose-500",
   },
   {
     id: "settings",
-    label: "Preferências 🔧💝",
+    label: "Preferências",
+    description: "Configurações",
     icon: Settings,
     href: "/settings",
+    color: "from-slate-500 to-gray-500",
   },
 ];
 
@@ -92,82 +109,123 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "flex h-full w-64 flex-col bg-card/95 backdrop-blur-xl border-r border-border/40",
+        "flex h-full w-80 flex-col bg-gradient-to-b from-background via-background/95 to-secondary/20 backdrop-blur-xl border-r border-border/50 shadow-2xl",
         className
       )}
     >
-      {/* Apple-style Header */}
-      <div className="flex h-16 items-center px-6 border-b border-border/20">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-primary/10 text-primary animate-apple-spring">
-            <Sparkles className="h-4 w-4" />
+      {/* Modern Header with Gradient */}
+      <div className="relative px-6 py-6 border-b border-border/30">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-purple-500/5 to-pink-500/5 backdrop-blur-sm" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-purple-500 to-pink-500 shadow-lg animate-pulse">
+            <Heart className="h-6 w-6 text-white drop-shadow-sm" />
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-[15px] text-foreground tracking-[-0.01em]">
+            <span className="font-bold text-xl text-foreground tracking-tight">
               Auzap 💝
             </span>
-            <span className="text-[11px] text-muted-foreground font-medium tracking-[-0.005em]">
+            <span className="text-sm text-muted-foreground font-medium bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
               Cuidado com Amor & IA
             </span>
           </div>
         </div>
       </div>
 
-      {/* Apple-style Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      {/* Modern Navigation */}
+      <nav className="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = activeItem === item.id;
 
           return (
-            <Button
+            <div
               key={item.id}
-              variant="ghost"
-              className={cn(
-                "w-full justify-start gap-3 h-9 px-3 rounded-[8px] font-medium transition-all duration-200",
-                "hover:bg-secondary/50 hover:backdrop-blur-sm",
-                "animate-apple-fade-in text-[13px] tracking-[-0.01em]",
-                isActive && [
-                  "bg-primary/8 text-primary shadow-sm",
-                  "hover:bg-primary/12",
-                  "border border-primary/10"
-                ]
-              )}
-              style={{ animationDelay: `${index * 30}ms` }}
-              onClick={() => handleItemClick(item)}
+              className="group relative"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <Icon className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                isActive ? "scale-105" : "scale-100"
-              )} />
-              <span className="flex-1 text-left">
-                {item.label}
-              </span>
-              {item.badge && (
-                <span className={cn(
-                  "ml-auto flex items-center justify-center rounded-full text-[10px] text-white font-medium animate-apple-pulse",
-                  typeof item.badge === 'string' ? "h-5 px-2 bg-gradient-to-r from-green-500 to-blue-500" : "h-4 w-4 bg-primary"
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-4 h-14 px-4 rounded-2xl font-medium transition-all duration-300 group-hover:scale-[1.02]",
+                  "relative overflow-hidden border border-transparent",
+                  isActive ? [
+                    "bg-gradient-to-r text-white shadow-xl border-white/20",
+                    `bg-gradient-to-r ${item.color}`,
+                    "hover:shadow-2xl"
+                  ] : [
+                    "hover:bg-secondary/50 hover:border-border/30 hover:shadow-lg",
+                    "text-muted-foreground hover:text-foreground"
+                  ]
+                )}
+                onClick={() => handleItemClick(item)}
+              >
+                {/* Background glow for active item */}
+                {isActive && (
+                  <div className={cn(
+                    "absolute inset-0 bg-gradient-to-r opacity-20 blur-xl",
+                    item.color
+                  )} />
+                )}
+                
+                {/* Icon container */}
+                <div className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-xl transition-all duration-300",
+                  isActive ? "bg-white/20 text-white" : "bg-secondary/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                 )}>
-                  {item.badge}
-                </span>
-              )}
-            </Button>
+                  <Icon className="h-5 w-5" />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 text-left">
+                  <div className={cn(
+                    "font-semibold text-sm",
+                    isActive ? "text-white" : "text-foreground"
+                  )}>
+                    {item.label}
+                  </div>
+                  <div className={cn(
+                    "text-xs opacity-80",
+                    isActive ? "text-white/80" : "text-muted-foreground"
+                  )}>
+                    {item.description}
+                  </div>
+                </div>
+
+                {/* Badge */}
+                {item.badge && (
+                  <div className={cn(
+                    "flex items-center justify-center rounded-full text-xs font-bold shadow-lg animate-pulse",
+                    typeof item.badge === 'string' 
+                      ? "h-6 px-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white" 
+                      : "h-6 w-6 bg-gradient-to-r from-orange-500 to-red-500 text-white"
+                  )}>
+                    {item.badge}
+                  </div>
+                )}
+              </Button>
+            </div>
           );
         })}
       </nav>
 
-      {/* Apple-style Footer */}
-      <div className="p-3">
-        <div className="rounded-[12px] bg-secondary/60 backdrop-blur-sm p-3 text-center border border-border/30">
-          <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-[8px] mx-auto mb-2 animate-apple-gentle-hover">
-            <Bot className="h-4 w-4 text-primary" />
+      {/* Modern Footer */}
+      <div className="p-4">
+        <div className="relative rounded-2xl bg-gradient-to-br from-secondary/80 via-secondary/60 to-primary/10 backdrop-blur-sm p-6 text-center border border-border/30 shadow-xl overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-primary/20 to-transparent rounded-full blur-xl" />
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-purple-500/20 to-transparent rounded-full blur-xl" />
+          
+          <div className="relative">
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary via-purple-500 to-pink-500 rounded-2xl mx-auto mb-3 shadow-lg animate-bounce">
+              <Zap className="h-6 w-6 text-white drop-shadow-sm" />
+            </div>
+            <p className="font-bold text-sm mb-1 text-foreground">
+              Cuidando com Amor ✨
+            </p>
+            <p className="text-xs text-muted-foreground opacity-80">
+              Proteção & carinho 24/7
+            </p>
           </div>
-          <p className="text-[12px] font-semibold mb-0.5 text-foreground tracking-[-0.01em]">
-            Cuidando com Amor ✨
-          </p>
-          <p className="text-[10px] text-muted-foreground tracking-[-0.005em]">
-            Proteção & carinho 24/7
-          </p>
         </div>
       </div>
     </div>
