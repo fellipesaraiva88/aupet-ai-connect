@@ -27,6 +27,7 @@ import conversationsRoutes from './routes/conversations';
 import catalogRoutes from './routes/catalog';
 import reportsRoutes from './routes/reports';
 import monitoringRoutes from './routes/monitoring';
+import adminRoutes from './routes/admin'; // Admin area routes
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -197,6 +198,13 @@ class AuzapServer {
     this.app.use('/api/reports', authMiddleware, tenantIsolationMiddleware, reportsRoutes);
     this.app.use('/api/monitoring', authMiddleware, tenantIsolationMiddleware, monitoringRoutes);
 
+    // AI Metrics routes
+    const aiMetricsRoutes = require('./routes/ai-metrics').default;
+    this.app.use('/api/ai-metrics', authMiddleware, tenantIsolationMiddleware, aiMetricsRoutes);
+
+    // Admin routes (super_admin only, includes auth + audit)
+    this.app.use('/api/admin', adminRoutes);
+
     // Serve static files
     this.app.use('/public', express.static('public'));
   }
@@ -285,6 +293,16 @@ class AuzapServer {
         logger.info('✅ WhatsApp health monitoring started');
       } catch (error) {
         logger.error('❌ Failed to start health monitoring:', error);
+      }
+
+      // Start Daily Engagement Cron (Proactive Follow-ups)
+      try {
+        const { DailyEngagementCron } = require('./cron/daily-engagement');
+        const engagementCron = new DailyEngagementCron();
+        engagementCron.start();
+        logger.info('✅ Daily engagement cron started (runs at 9 AM daily)');
+      } catch (error) {
+        logger.error('❌ Failed to start engagement cron:', error);
       }
 
       // Log available endpoints

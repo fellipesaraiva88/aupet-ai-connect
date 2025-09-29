@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tutorial completo da plataforma Auzap.ai - Inteligência Artificial para Pet Care">
+  <title>Tutorial Auzap.ai 🐾 | Aprenda a Usar a Plataforma</title>
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+</head>
+<body data-page-id="home">
+  <div class="tutorial-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <span style="font-size: 2rem;">🐾</span>
+        <h1>Tutorial Auzap.ai</h1>
+      </div>
+
+      <div style="margin-bottom: 2rem;">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">0% completo</div>
+      </div>
+
+      <div class="search-container" style="margin-bottom: 2rem; position: relative;">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="🔍 Buscar no tutorial..."
+          style="width: 100%; padding: 0.75rem; border: 2px solid var(--gray-200); border-radius: 0.75rem; font-size: 0.875rem;"
+        >
+        <div id="search-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 0.75rem; box-shadow: var(--shadow-lg); margin-top: 0.5rem; max-height: 300px; overflow-y: auto; z-index: 100;"></div>
+      </div>
+
+      <nav>
+        <div class="nav-section">
+          <div class="nav-section-title">🏠 Começando</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./introducao/o-que-e-auzap.html" class="nav-link" data-page-id="intro-1">
+                <span class="nav-link-icon">📚</span>
+                <span>O que é Auzap.ai</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./introducao/primeiros-passos.html" class="nav-link" data-page-id="intro-2">
+                <span class="nav-link-icon">🚀</span>
+                <span>Primeiros Passos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./introducao/navegacao-basica.html" class="nav-link" data-page-id="intro-3">
+                <span class="nav-link-icon">🧭</span>
+                <span>Navegação Básica</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">📱 WhatsApp</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./whatsapp/conexao-whatsapp.html" class="nav-link" data-page-id="whats-1">
+                <span class="nav-link-icon">🔗</span>
+                <span>Conectar WhatsApp</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./whatsapp/gerenciar-instancias.html" class="nav-link" data-page-id="whats-2">
+                <span class="nav-link-icon">⚙️</span>
+                <span>Gerenciar Instâncias</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./whatsapp/configuracoes.html" class="nav-link" data-page-id="whats-3">
+                <span class="nav-link-icon">🔧</span>
+                <span>Configurações</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">💬 Conversas</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./conversas/interface-chat.html" class="nav-link" data-page-id="conv-1">
+                <span class="nav-link-icon">💭</span>
+                <span>Interface de Chat</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./conversas/enviar-mensagens.html" class="nav-link" data-page-id="conv-2">
+                <span class="nav-link-icon">📤</span>
+                <span>Enviar Mensagens</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./conversas/historico.html" class="nav-link" data-page-id="conv-3">
+                <span class="nav-link-icon">📋</span>
+                <span>Histórico</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">👨‍👩‍👧‍👦 Clientes & Pets</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./clientes-pets/cadastro-clientes.html" class="nav-link" data-page-id="client-1">
+                <span class="nav-link-icon">👤</span>
+                <span>Cadastro de Clientes</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./clientes-pets/cadastro-pets.html" class="nav-link" data-page-id="client-2">
+                <span class="nav-link-icon">🐕</span>
+                <span>Cadastro de Pets</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./clientes-pets/familias.html" class="nav-link" data-page-id="client-3">
+                <span class="nav-link-icon">💝</span>
+                <span>Visualizar Famílias</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">📅 Agendamentos</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./agendamentos/criar-agendamento.html" class="nav-link" data-page-id="agenda-1">
+                <span class="nav-link-icon">➕</span>
+                <span>Criar Agendamento</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./agendamentos/calendario.html" class="nav-link" data-page-id="agenda-2">
+                <span class="nav-link-icon">🗓️</span>
+                <span>Visualizar Calendário</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./agendamentos/gerenciar.html" class="nav-link" data-page-id="agenda-3">
+                <span class="nav-link-icon">📝</span>
+                <span>Gerenciar</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">📦 Catálogo</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./catalogo/adicionar-servicos.html" class="nav-link" data-page-id="catalog-1">
+                <span class="nav-link-icon">➕</span>
+                <span>Adicionar Serviços</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./catalogo/gerenciar-catalogo.html" class="nav-link" data-page-id="catalog-2">
+                <span class="nav-link-icon">📦</span>
+                <span>Gerenciar Catálogo</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">📊 Analytics</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./analytics/dashboard.html" class="nav-link" data-page-id="analytics-1">
+                <span class="nav-link-icon">📈</span>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./analytics/metricas.html" class="nav-link" data-page-id="analytics-2">
+                <span class="nav-link-icon">📊</span>
+                <span>Métricas Detalhadas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./analytics/relatorios.html" class="nav-link" data-page-id="analytics-3">
+                <span class="nav-link-icon">📄</span>
+                <span>Relatórios</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">🤖 IA Config</div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="./ia-config/configurar-ia.html" class="nav-link" data-page-id="ia-1">
+                <span class="nav-link-icon">⚙️</span>
+                <span>Configurar IA</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./ia-config/personalidade.html" class="nav-link" data-page-id="ia-2">
+                <span class="nav-link-icon">🎭</span>
+                <span>Personalidade</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./ia-config/horarios.html" class="nav-link" data-page-id="ia-3">
+                <span class="nav-link-icon">⏰</span>
+                <span>Horários</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="./ia-config/testar-ia.html" class="nav-link" data-page-id="ia-4">
+                <span class="nav-link-icon">🧪</span>
+                <span>Testar IA</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header" style="text-align: center; margin-bottom: 4rem;">
+        <div style="font-size: 5rem; margin-bottom: 1rem;">🐾</div>
+        <h1 class="page-title" style="font-size: 3.5rem; margin-bottom: 1rem;">
+          Bem-vindo ao Tutorial Auzap.ai
+        </h1>
+        <p class="page-subtitle" style="font-size: 1.25rem; max-width: 600px; margin: 0 auto;">
+          Aprenda a usar a plataforma de Inteligência Artificial para Pet Care e transforme seu negócio! 💝
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+        <a href="./introducao/o-que-e-auzap.html" style="text-decoration: none;">
+          <div class="card" style="height: 100%; cursor: pointer;">
+            <div class="card-header">
+              <span class="card-icon">📚</span>
+              <h3 class="card-title">Introdução</h3>
+            </div>
+            <div class="card-content">
+              <p>Descubra o que é Auzap.ai e como pode revolucionar seu negócio pet.</p>
+            </div>
+          </div>
+        </a>
+
+        <a href="./whatsapp/conexao-whatsapp.html" style="text-decoration: none;">
+          <div class="card" style="height: 100%; cursor: pointer;">
+            <div class="card-header">
+              <span class="card-icon">📱</span>
+              <h3 class="card-title">Conectar WhatsApp</h3>
+            </div>
+            <div class="card-content">
+              <p>Configure sua primeira conexão WhatsApp em minutos.</p>
+            </div>
+          </div>
+        </a>
+
+        <a href="./ia-config/configurar-ia.html" style="text-decoration: none;">
+          <div class="card" style="height: 100%; cursor: pointer;">
+            <div class="card-header">
+              <span class="card-icon">🤖</span>
+              <h3 class="card-title">Configurar IA</h3>
+            </div>
+            <div class="card-content">
+              <p>Personalize seu assistente de IA para atendimento automático.</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">✨</span>
+          <h2 class="card-title">O que você vai aprender</h2>
+        </div>
+        <div class="card-content">
+          <div style="display: grid; gap: 1.5rem;">
+            <div style="display: flex; gap: 1rem; align-items: start;">
+              <span style="font-size: 2rem; flex-shrink: 0;">🔗</span>
+              <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Integração WhatsApp</h4>
+                <p style="color: var(--gray-600);">Conecte suas contas WhatsApp e gerencie múltiplas instâncias com facilidade.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: start;">
+              <span style="font-size: 2rem; flex-shrink: 0;">💬</span>
+              <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Gestão de Conversas</h4>
+                <p style="color: var(--gray-600);">Organize e responda mensagens de forma eficiente com interface intuitiva.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: start;">
+              <span style="font-size: 2rem; flex-shrink: 0;">🤖</span>
+              <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Inteligência Artificial</h4>
+                <p style="color: var(--gray-600);">Configure respostas automáticas inteligentes com GPT-4 personalizado.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: start;">
+              <span style="font-size: 2rem; flex-shrink: 0;">📊</span>
+              <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Analytics e Relatórios</h4>
+                <p style="color: var(--gray-600);">Acompanhe métricas em tempo real e tome decisões baseadas em dados.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: start;">
+              <span style="font-size: 2rem; flex-shrink: 0;">📅</span>
+              <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Agendamentos</h4>
+                <p style="color: var(--gray-600);">Gerencie compromissos e sincronize com seu calendário.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: start;">
+              <span style="font-size: 2rem; flex-shrink: 0;">👨‍👩‍👧‍👦</span>
+              <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Clientes e Pets</h4>
+                <p style="color: var(--gray-600);">Mantenha fichas completas de clientes e seus pets com histórico detalhado.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 4rem;">
+        <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">Pronto para começar? 🚀</h2>
+        <p style="color: var(--gray-600); margin-bottom: 2rem;">Comece pelo básico ou vá direto para o que você precisa aprender.</p>
+        <a href="./introducao/o-que-e-auzap.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
+          <span>Começar Tutorial</span>
+          <span>→</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="./assets/js/tutorial.js"></script>
+</body>
+</html>

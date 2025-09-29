@@ -6,15 +6,26 @@ import {
   BusinessConfig,
   CustomerData
 } from '../types';
+import { HumanizationEngine } from './ai/humanization-engine';
+import { PNL_TECHNIQUES, selectPNLTechniqueByIntent, applyPNLTechnique } from './ai/pnl-patterns';
+import { OpportunityDetector, DetectedOpportunity } from './ai/opportunity-detector';
+import TokenTrackerService from './token-tracker';
 
 export class AIService {
   private openai: OpenAI | null = null;
   private defaultPersonality = 'friendly';
   private defaultTemperature = 0.7;
   private defaultMaxTokens = 200;
+  private humanizationEngine: HumanizationEngine;
+  private opportunityDetector: OpportunityDetector;
+  private tokenTracker: TokenTrackerService;
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
+
+    this.humanizationEngine = new HumanizationEngine();
+    this.opportunityDetector = new OpportunityDetector();
+    this.tokenTracker = new TokenTrackerService();
 
     if (!apiKey) {
       logger.warn('OpenAI API key not provided. AI features will be limited.');
@@ -25,14 +36,16 @@ export class AIService {
       apiKey,
     });
 
-    logger.info('AI service initialized with OpenAI');
+    logger.info('AI service initialized with OpenAI, PNL, Opportunity Detection and Token Tracking');
   }
 
   // Main AI Analysis Method
   async analyzeMessage(
     message: string,
     customerContext: any,
-    businessConfig: BusinessConfig
+    businessConfig: BusinessConfig,
+    organizationId?: string,
+    userId?: string
   ): Promise<AIAnalysis> {
     try {
       if (!this.openai) {
@@ -91,13 +104,30 @@ REGRAS:
         response_format: { type: 'json_object' }
       });
 
+      // Track token usage
+      if (organizationId && response.usage) {
+        await this.tokenTracker.trackTokenUsage({
+          organizationId,
+          userId,
+          model: response.model || 'gpt-4o-mini',
+          promptTokens: response.usage.prompt_tokens || 0,
+          completionTokens: response.usage.completion_tokens || 0,
+          totalTokens: response.usage.total_tokens || 0,
+          metadata: {
+            feature: 'analyze_message',
+            intent: 'analyze'
+          }
+        });
+      }
+
       const analysis = JSON.parse(response.choices[0]?.message?.content || '{}');
 
       logger.ai('ANALYZE_MESSAGE', {
         intent: analysis.intent,
         sentiment: analysis.sentiment,
         urgency: analysis.urgency,
-        needsHuman: analysis.needsHuman
+        needsHuman: analysis.needsHuman,
+        tokensUsed: response.usage?.total_tokens || 0
       });
 
       return {
@@ -116,7 +146,7 @@ REGRAS:
     }
   }
 
-  // Generate Personalized Response
+  // Generate Personalized Response with PNL and Humanization
   async generateResponse(
     intent: string,
     customerContext: any,
@@ -130,6 +160,18 @@ REGRAS:
 
       const context = this.buildResponseContext(customerContext, businessConfig, previousMessages);
 
+      // Detectar preferências do cliente para humanização
+      const customerMessages = previousMessages
+        .filter((m: any) => m.direction === 'inbound')
+        .map((m: any) => m.content);
+
+      const useEmojis = this.humanizationEngine.detectEmojiUsage(customerMessages);
+      const customerTone = this.humanizationEngine.detectCustomerTone(customerMessages);
+
+      // Selecionar técnica de PNL baseada na intenção
+      const pnlTechnique = selectPNLTechniqueByIntent(intent);
+      const pnlInfo = PNL_TECHNIQUES[pnlTechnique];
+
       const personality = this.getPersonalityPrompt(businessConfig.ai_personality);
 
       const prompt = `
@@ -140,28 +182,33 @@ ${context}
 
 INTENÇÃO DETECTADA: ${intent}
 
+TÉCNICA DE COMUNICAÇÃO (PNL):
+Aplique a técnica "${pnlInfo.name}": ${pnlInfo.description}
+Exemplos de padrões: ${pnlInfo.patterns.slice(0, 2).join(', ')}
+
 Gere uma resposta personalizada seguindo estas diretrizes:
 
-REGRAS:
+REGRAS DE COMUNICAÇÃO:
 - Use o nome do cliente: ${customerContext?.name || 'querido cliente'}
-- Use o nome do pet se disponível: ${customerContext?.pets?.[0]?.name || ''}
-- Seja caloroso, acolhedor e profissional
-- Foque no cuidado e bem-estar do pet
-- Máximo 150 caracteres
-- Use emojis sutilmente (máximo 2)
-- Se for agendamento, sugira horários disponíveis
-- Se for dúvida, ofereça informações úteis
-- Se for emergência, demonstre urgência e cuidado
+- Use o nome do pet se disponível: ${customerContext?.pets?.[0]?.name || 'seu pet'}
+- Seja EXTREMAMENTE natural e humana
+- Fale como uma pessoa real, não como IA
+- Fragmenta naturalmente (pontos, vírgulas)
+- Tom: ${customerTone} (espelhe o cliente)
+- Emojis: ${useEmojis ? 'Sim, sutilmente' : 'Não use'}
+- Máximo 180 caracteres
+- Demonstre empatia e cuidado genuíno
+- NUNCA pareça robótica ou automática
 
-EXEMPLOS DE RESPOSTAS POR INTENÇÃO:
+APLICAR TÉCNICA PNL:
+${pnlInfo.examples[0] || 'Aplique os padrões listados acima'}
 
-agendar: "Olá [nome]! Vamos cuidar do [pet] com todo carinho 💝 Que tal amanhã às 14h? Confirma pra gente?"
+EXEMPLOS DE NATURALIDADE:
+- "Oi! Nossa, faz tempo que não vejo o Thor aqui... Como ele tá?"
+- "Deixa eu ver aqui... Tenho uma vaguinha amanhã às 14h! Serve?"
+- "Aiii que dó 😢 Vamos cuidar disso rapidinho, pode vir?"
 
-duvida: "Oi [nome]! Claro, estamos aqui para esclarecer tudo sobre o [pet] 🐾 [resposta específica]"
-
-emergencia: "Olá [nome]! Vamos ajudar o [pet] agora mesmo! Pode vir imediatamente ou precisa de orientação?"
-
-Responda APENAS com a mensagem final, sem explicações.
+Responda APENAS com a mensagem final, SEM explicações ou introduções.
 `;
 
       const response = await this.openai.chat.completions.create({
@@ -169,23 +216,33 @@ Responda APENAS com a mensagem final, sem explicações.
         messages: [
           {
             role: 'system',
-            content: 'Você é um assistente carinhoso de pet shop. Responda apenas com a mensagem final.'
+            content: 'Você é uma atendente carinhosa de pet shop. Fale como um humano real, nunca como IA. Seja natural, empática e use PNL.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: businessConfig.ai_personality === 'formal' ? 0.3 : 0.7,
-        max_tokens: 150
+        temperature: businessConfig.ai_personality === 'formal' ? 0.5 : 0.8, // Mais criativo
+        max_tokens: 200
       });
 
-      const generatedResponse = response.choices[0]?.message?.content?.trim() || '';
+      let generatedResponse = response.choices[0]?.message?.content?.trim() || '';
 
-      logger.ai('GENERATE_RESPONSE', {
+      // APLICAR HUMANIZAÇÃO TOTAL
+      generatedResponse = this.humanizationEngine.humanize(generatedResponse, {
+        customerTone,
+        useEmojis,
+        variationLevel: 0.7,
+        errorProbability: 0.08 // 8% de chance de "erro" humano
+      });
+
+      logger.ai('GENERATE_RESPONSE_PNL', {
         intent,
+        pnlTechnique,
         responseLength: generatedResponse.length,
-        customer: customerContext?.name
+        customer: customerContext?.name,
+        humanized: true
       });
 
       return generatedResponse || this.getFallbackResponse(intent, customerContext);
@@ -442,6 +499,59 @@ Mensagem de boas-vindas padrão: ${businessConfig.welcome_message}
       customerSatisfaction: 8.5,
       responseEffectiveness: 7.8
     };
+  }
+
+  // Detect Sales Opportunities
+  detectOpportunities(
+    message: string,
+    customerContext: any,
+    recentServices: any[] = []
+  ): DetectedOpportunity[] {
+    const opportunities = this.opportunityDetector.detectOpportunities(message, customerContext);
+
+    // Filtra oportunidades que não devem ser oferecidas
+    return opportunities.filter(opp =>
+      this.opportunityDetector.shouldOfferService(opp.service, customerContext, recentServices)
+    );
+  }
+
+  // Generate Response with Opportunity
+  async generateResponseWithOpportunity(
+    intent: string,
+    customerContext: any,
+    businessConfig: BusinessConfig,
+    previousMessages: any[] = [],
+    opportunity?: DetectedOpportunity
+  ): Promise<string> {
+    // Se tem oportunidade de alta confiança, usa ela
+    if (opportunity && opportunity.confidence >= 0.6) {
+      const opportunityResponse = this.opportunityDetector.generateOpportunityResponse(
+        opportunity,
+        customerContext,
+        businessConfig
+      );
+
+      // Humaniza a resposta de oportunidade
+      const humanized = this.humanizationEngine.humanize(opportunityResponse, {
+        customerTone: this.humanizationEngine.detectCustomerTone(
+          previousMessages.filter((m: any) => m.direction === 'inbound').map((m: any) => m.content)
+        ),
+        useEmojis: this.humanizationEngine.detectEmojiUsage(
+          previousMessages.filter((m: any) => m.direction === 'inbound').map((m: any) => m.content)
+        )
+      });
+
+      logger.ai('RESPONSE_WITH_OPPORTUNITY', {
+        intent,
+        opportunityService: opportunity.service,
+        confidence: opportunity.confidence
+      });
+
+      return humanized;
+    }
+
+    // Caso contrário, gera resposta normal
+    return this.generateResponse(intent, customerContext, businessConfig, previousMessages);
   }
 
   // Health Check

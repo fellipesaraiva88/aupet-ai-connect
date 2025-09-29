@@ -547,6 +547,88 @@ export class SupabaseService {
     }
   }
 
+  // Conversation Messages
+  async getConversationMessages(conversationId: string, limit: number = 10) {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      logger.supabase('SELECT', 'whatsapp_messages', { conversationId, count: data?.length });
+      return data?.reverse() || []; // Retorna em ordem cronológica
+    } catch (error) {
+      logger.error('Error getting conversation messages:', error);
+      return [];
+    }
+  }
+
+  // Customer Pets
+  async getCustomerPets(customerId: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('pets')
+        .select('*')
+        .eq('customer_id', customerId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      logger.supabase('SELECT', 'pets', { customerId, count: data?.length });
+      return data || [];
+    } catch (error) {
+      logger.error('Error getting customer pets:', error);
+      return [];
+    }
+  }
+
+  // Customer Appointments
+  async getCustomerAppointments(customerId: string, limit: number = 5) {
+    try {
+      const { data, error } = await this.supabase
+        .from('appointments')
+        .select('*')
+        .eq('customer_id', customerId)
+        .order('scheduled_date', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      logger.supabase('SELECT', 'appointments', { customerId, count: data?.length });
+      return data || [];
+    } catch (error) {
+      logger.error('Error getting customer appointments:', error);
+      return [];
+    }
+  }
+
+  // Update Conversation Status
+  async updateConversationStatus(conversationId: string, status: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_conversations')
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', conversationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      logger.supabase('UPDATE', 'whatsapp_conversations', { conversationId, status });
+      return data;
+    } catch (error) {
+      logger.error('Error updating conversation status:', error);
+      throw error;
+    }
+  }
+
   // Get Supabase client for direct access (used in auth routes)
   getClient(): SupabaseClient {
     return this.supabase;

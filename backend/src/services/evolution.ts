@@ -522,4 +522,28 @@ export class EvolutionAPIService {
       throw new Error(`Falha ao atualizar status do perfil: ${error.response?.data?.message || error.message}`);
     }
   }
+
+  // Presence Management (typing indicator, recording, etc)
+  async setPresence(instanceName: string, to: string, presence: 'composing' | 'recording' | 'paused' | 'available'): Promise<any> {
+    try {
+      const cleanPhoneNumber = this.cleanPhoneNumber(to);
+
+      const response = await this.api.post(`/chat/updatePresence/${instanceName}`, {
+        number: cleanPhoneNumber,
+        presence
+      });
+
+      logger.evolution('SET_PRESENCE', instanceName, { to: cleanPhoneNumber, presence });
+      return response.data;
+    } catch (error: any) {
+      // Presence is not critical, just log and continue
+      logger.warn('Error setting presence (non-critical):', error.message);
+      return null;
+    }
+  }
+
+  // Alias for sendText to maintain compatibility with MessageSender
+  async sendMessage(instanceName: string, phoneNumber: string, message: string): Promise<any> {
+    return this.sendText(instanceName, phoneNumber, message);
+  }
 }

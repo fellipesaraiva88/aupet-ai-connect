@@ -410,10 +410,21 @@ export class WebhookHandler {
       };
 
       // Analisar mensagem com IA
+      const startTime = Date.now();
       const analysis = await this.aiService.analyzeMessage(
         message.content,
         customerContext,
         businessConfig
+      );
+      const processingTime = Date.now() - startTime;
+
+      // LOG: Análise de mensagem
+      await this.aiLogger.logMessageAnalysis(
+        organizationId,
+        conversation.id,
+        contact.id,
+        analysis,
+        processingTime
       );
 
       // Verificar se precisa escalar para humano
@@ -425,6 +436,15 @@ export class WebhookHandler {
 
         // Atualizar status da conversa
         await this.supabaseService.updateConversationStatus(conversation.id, 'escalated');
+
+        // LOG: Escalação
+        await this.aiLogger.logEscalation(
+          organizationId,
+          conversation.id,
+          contact.id,
+          analysis.urgency || 'unknown',
+          analysis.urgency
+        );
 
         // Notificar equipe
         if (this.wsService) {
@@ -448,6 +468,14 @@ export class WebhookHandler {
       const topOpportunity = opportunities.length > 0 ? opportunities[0] : undefined;
 
       if (topOpportunity) {
+        // LOG: Oportunidade detectada
+        await this.aiLogger.logOpportunityDetected(
+          organizationId,
+          conversation.id,
+          contact.id,
+          topOpportunity
+        );
+
         logger.info('Sales opportunity detected', {
           conversationId: conversation.id,
           service: topOpportunity.service,
@@ -475,6 +503,26 @@ export class WebhookHandler {
 
         // ENVIO REAL VIA EVOLUTION API - Fragmentar e enviar
         const fragments = this.messageSender.fragmentMessage(aiResponseText, 120);
+
+        // LOG: Resposta gerada
+        const hour = new Date().getHours();
+        const timeOfDay = hour >= 6 && hour < 12 ? 'morning' :
+                         hour >= 12 && hour < 18 ? 'afternoon' :
+                         hour >= 18 && hour < 22 ? 'evening' : 'night';
+
+        await this.aiLogger.logResponseGenerated(
+          organizationId,
+          conversation.id,
+          contact.id,
+          aiResponseText,
+          fragments.length,
+          {
+            timeOfDay,
+            customerTone: 'informal',
+            errorProbability: 0.05,
+            useEmojis: true
+          }
+        );
 
         const sendResult = await this.messageSender.sendFragmentedMessages(
           instance.instance_name,
@@ -531,8 +579,20 @@ export class WebhookHandler {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing message with AI:', error);
+
+      // LOG: Erro
+      try {
+        await this.aiLogger.logError(
+          organizationId,
+          conversation.id,
+          error.message || 'Unknown error',
+          error.stack
+        );
+      } catch (logError) {
+        logger.error('Failed to log AI error:', logError);
+      }
     }
   }
 

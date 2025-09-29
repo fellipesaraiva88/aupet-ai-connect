@@ -61,6 +61,10 @@ const Analytics = withChunkErrorBoundary(
   lazy(() => import("./pages/Analytics")),
   'analytics-page'
 );
+const AIAnalytics = withChunkErrorBoundary(
+  lazy(() => import("./pages/AIAnalytics")),
+  'ai-analytics-page'
+);
 const Settings = withChunkErrorBoundary(
   lazy(() => import("./pages/Settings")),
   'settings-page'
@@ -68,6 +72,20 @@ const Settings = withChunkErrorBoundary(
 const Signup = withChunkErrorBoundary(
   lazy(() => import("./pages/Signup")),
   'signup-page'
+);
+
+// Admin pages (super_admin only)
+const Admin = withChunkErrorBoundary(
+  lazy(() => import("./pages/Admin")),
+  'admin-page'
+);
+const AdminOrganizations = withChunkErrorBoundary(
+  lazy(() => import("./pages/AdminOrganizations")),
+  'admin-organizations-page'
+);
+const AdminTokens = withChunkErrorBoundary(
+  lazy(() => import("./pages/AdminTokens")),
+  'admin-tokens-page'
 );
 
 // Mobile pages with better error handling
@@ -392,6 +410,39 @@ const AppRoutes = () => {
               ) : (
                 <Settings />
               )}
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/ai-analytics" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <AIAnalytics />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        {/* Admin Routes (super_admin only) */}
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Admin />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/organizations" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <AdminOrganizations />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/tokens" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <AdminTokens />
             </Suspense>
           </ProtectedRoute>
         } />
