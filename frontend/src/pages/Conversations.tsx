@@ -243,7 +243,7 @@ const Conversations = () => {
                   <DialogTitle>Configurar WhatsApp</DialogTitle>
                   <DialogDescription>Configure sua instância do WhatsApp</DialogDescription>
                 </DialogHeader>
-                <WhatsAppSetup onClose={() => setShowWhatsAppSetup(false)} />
+                <WhatsAppSetup organizationId={organizationId} />
               </DialogContent>
             </Dialog>
 
@@ -253,7 +253,10 @@ const Conversations = () => {
                   <DialogTitle>Gerenciar Templates</DialogTitle>
                   <DialogDescription>Configure templates de mensagem</DialogDescription>
                 </DialogHeader>
-                <TemplateManager onUseTemplate={() => {}} />
+                <TemplateManager 
+                  organizationId={organizationId} 
+                  onUseTemplate={() => {}} 
+                />
               </DialogContent>
             </Dialog>
 
@@ -263,7 +266,10 @@ const Conversations = () => {
                   <DialogTitle>Configurar Auto Resposta</DialogTitle>
                   <DialogDescription>Configure respostas automáticas da IA</DialogDescription>
                 </DialogHeader>
-                <AutoReplySettings />
+                <AutoReplySettings 
+                  organizationId={organizationId}
+                  instanceId={selectedInstance || ''}
+                />
               </DialogContent>
             </Dialog>
           </div>
