@@ -62,7 +62,7 @@ export class WhatsAppManager {
       if (localInstance) {
         return {
           id: localInstance.id,
-          name: localInstance.name,
+          name: localInstance.instance_name,
           userId: userId,
           status: localInstance.status,
           phoneNumber: localInstance.phone_number,

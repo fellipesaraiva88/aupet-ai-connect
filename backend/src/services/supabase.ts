@@ -50,8 +50,8 @@ export class SupabaseService {
       const { data, error } = await this.supabase
         .from('whatsapp_instances')
         .insert({
-          name: instanceData.name,
-          user_id: instanceData.user_id,
+          instance_name: instanceData.name,
+          instance_id: instanceData.user_id, // Using instance_id to store user_id
           status: instanceData.status,
           organization_id: instanceData.organization_id,
           created_at: new Date().toISOString(),
