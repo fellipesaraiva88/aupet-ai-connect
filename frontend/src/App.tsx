@@ -12,6 +12,7 @@ import { ToastContainer } from "@/components/ui/enhanced-toast";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { PawPrintsBackground } from "@/components/ui/paw-prints-background";
 
 // Core pages loaded immediately
 import Index from "./pages/Index";
@@ -231,6 +232,7 @@ const AppContent = () => {
 
   return (
     <>
+      <PawPrintsBackground />
       <LoadingOverlay isVisible={isAnyLoading()} />
       <ToastContainer toasts={toastInstance.toasts} />
       <BrowserRouter>

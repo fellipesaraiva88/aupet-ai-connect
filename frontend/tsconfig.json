@@ -9,7 +9,7 @@
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
     "declaration": false,
     "declarationMap": false,
@@ -33,7 +33,8 @@
   },
   "include": [
     "src/**/*",
-    "src/types/global.d.ts"
+    "src/types/global.d.ts",
+    "src/types/global-fixes.d.ts"
   ],
   "exclude": [
     "node_modules",

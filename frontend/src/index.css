@@ -270,6 +270,18 @@
     100% { opacity: 1; transform: scale(1); }
   }
 
+  @keyframes paw-float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-2px) rotate(1deg); }
+    50% { transform: translateY(0px) rotate(0deg); }
+    75% { transform: translateY(-1px) rotate(-1deg); }
+  }
+
+  @keyframes paw-fade {
+    0%, 100% { opacity: 0.04; }
+    50% { opacity: 0.08; }
+  }
+
   .dot-pattern {
     background-image: var(--dot-pattern);
     background-size: 20px 20px;
