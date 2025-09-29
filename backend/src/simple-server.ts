@@ -7,6 +7,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -44,6 +45,33 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Basic auth middleware
+const authMiddleware = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      success: false,
+      error: 'Token de autorização necessário',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  const token = authHeader.substring(7);
+
+  try {
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    req.user = { id: decoded.sub, organizationId: decoded.organization_id };
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      error: 'Token inválido',
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
 // Basic API endpoint
 app.get('/api', (req, res) => {
   res.json({
@@ -52,8 +80,78 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/health',
-      api: '/api'
+      api: '/api',
+      whatsapp_status: 'POST /api/whatsapp/status',
+      whatsapp_connect: 'POST /api/whatsapp/connect',
+      whatsapp_disconnect: 'POST /api/whatsapp/disconnect'
     },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// WhatsApp Status endpoint
+app.get('/api/whatsapp/status', authMiddleware, (req, res) => {
+  // Mock response for now - will be replaced with real WhatsApp manager later
+  const mockStatus = {
+    status: 'disconnected',
+    needsQR: false,
+    phoneNumber: null,
+    instanceName: null,
+    lastUpdate: new Date().toISOString()
+  };
+
+  res.json({
+    success: true,
+    data: mockStatus,
+    message: 'WhatsApp disconnected',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// WhatsApp Connect endpoint
+app.post('/api/whatsapp/connect', authMiddleware, (req, res) => {
+  // Mock response for now
+  const mockResult = {
+    qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    message: 'QR Code gerado! Escaneie com seu WhatsApp para conectar'
+  };
+
+  res.json({
+    success: true,
+    data: mockResult,
+    message: mockResult.message,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// WhatsApp Disconnect endpoint
+app.post('/api/whatsapp/disconnect', authMiddleware, (req, res) => {
+  // Mock response for now
+  const mockResult = {
+    success: true,
+    message: 'WhatsApp desconectado com sucesso'
+  };
+
+  res.json({
+    success: true,
+    data: mockResult,
+    message: mockResult.message,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// WhatsApp QR Code endpoint
+app.get('/api/whatsapp/qrcode', authMiddleware, (req, res) => {
+  // Mock response for now
+  const mockData = {
+    available: false,
+    qrCode: null
+  };
+
+  res.json({
+    success: true,
+    data: mockData,
+    message: 'QR Code não disponível',
     timestamp: new Date().toISOString()
   });
 });
@@ -86,6 +184,11 @@ app.listen(PORT, () => {
   console.log(`📋 Available endpoints:`);
   console.log(`   GET  /health - Health check`);
   console.log(`   GET  /api - API information`);
+  console.log(`   POST /api/webhook/whatsapp - WhatsApp webhook`);
+  console.log(`   GET  /api/evolution/* - Evolution API routes`);
+  console.log(`   POST /api/ai/* - AI service routes`);
+  console.log(`   GET  /api/dashboard/* - Dashboard routes`);
+  console.log(`   PUT  /api/settings/* - Settings routes`);
 });
 
 export default app;
