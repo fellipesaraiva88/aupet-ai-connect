@@ -75,13 +75,29 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
   const createCustomerMutation = useCreateCustomer();
   const createPetMutation = useCreatePet();
 
-  // Máscara para telefone
+  // Máscara para telefone brasileira
   const formatPhone = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
-    const match = cleaned.match(/^(\d{2})(\d{0,5})(\d{0,4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}${match[3] ? '-' + match[3] : ''}`;
+    
+    if (cleaned.length <= 10) {
+      // Formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+      const match = cleaned.match(/^(\d{0,2})(\d{0,5})(\d{0,4})$/);
+      if (match) {
+        let formatted = '';
+        if (match[1]) formatted += `(${match[1]}`;
+        if (match[1] && match[1].length === 2) formatted += ') ';
+        if (match[2]) formatted += match[2];
+        if (match[3]) formatted += `-${match[3]}`;
+        return formatted;
+      }
+    } else {
+      // Formato com 11 dígitos: (XX) 9XXXX-XXXX
+      const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+      if (match) {
+        return `(${match[1]}) ${match[2]}-${match[3]}`;
+      }
     }
+    
     return value;
   };
 
@@ -168,10 +184,12 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
       return;
     }
 
+    console.log('Organization ID sendo usado:', organizationId);
+    
     setLoading(true);
     try {
-      // Criar o cliente/família
-      const customerData = {
+      // Criar o contato no WhatsApp
+      const contactData = {
         name: familyData.owner.name,
         phone: familyData.owner.phone.replace(/\D/g, ''), // Remove formatação
         email: familyData.owner.email || undefined,
@@ -179,7 +197,9 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
         organization_id: organizationId,
       };
 
-      const customer = await createCustomerMutation.mutateAsync(customerData);
+      console.log('Dados do contato:', contactData);
+
+      const contact = await createCustomerMutation.mutateAsync(contactData);
 
       // Criar os pets
       const petsPromises = familyData.pets.map(pet => 
@@ -189,7 +209,7 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
           breed: pet.breed || 'Não informado',
           birth_date: pet.age ? new Date(new Date().getFullYear() - parseInt(pet.age), 0, 1).toISOString().split('T')[0] : undefined,
           weight: pet.weight ? parseFloat(pet.weight) : undefined,
-          owner_id: customer.id,
+          owner_id: contact.id,
           organization_id: organizationId,
         })
       );
@@ -215,7 +235,7 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
       setCurrentStep('owner');
       setOpen(false);
 
-      onFamilyCreated?.(customer);
+      onFamilyCreated?.(contact);
 
     } catch (error) {
       console.error('Error creating family:', error);
@@ -457,13 +477,27 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                     </div>
                     <div>
                       <Label htmlFor="pet-species">Espécie *</Label>
-                      <Input
-                        id="pet-species"
-                        placeholder="Ex: Cão, Gato"
-                        value={currentPet.species}
-                        onChange={(e) => handlePetChange('species', e.target.value)}
-                        className="mt-1"
-                      />
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        {[
+                          { value: 'dog', label: '🐕 Cão', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
+                          { value: 'cat', label: '🐱 Gato', color: 'bg-orange-100 text-orange-700 hover:bg-orange-200' },
+                          { value: 'bird', label: '🐦 Ave', color: 'bg-green-100 text-green-700 hover:bg-green-200' },
+                          { value: 'rabbit', label: '🐰 Coelho', color: 'bg-pink-100 text-pink-700 hover:bg-pink-200' },
+                          { value: 'hamster', label: '🐹 Hamster', color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' },
+                          { value: 'fish', label: '🐠 Peixe', color: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200' },
+                        ].map((species) => (
+                          <Button
+                            key={species.value}
+                            type="button"
+                            variant={currentPet.species === species.value ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePetChange('species', species.value)}
+                            className={currentPet.species === species.value ? 'bg-primary text-primary-foreground' : species.color}
+                          >
+                            {species.label}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
