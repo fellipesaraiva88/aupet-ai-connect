@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
+import { api } from '@/hooks/useApiData';
 import { QRCodeDisplay } from './QRCodeDisplay';
 import {
   MessageCircle,
@@ -49,33 +50,24 @@ export const WhatsAppConnection: React.FC = () => {
 
   const checkWhatsAppStatus = async () => {
     try {
-      const response = await fetch('/api/whatsapp/status', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const response = await api.get('/whatsapp/status');
+      const { data }: { data: WhatsAppStatusData } = response.data;
+      setStatus(data.status);
+      setPhoneNumber(data.phoneNumber || '');
+      setError('');
 
-      if (response.ok) {
-        const { data }: { data: WhatsAppStatusData } = await response.json();
-        setStatus(data.status);
-        setPhoneNumber(data.phoneNumber || '');
-        setError('');
+      // Se status mudou para connected, limpar QR code
+      if (data.status === 'connected') {
+        setQrCode('');
+      }
 
-        // Se status mudou para connected, limpar QR code
-        if (data.status === 'connected') {
-          setQrCode('');
-        }
-
-        // Se precisa de QR e não temos um, buscar
-        if (data.needsQR && !qrCode && data.status === 'waiting_qr') {
-          fetchQRCode();
-        }
-      } else {
-        setError('Erro ao verificar status do WhatsApp');
+      // Se precisa de QR e não temos um, buscar
+      if (data.needsQR && !qrCode && data.status === 'waiting_qr') {
+        fetchQRCode();
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
-      setError('Falha na conexão com o servidor');
+      setError('Erro ao verificar status do WhatsApp');
     } finally {
       setChecking(false);
     }
@@ -83,17 +75,10 @@ export const WhatsAppConnection: React.FC = () => {
 
   const fetchQRCode = async () => {
     try {
-      const response = await fetch('/api/whatsapp/qrcode', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-
-      if (response.ok) {
-        const { data } = await response.json();
-        if (data.available && data.qrCode) {
-          setQrCode(data.qrCode);
-        }
+      const response = await api.get('/whatsapp/qrcode');
+      const { data } = response.data;
+      if (data.available && data.qrCode) {
+        setQrCode(data.qrCode);
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
@@ -106,40 +91,30 @@ export const WhatsAppConnection: React.FC = () => {
       setError('');
       setStatus('connecting');
 
-      const response = await fetch('/api/whatsapp/connect', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const response = await api.post('/whatsapp/connect');
+      const { data }: { data: ConnectionResult } = response.data;
 
-      if (response.ok) {
-        const { data }: { data: ConnectionResult } = await response.json();
-
-        if (data.qrCode) {
-          setQrCode(data.qrCode);
-          setStatus('waiting_qr');
-          toast({
-            title: 'QR Code gerado!',
-            description: 'Escaneie o código com seu WhatsApp para conectar',
-          });
-        } else {
-          toast({
-            title: 'Conectando...',
-            description: data.message,
-          });
-        }
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+        setStatus('waiting_qr');
+        toast({
+          title: 'QR Code gerado!',
+          description: 'Escaneie o código com seu WhatsApp para conectar',
+        });
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao conectar WhatsApp');
+        toast({
+          title: 'Conectando...',
+          description: data.message,
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao conectar WhatsApp:', error);
-      setError(error instanceof Error ? error.message : 'Falha ao conectar WhatsApp');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Falha ao conectar WhatsApp';
+      setError(errorMessage);
       setStatus('disconnected');
       toast({
         title: 'Erro na conexão',
-        description: error instanceof Error ? error.message : 'Falha ao conectar WhatsApp',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -150,30 +125,21 @@ export const WhatsAppConnection: React.FC = () => {
   const disconnectWhatsApp = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/whatsapp/disconnect', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      await api.post('/whatsapp/disconnect');
 
-      if (response.ok) {
-        setStatus('disconnected');
-        setQrCode('');
-        setPhoneNumber('');
-        toast({
-          title: 'WhatsApp desconectado',
-          description: 'Você pode reconectar a qualquer momento',
-        });
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao desconectar');
-      }
-    } catch (error) {
+      setStatus('disconnected');
+      setQrCode('');
+      setPhoneNumber('');
+      toast({
+        title: 'WhatsApp desconectado',
+        description: 'Você pode reconectar a qualquer momento',
+      });
+    } catch (error: any) {
       console.error('Erro ao desconectar:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Falha ao desconectar';
       toast({
         title: 'Erro',
-        description: error instanceof Error ? error.message : 'Falha ao desconectar',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
