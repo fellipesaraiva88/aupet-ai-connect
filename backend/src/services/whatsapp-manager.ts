@@ -85,8 +85,7 @@ export class WhatsAppManager {
           name: instanceName,
           business_id: userId,
           status: evolutionInstance.status || 'created',
-          organization_id: 'default', // Será atualizado posteriormente
-          phone_number: evolutionInstance.instanceName
+          organization_id: 'default' // Será atualizado posteriormente
         });
 
         return {
