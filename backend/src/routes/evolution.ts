@@ -46,7 +46,7 @@ router.post('/instance/create', asyncHandler(async (req: Request, res: Response)
     // Save instance in Supabase
     const instanceData = await getSupabaseService().createInstance({
       name: evolutionInstance.instanceName,
-      business_id: businessId,
+      user_id: businessId, // businessId is actually userId in this context
       status: evolutionInstance.status,
       organization_id: organizationId
     });
