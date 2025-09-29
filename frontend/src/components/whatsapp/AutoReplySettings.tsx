@@ -126,7 +126,12 @@ export const AutoReplySettings: React.FC<AutoReplySettingsProps> = ({
 
         if (error) throw error;
 
-        setAutoReplies(data || []);
+        // Filter and validate data with type safety
+        const validData = Array.isArray(data) ? data.filter((item: any) => 
+          item && typeof item === 'object' && 'id' in item && 'reply_message' in item
+        ) : [];
+        
+        setAutoReplies(validData as any);
       } catch (error) {
         console.error('Error loading auto-replies:', error);
         toast({
@@ -206,9 +211,12 @@ export const AutoReplySettings: React.FC<AutoReplySettingsProps> = ({
 
         if (error) throw error;
 
-        setAutoReplies(prev => prev.map(reply =>
-          reply.id === editingReply.id ? data : reply
-        ));
+        if (data) {
+          const updateData = data as any;
+          setAutoReplies(prev => prev.map(reply =>
+            reply.id === editingReply.id ? updateData : reply
+          ));
+        }
 
         toast({
           title: "Auto-resposta atualizada! ✨",
@@ -224,7 +232,10 @@ export const AutoReplySettings: React.FC<AutoReplySettingsProps> = ({
 
         if (error) throw error;
 
-        setAutoReplies(prev => [data, ...prev]);
+        if (data) {
+          const newData = data as any;
+          setAutoReplies(prev => [newData, ...prev]);
+        }
 
         toast({
           title: "Auto-resposta criada! 🤖",
@@ -394,7 +405,7 @@ export const AutoReplySettings: React.FC<AutoReplySettingsProps> = ({
                   rows={4}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Use variáveis: {{customerName}}, {{petName}}
+                  Use variáveis: nome do cliente, nome do pet
                 </p>
               </div>
 

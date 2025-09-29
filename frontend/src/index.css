@@ -9,73 +9,79 @@
 
 @layer base {
   :root {
-    /* Apple-Style Design System */
-    --background: 0 0% 98%; /* Light Gray #FAFAFA */
-    --foreground: 0 0% 11%; /* Near Black #1D1D1F */
+    /* Pet Care White & Blue Design System */
+    --background: 0 0% 100%; /* Pure White */
+    --foreground: 220 15% 15%; /* Soft Dark Blue-Gray */
 
     --card: 0 0% 100%; /* Pure White */
-    --card-foreground: 0 0% 11%; /* Near Black */
+    --card-foreground: 220 15% 15%; /* Soft Dark Blue-Gray */
 
     --popover: 0 0% 100%; /* Pure White */
-    --popover-foreground: 0 0% 11%; /* Near Black */
+    --popover-foreground: 220 15% 15%; /* Soft Dark Blue-Gray */
 
-    /* Apple Blue System */
-    --primary: 211 100% 50%; /* Apple Blue #007AFF */
+    /* Ocean Blue Pet System */
+    --primary: 211 100% 50%; /* Ocean Blue #007AFF */
     --primary-foreground: 0 0% 100%; /* Pure White */
-    --primary-light: 211 100% 60%; /* Light Blue */
-    --primary-dark: 211 100% 40%; /* Dark Blue */
+    --primary-light: 211 100% 65%; /* Light Ocean Blue */
+    --primary-dark: 211 100% 35%; /* Deep Ocean Blue */
 
-    /* Apple Gray System */
-    --secondary: 0 0% 96%; /* Light Gray #F5F5F7 */
-    --secondary-foreground: 0 0% 11%; /* Near Black */
-    --secondary-light: 0 0% 98%; /* Ultra Light Gray */
-    --secondary-dark: 0 0% 90%; /* Medium Light Gray */
+    /* Clean White & Light Blue System */
+    --secondary: 211 50% 98%; /* Very Light Blue White #F8FBFF */
+    --secondary-foreground: 220 15% 15%; /* Soft Dark Blue-Gray */
+    --secondary-light: 211 30% 99%; /* Ultra Light Blue White */
+    --secondary-dark: 211 40% 95%; /* Light Blue Gray */
 
-    /* Apple Accent */
-    --accent: 0 0% 96%; /* Light Gray for accents */
-    --accent-foreground: 0 0% 11%; /* Near Black */
+    /* Pet Blue Accent */
+    --accent: 211 70% 95%; /* Light Blue accent */
+    --accent-foreground: 220 15% 15%; /* Soft Dark Blue-Gray */
+    --accent-light: 211 50% 97%; /* Ultra Light Blue */
 
-    /* Apple Neutral Colors */
-    --muted: 0 0% 96%; /* #F5F5F7 - Apple Light Gray */
-    --muted-foreground: 0 0% 53%; /* #86868B - Apple Medium Gray */
+    /* Soft Neutral Colors */
+    --muted: 211 50% 96%; /* Light Blue Muted */
+    --muted-foreground: 220 10% 50%; /* Medium Blue Gray */
 
-    /* Apple System Colors */
-    --destructive: 4 90% 58%; /* Apple Red #FF3B30 */
+    /* Pet Care System Colors */
+    --destructive: 4 85% 55%; /* Gentle Red */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 47%; /* Apple Green #34C759 */
-    --warning: 48 100% 50%; /* Apple Yellow #FFCC00 */
-    --info: 211 100% 50%; /* Apple Blue #007AFF */
+    --success: 142 70% 45%; /* Pet Green */
+    --warning: 45 95% 55%; /* Soft Yellow */
+    --info: 211 100% 50%; /* Ocean Blue */
 
-    --border: 0 0% 89%; /* #E3E3E3 - Apple Border Gray */
-    --input: 0 0% 96%; /* #F5F5F7 - Apple Input Background */
-    --ring: 211 100% 50%; /* Apple Blue Focus Ring */
+    --border: 211 30% 92%; /* Light Blue Border */
+    --input: 211 50% 98%; /* Very Light Blue Input */
+    --ring: 211 100% 50%; /* Ocean Blue Focus Ring */
 
-    --radius: 1rem; /* Apple-style larger radius */
+    --radius: 1rem; /* Rounded Pet-friendly */
 
-    /* Apple Shadows */
-    --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
-    --shadow-large: 0 16px 32px rgba(0, 0, 0, 0.2);
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+    /* Pet Care Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(211, 100%, 50%), hsl(211, 100%, 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(211, 50%, 98%), hsl(211, 30%, 95%));
+    --gradient-hero: linear-gradient(135deg, hsl(211, 100%, 50%), hsl(220, 90%, 60%));
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%), hsl(211, 50%, 98%));
 
-    /* Apple Backdrop Effects */
-    --backdrop-blur: blur(20px);
-    --backdrop-bg: rgba(255, 255, 255, 0.8);
-    --backdrop-border: rgba(0, 0, 0, 0.1);
+    /* Soft Shadows with Blue Tint */
+    --shadow-soft: 0 1px 3px rgba(0, 122, 255, 0.08);
+    --shadow-medium: 0 4px 12px rgba(0, 122, 255, 0.12);
+    --shadow-large: 0 16px 32px rgba(0, 122, 255, 0.15);
+    --shadow-card: 0 2px 8px rgba(0, 122, 255, 0.06);
+    --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.15);
+    --pet-glow: 0 0 30px rgba(0, 122, 255, 0.2);
 
-    /* Apple Typography */
+    /* Pet Care Typography */
     --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
     --font-mono: 'SF Mono', ui-monospace, 'Monaco', monospace;
 
-    /* Apple Transitions */
+    /* Smooth Pet-friendly Transitions */
     --transition-fast: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     --transition-standard: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     --transition-slow: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    /* Apple Spacing Grid (8px base) */
+    /* Pet Care Spacing */
     --spacing-xs: 0.5rem; /* 8px */
     --spacing-sm: 1rem; /* 16px */
     --spacing-md: 1.5rem; /* 24px */
@@ -88,72 +94,86 @@
     --whatsapp-light: 142 70% 96%;
     --whatsapp-dark: 142 70% 39%;
 
-    /* Sidebar Apple-style */
-    --sidebar-background: 0 0% 98%; /* #FAFAFA */
-    --sidebar-foreground: 0 0% 11%; /* Near Black */
-    --sidebar-border: 0 0% 89%; /* Apple Border Gray */
-    --sidebar-backdrop: rgba(250, 250, 250, 0.8);
+    /* Pet Care Sidebar */
+    --sidebar-background: 0 0% 100%; /* Pure White */
+    --sidebar-foreground: 220 15% 15%; /* Soft Dark Blue-Gray */
+    --sidebar-border: 211 30% 92%; /* Light Blue Border */
+    --sidebar-backdrop: rgba(255, 255, 255, 0.95);
+    --sidebar-primary: 211 100% 50%; /* Ocean Blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 211 70% 95%; /* Light Blue Accent */
+    --sidebar-accent-foreground: 220 15% 15%; /* Dark Blue Gray */
+    --sidebar-ring: 211 100% 50%; /* Ocean Blue */
   }
 
   .dark {
-    /* Apple-Style Dark Mode Design System */
-    --background: 220 13% 9%; /* Dark Background #1C1C1E */
-    --foreground: 0 0% 98%; /* Light Text #FAFAFA */
+    /* Pet Care Dark Mode - Soft Blue & White */
+    --background: 220 20% 8%; /* Soft Dark Blue #151821 */
+    --foreground: 0 0% 98%; /* Soft White */
 
-    --card: 220 13% 11%; /* Dark Card #2C2C2E */
-    --card-foreground: 0 0% 98%; /* Light Text */
+    --card: 220 18% 10%; /* Dark Blue Card #1A1F2E */
+    --card-foreground: 0 0% 98%; /* Soft White */
 
-    --popover: 220 13% 11%; /* Dark Popover */
-    --popover-foreground: 0 0% 98%; /* Light Text */
+    --popover: 220 18% 10%; /* Dark Blue Popover */
+    --popover-foreground: 0 0% 98%; /* Soft White */
 
-    /* Apple Blue System - Dark Mode */
-    --primary: 211 100% 60%; /* Brighter Blue for dark mode #0A84FF */
-    --primary-foreground: 0 0% 98%; /* White text */
-    --primary-light: 211 100% 70%; /* Lighter Blue */
-    --primary-dark: 211 100% 50%; /* Darker Blue */
+    /* Ocean Blue System - Dark Mode */
+    --primary: 211 100% 62%; /* Bright Ocean Blue #0A8BFF */
+    --primary-foreground: 0 0% 98%; /* Soft White */
+    --primary-light: 211 100% 72%; /* Light Ocean Blue */
+    --primary-dark: 211 100% 45%; /* Deep Ocean Blue */
 
-    /* Apple Gray System - Dark Mode */
-    --secondary: 220 13% 15%; /* Dark Gray #3A3A3C */
-    --secondary-foreground: 0 0% 98%; /* Light Text */
-    --secondary-light: 220 13% 18%; /* Lighter Dark Gray */
-    --secondary-dark: 220 13% 12%; /* Darker Gray */
+    /* Blue Gray System - Dark Mode */
+    --secondary: 220 18% 12%; /* Dark Blue Gray #1F2937 */
+    --secondary-foreground: 0 0% 98%; /* Soft White */
+    --secondary-light: 220 15% 15%; /* Lighter Dark Blue */
+    --secondary-dark: 220 20% 8%; /* Darker Blue */
 
-    /* Apple Accent - Dark Mode */
-    --accent: 220 13% 15%; /* Dark accent */
-    --accent-foreground: 0 0% 98%; /* Light text */
+    /* Pet Blue Accent - Dark Mode */
+    --accent: 220 18% 12%; /* Dark Blue accent */
+    --accent-foreground: 0 0% 98%; /* Soft White */
+    --accent-light: 220 15% 15%; /* Light Dark Blue */
 
-    /* Apple Neutral Colors - Dark Mode */
-    --muted: 220 13% 15%; /* #3A3A3C - Apple Dark Gray */
-    --muted-foreground: 0 0% 70%; /* #B3B3B3 - Apple Light Gray */
+    /* Soft Neutral Colors - Dark Mode */
+    --muted: 220 15% 15%; /* Dark Blue Muted */
+    --muted-foreground: 0 0% 75%; /* Light Blue Gray */
 
-    /* Apple System Colors - Dark Mode */
-    --destructive: 4 90% 65%; /* Apple Red #FF453A */
+    /* Pet Care System Colors - Dark Mode */
+    --destructive: 4 85% 62%; /* Soft Red */
     --destructive-foreground: 0 0% 98%;
 
-    --success: 142 76% 55%; /* Apple Green #32D74B */
-    --warning: 48 100% 60%; /* Apple Yellow #FFD60A */
-    --info: 211 100% 60%; /* Apple Blue #0A84FF */
+    --success: 142 70% 52%; /* Pet Green */
+    --warning: 45 95% 62%; /* Soft Yellow */
+    --info: 211 100% 62%; /* Bright Ocean Blue */
 
-    --border: 220 13% 20%; /* #48484A - Apple Border Gray Dark */
-    --input: 220 13% 15%; /* #3A3A3C - Apple Input Background Dark */
-    --ring: 211 100% 60%; /* Apple Blue Focus Ring */
+    --border: 220 15% 18%; /* Dark Blue Border */
+    --input: 220 18% 12%; /* Dark Blue Input */
+    --ring: 211 100% 62%; /* Bright Ocean Focus Ring */
 
-    /* Apple Shadows - Dark Mode */
-    --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-large: 0 16px 32px rgba(0, 0, 0, 0.5);
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.25);
+    /* Pet Care Gradients - Dark Mode */
+    --gradient-primary: linear-gradient(135deg, hsl(211, 100%, 62%), hsl(211, 100%, 72%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220, 18%, 12%), hsl(220, 15%, 15%));
+    --gradient-hero: linear-gradient(135deg, hsl(211, 100%, 50%), hsl(220, 80%, 55%));
+    --gradient-card: linear-gradient(145deg, hsl(220, 18%, 10%), hsl(220, 15%, 12%));
 
-    /* Apple Backdrop Effects - Dark Mode */
-    --backdrop-blur: blur(20px);
-    --backdrop-bg: rgba(28, 28, 30, 0.8);
-    --backdrop-border: rgba(255, 255, 255, 0.1);
+    /* Soft Shadows with Blue Tint - Dark Mode */
+    --shadow-soft: 0 1px 3px rgba(0, 122, 255, 0.15);
+    --shadow-medium: 0 4px 12px rgba(0, 122, 255, 0.2);
+    --shadow-large: 0 16px 32px rgba(0, 122, 255, 0.25);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.3);
+    --pet-glow: 0 0 30px rgba(0, 122, 255, 0.4);
 
-    /* Sidebar Apple-style - Dark Mode */
-    --sidebar-background: 220 13% 9%; /* #1C1C1E */
-    --sidebar-foreground: 0 0% 98%; /* Light Text */
-    --sidebar-border: 220 13% 20%; /* Dark Border */
-    --sidebar-backdrop: rgba(28, 28, 30, 0.8);
+    /* Pet Care Sidebar - Dark Mode */
+    --sidebar-background: 220 20% 8%; /* Soft Dark Blue */
+    --sidebar-foreground: 0 0% 98%; /* Soft White */
+    --sidebar-border: 220 15% 18%; /* Dark Blue Border */
+    --sidebar-backdrop: rgba(21, 24, 33, 0.95);
+    --sidebar-primary: 211 100% 62%; /* Bright Ocean Blue */
+    --sidebar-primary-foreground: 0 0% 98%; /* Soft White */
+    --sidebar-accent: 220 18% 12%; /* Dark Blue Accent */
+    --sidebar-accent-foreground: 0 0% 98%; /* Soft White */
+    --sidebar-ring: 211 100% 62%; /* Bright Ocean Blue */
   }
 }
 
@@ -235,6 +255,15 @@
   @keyframes apple-gentle-hover {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-1px); }
+  }
+
+  @keyframes gentle-hover {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-2px) scale(1.02); }
+  }
+
+  .animate-gentle-hover {
+    animation: gentle-hover 3s ease-in-out infinite;
   }
 
   @keyframes apple-subtle-pulse {
