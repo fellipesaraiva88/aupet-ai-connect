@@ -44,6 +44,7 @@ import { tenantIsolationMiddleware } from './middleware/tenant-isolation';
 import { WebSocketService } from './services/websocket';
 import { SupabaseService } from './services/supabase';
 import { MonitoringService } from './services/monitoring';
+import { startHealthMonitoring } from './services/whatsapp-health-monitor';
 import { logger } from './utils/logger';
 
 // Environment variables already loaded above
@@ -277,6 +278,14 @@ class AuzapServer {
       logger.info(`📡 Server running on port ${port}`);
       logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`💝 Ready to transform pet care with AI!`);
+
+      // Start WhatsApp health monitoring
+      try {
+        startHealthMonitoring(this.wsService);
+        logger.info('✅ WhatsApp health monitoring started');
+      } catch (error) {
+        logger.error('❌ Failed to start health monitoring:', error);
+      }
 
       // Log available endpoints
       logger.info('📋 Available endpoints:');

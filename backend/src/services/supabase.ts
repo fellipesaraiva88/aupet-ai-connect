@@ -51,7 +51,8 @@ export class SupabaseService {
         .from('whatsapp_instances')
         .insert({
           instance_name: instanceData.name,
-          instance_id: instanceData.user_id, // Using instance_id to store user_id
+          instance_id: instanceData.user_id, // Keep for backward compatibility
+          user_id: instanceData.user_id, // New user_id column
           status: instanceData.status,
           organization_id: instanceData.organization_id,
           created_at: new Date().toISOString(),
@@ -129,6 +130,48 @@ export class SupabaseService {
     } catch (error) {
       logger.error('Error getting instance by name:', error);
       return null;
+    }
+  }
+
+  async getInstanceByUserId(userId: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_instances')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      return data;
+    } catch (error) {
+      logger.error('Error getting instance by user_id:', error);
+      return null;
+    }
+  }
+
+  async updateInstanceUserId(instanceName: string, userId: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_instances')
+        .update({
+          user_id: userId,
+          instance_id: userId, // Also update for backward compatibility
+          updated_at: new Date().toISOString()
+        })
+        .eq('instance_name', instanceName)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      logger.supabase('UPDATE', 'whatsapp_instances', { instanceName, userId });
+      return data;
+    } catch (error) {
+      logger.error('Error updating instance user_id:', error);
+      throw error;
     }
   }
 

@@ -39,6 +39,12 @@ export class WhatsAppManager {
       const existing = await this.findUserInstance(userId);
       if (existing) {
         logger.info('Instance found for user', { userId, instanceName: existing.name });
+
+        // Atualizar user_id se ainda não estiver definido
+        if (!existing.userId) {
+          await this.updateInstanceUserId(existing.name, userId);
+        }
+
         return existing;
       }
 
@@ -55,15 +61,20 @@ export class WhatsAppManager {
    */
   async findUserInstance(userId: string): Promise<WhatsAppInstance | null> {
     try {
-      const instanceName = this.generateInstanceName(userId);
+      // Busca primeiro por user_id no banco
+      let localInstance = await this.supabaseService.getInstanceByUserId(userId);
 
-      // Busca primeiro no banco local
-      const localInstance = await this.supabaseService.getInstanceByName(instanceName);
+      // Se não encontrou, busca pelo nome da instância
+      if (!localInstance) {
+        const instanceName = this.generateInstanceName(userId);
+        localInstance = await this.supabaseService.getInstanceByName(instanceName);
+      }
+
       if (localInstance) {
         return {
           id: localInstance.id,
           name: localInstance.instance_name,
-          userId: userId,
+          userId: localInstance.user_id || userId,
           status: localInstance.status,
           phoneNumber: localInstance.phone_number,
           created_at: localInstance.created_at,
@@ -122,7 +133,7 @@ export class WhatsAppManager {
       const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/user/${userId}`;
       await this.evolutionService.setWebhook(instanceName, webhookUrl);
 
-      // Salva no banco local
+      // Salva no banco local com user_id
       const savedInstance = await this.supabaseService.createInstance({
         name: instanceName,
         user_id: userId,
@@ -327,6 +338,18 @@ export class WhatsAppManager {
     // Implementar lógica para extrair número do telefone dos dados da Evolution
     // Por enquanto retorna undefined, será implementado conforme dados reais
     return undefined;
+  }
+
+  /**
+   * Atualiza user_id de uma instância
+   */
+  private async updateInstanceUserId(instanceName: string, userId: string): Promise<void> {
+    try {
+      await this.supabaseService.updateInstanceUserId(instanceName, userId);
+      logger.info('Instance user_id updated', { instanceName, userId });
+    } catch (error) {
+      logger.error('Error updating instance user_id:', error);
+    }
   }
 
   /**

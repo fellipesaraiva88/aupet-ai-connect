@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { logger } from '../utils/logger';
+import { retryHttp, CircuitBreaker } from '../utils/retry';
 import {
   EvolutionInstance,
   EvolutionMessage,
@@ -11,6 +12,7 @@ export class EvolutionAPIService {
   private api: AxiosInstance;
   private baseURL: string;
   private apiKey: string;
+  private circuitBreaker: CircuitBreaker;
 
   constructor() {
     this.baseURL = process.env.EVOLUTION_API_URL!;
@@ -19,6 +21,9 @@ export class EvolutionAPIService {
     if (!this.baseURL || !this.apiKey) {
       throw new Error('Evolution API URL and API Key are required');
     }
+
+    // Initialize circuit breaker for Evolution API
+    this.circuitBreaker = new CircuitBreaker(5, 60000, 30000);
 
     this.api = axios.create({
       baseURL: this.baseURL,
@@ -69,37 +74,41 @@ export class EvolutionAPIService {
 
   // Instance Management
   async createInstance(instanceName: string): Promise<EvolutionInstance> {
-    try {
-      // Usar o endpoint correto da Evolution API v2
-      const response = await this.api.post('/instance/create', {
-        instanceName,
-        integration: 'WHATSAPP-BAILEYS',
-        qrcode: true,
-        webhookUrl: `${process.env.WEBHOOK_URL}/api/webhook/whatsapp`,
-        webhookByEvents: true,
-        events: [
-          'APPLICATION_STARTUP',
-          'QRCODE_UPDATED',
-          'CONNECTION_UPDATE',
-          'MESSAGES_UPSERT',
-          'MESSAGES_UPDATE',
-          'SEND_MESSAGE'
-        ]
-      });
+    return retryHttp(async () => {
+      return this.circuitBreaker.execute(async () => {
+        try {
+          // Usar o endpoint correto da Evolution API v2
+          const response = await this.api.post('/instance/create', {
+            instanceName,
+            integration: 'WHATSAPP-BAILEYS',
+            qrcode: true,
+            webhookUrl: `${process.env.WEBHOOK_URL}/api/webhook/whatsapp`,
+            webhookByEvents: true,
+            events: [
+              'APPLICATION_STARTUP',
+              'QRCODE_UPDATED',
+              'CONNECTION_UPDATE',
+              'MESSAGES_UPSERT',
+              'MESSAGES_UPDATE',
+              'SEND_MESSAGE'
+            ]
+          });
 
-      const instanceData: EvolutionInstance = {
-        instanceName,
-        instanceId: response.data.instance?.instanceId || instanceName,
-        status: 'created',
-        integration: 'WHATSAPP-BAILEYS'
-      };
+          const instanceData: EvolutionInstance = {
+            instanceName,
+            instanceId: response.data.instance?.instanceId || instanceName,
+            status: 'created',
+            integration: 'WHATSAPP-BAILEYS'
+          };
 
-      logger.evolution('CREATE_INSTANCE', instanceName, response.data);
-      return instanceData;
-    } catch (error: any) {
-      logger.error('Error creating Evolution instance:', error);
-      throw new Error(`Falha ao criar instância WhatsApp: ${error.response?.data?.message || error.message}`);
-    }
+          logger.evolution('CREATE_INSTANCE', instanceName, response.data);
+          return instanceData;
+        } catch (error: any) {
+          logger.error('Error creating Evolution instance:', error);
+          throw new Error(`Falha ao criar instância WhatsApp: ${error.response?.data?.message || error.message}`);
+        }
+      }, 'createInstance');
+    }, 'EvolutionAPI.createInstance');
   }
 
   async connectInstance(instanceName: string): Promise<string> {

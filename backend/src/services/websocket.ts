@@ -356,6 +356,28 @@ export class WebSocketService {
     });
   }
 
+  // User-specific messaging
+  public sendToUser(userId: string, data: any): void {
+    // Find all sockets for this user
+    const userSockets = Array.from(this.connectedClients.entries())
+      .filter(([_, client]) => client.userId === userId)
+      .map(([socketId]) => socketId);
+
+    userSockets.forEach(socketId => {
+      this.io.to(socketId).emit('user_message', {
+        ...data,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    if (userSockets.length > 0) {
+      logger.websocket('USER_MESSAGE_SENT', userId, {
+        socketCount: userSockets.length,
+        messageType: data.type || 'unknown'
+      });
+    }
+  }
+
   // Notification Events
   public sendNotification(organizationId: string, notification: {
     title: string;
@@ -367,6 +389,19 @@ export class WebSocketService {
       ...notification,
       id: `notif_${Date.now()}`,
       timestamp: new Date().toISOString()
+    });
+  }
+
+  // User-specific notification
+  public sendUserNotification(userId: string, notification: {
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+    action?: { label: string; url: string };
+  }): void {
+    this.sendToUser(userId, {
+      type: 'notification',
+      data: notification
     });
   }
 

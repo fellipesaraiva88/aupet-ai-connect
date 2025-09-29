@@ -205,16 +205,127 @@ class WhatsAppInstanceMigrator {
     result: MigrationResult
   ): Promise<void> {
     try {
+      // First, verify if user exists in profiles
+      const { data: profile } = await this.supabaseService['supabase']
+        .from('profiles')
+        .select('id, organization_id')
+        .eq('id', userId)
+        .single();
+
+      const organizationId = profile?.organization_id || 'migrated';
+
       await this.supabaseService.createInstance({
         name: instanceName,
         user_id: userId,
         status: instance.status || instance.connectionStatus || 'created',
-        organization_id: 'migrated' // Identificar como migrado
+        organization_id: organizationId
       });
 
-      logger.info(`Created database record for ${instanceName}`);
+      logger.info(`Created database record for ${instanceName} with user_id: ${userId}`);
     } catch (error) {
       logger.error(`Error creating database record for ${instanceName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atualiza instâncias existentes com user_id
+   */
+  async updateExistingInstances(): Promise<MigrationResult> {
+    const result: MigrationResult = {
+      totalProcessed: 0,
+      migrated: 0,
+      errors: 0,
+      skipped: 0,
+      details: []
+    };
+
+    try {
+      logger.info('Starting update of existing instances with user_id...');
+
+      // Buscar todas as instâncias no banco sem user_id
+      const { data: instances } = await this.supabaseService['supabase']
+        .from('whatsapp_instances')
+        .select('*')
+        .is('user_id', null);
+
+      if (!instances || instances.length === 0) {
+        logger.info('No instances need user_id update');
+        return result;
+      }
+
+      result.totalProcessed = instances.length;
+      logger.info(`Found ${instances.length} instances without user_id`);
+
+      for (const instance of instances) {
+        try {
+          const instanceName = instance.instance_name;
+
+          // Extrair userId do instance_name
+          const userIdMatch = instanceName.match(/^user_(.+)$/);
+
+          if (!userIdMatch) {
+            result.skipped++;
+            result.details.push({
+              oldInstanceName: instanceName,
+              status: 'skipped',
+              error: 'Instance name does not match user_[userId] format'
+            });
+            continue;
+          }
+
+          const userId = userIdMatch[1];
+
+          // Verificar se usuário existe
+          const { data: profile } = await this.supabaseService['supabase']
+            .from('profiles')
+            .select('id')
+            .eq('id', userId)
+            .single();
+
+          if (!profile) {
+            result.errors++;
+            result.details.push({
+              oldInstanceName: instanceName,
+              userId,
+              status: 'error',
+              error: 'User not found in profiles table'
+            });
+            continue;
+          }
+
+          // Atualizar user_id
+          await this.supabaseService.updateInstanceUserId(instanceName, userId);
+
+          result.migrated++;
+          result.details.push({
+            oldInstanceName: instanceName,
+            userId,
+            status: 'migrated'
+          });
+
+          logger.info(`Updated instance ${instanceName} with user_id: ${userId}`);
+        } catch (error) {
+          result.errors++;
+          result.details.push({
+            oldInstanceName: instance.instance_name,
+            status: 'error',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+          logger.error(`Error updating instance ${instance.instance_name}:`, error);
+        }
+      }
+
+      logger.info('Update completed', {
+        totalProcessed: result.totalProcessed,
+        migrated: result.migrated,
+        errors: result.errors,
+        skipped: result.skipped
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('Update failed:', error);
       throw error;
     }
   }
@@ -253,8 +364,23 @@ class WhatsAppInstanceMigrator {
 // Executar migração se chamado diretamente
 if (require.main === module) {
   const migrator = new WhatsAppInstanceMigrator();
+  const command = process.argv[2] || 'migrate';
 
-  migrator.migrate()
+  let migrationPromise: Promise<MigrationResult>;
+
+  switch (command) {
+    case 'update':
+      console.log('Updating existing instances with user_id...\n');
+      migrationPromise = migrator.updateExistingInstances();
+      break;
+    case 'migrate':
+    default:
+      console.log('Migrating instances from Evolution API...\n');
+      migrationPromise = migrator.migrate();
+      break;
+  }
+
+  migrationPromise
     .then((result) => {
       migrator.printReport(result);
 
