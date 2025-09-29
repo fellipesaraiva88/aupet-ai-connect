@@ -350,5 +350,5 @@ export function useOrganizationId() {
   const { user } = useAuthContext();
 
   // Return organization_id from user metadata or fallback for development
-  return user?.user_metadata?.organization_id || 'default-org';
+  return user?.user_metadata?.organization_id || 'a16eff6e-d400-4e77-bb7b-75984de26d8b';
 }
