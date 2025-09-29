@@ -36,9 +36,9 @@ export function LoginForm({ onToggleMode, mode }: LoginFormProps) {
 
     try {
       if (mode === 'login') {
-        const { error } = await signIn(email, password, rememberMe);
-        if (error) {
-          setError(error.message);
+        const result = await signIn(email, password);
+        if (result.error) {
+          setError(result.error.message);
         } else {
           toast({
             title: 'Que alegria te ver! 😊',

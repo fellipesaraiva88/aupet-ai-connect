@@ -23,7 +23,6 @@ api.interceptors.request.use(
         // Add organization/tenant context from user metadata
         // Try both user_metadata and raw_user_meta_data for compatibility
         const organizationId = session.user?.user_metadata?.organization_id ||
-                              session.user?.raw_user_meta_data?.organization_id ||
                               '00000000-0000-0000-0000-000000000001'; // fallback
         if (organizationId) {
           config.headers['x-organization-id'] = organizationId;
@@ -349,7 +348,6 @@ export function useOrganizationId() {
   // Return organization_id from user metadata or fallback for development
   // Try both user_metadata and raw_user_meta_data for compatibility
   return user?.user_metadata?.organization_id ||
-         user?.raw_user_meta_data?.organization_id ||
          '00000000-0000-0000-0000-000000000001';
 }
 

@@ -34,7 +34,7 @@ export function Navbar({
   unreadNotifications = 3,
   organizationName,
 }: NavbarProps) {
-  const { user, userProfile, signOut } = useAuthContext();
+  const { user, signOut } = useAuthContext();
   const { toast } = useToast();
   const {
     notifications,
@@ -60,9 +60,9 @@ export function Navbar({
     }
   };
 
-  const userName = userProfile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
-  const userEmail = userProfile?.email || user?.email || 'usuario@exemplo.com';
-  const currentOrganizationName = organizationName || userProfile?.organization?.name || "Meu Pet VIP";
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
+  const userEmail = user?.email || 'usuario@exemplo.com';
+  const currentOrganizationName = organizationName || user?.user_metadata?.organization_name || "Meu Pet VIP";
   return (
     <nav className="sticky top-0 z-50 border-b border-border/30 bg-card/95 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between px-6">
@@ -116,19 +116,19 @@ export function Navbar({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-[10px] hover:scale-105 transition-all duration-200">
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src={userProfile?.avatar_url || "/avatars/user.jpg"} alt={userName} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-semibold text-[12px]">
-                    {userName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src="/avatars/user.jpg" alt={userName} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-[12px]">
+                      {userName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-60 rounded-[16px] border-border/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-apple-scale-in" align="end">
               <DropdownMenuLabel className="font-normal p-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={userProfile?.avatar_url || "/avatars/user.jpg"} alt={userName} />
+                    <AvatarImage src="/avatars/user.jpg" alt={userName} />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold text-[12px]">
                       {userName.charAt(0).toUpperCase()}
                     </AvatarFallback>

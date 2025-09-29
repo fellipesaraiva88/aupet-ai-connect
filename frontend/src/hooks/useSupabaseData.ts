@@ -347,9 +347,8 @@ export function useRevenueMetrics(organizationId?: string) {
 
 // Organization context using auth
 export function useOrganizationId() {
-  const { userProfile, user } = useAuthContext();
+  const { user } = useAuthContext();
 
-  // Return organization_id from userProfile (now loaded through AuthContext),
-  // or fallback to user metadata or default for development
-  return userProfile?.organization_id || user?.user_metadata?.organization_id || 'default-org';
+  // Return organization_id from user metadata or fallback for development
+  return user?.user_metadata?.organization_id || 'default-org';
 }

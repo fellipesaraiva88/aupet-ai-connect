@@ -14,6 +14,11 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Define process for WebSocket compatibility
+    'process.env': {},
+    'global': 'globalThis',
+  },
   build: {
     // Increase chunk size warning limit to 1000kb
     chunkSizeWarningLimit: 1000,
