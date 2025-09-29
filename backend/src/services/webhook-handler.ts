@@ -1,8 +1,10 @@
 import { logger } from '../utils/logger';
 import { SupabaseService } from './supabase';
 import { WebSocketService } from './websocket';
-import { AIService } from './ai/ai-service';
+import { AIService } from './ai';
 import { WhatsAppManager } from './whatsapp-manager';
+import { MessageSender } from './message-sender';
+import { AILogger } from './ai/ai-logger';
 
 interface WebhookEvent {
   event: string;
@@ -28,11 +30,15 @@ export class WebhookHandler {
   private wsService: WebSocketService | null = null;
   private aiService: AIService;
   private whatsAppManager: WhatsAppManager;
+  private messageSender: MessageSender;
+  private aiLogger: AILogger;
 
   constructor() {
     this.supabaseService = new SupabaseService();
     this.aiService = new AIService();
     this.whatsAppManager = new WhatsAppManager();
+    this.messageSender = new MessageSender();
+    this.aiLogger = new AILogger();
   }
 
   setWebSocketService(wsService: WebSocketService) {
@@ -364,27 +370,166 @@ export class WebhookHandler {
         return;
       }
 
-      // Gerar resposta com IA
-      const aiResponse = await this.aiService.generateResponse(
-        message.content,
-        {
-          customerName: contact.name,
-          conversationHistory: [], // TODO: Buscar histórico
-          businessContext: businessConfig
-        }
+      // Verificar horário comercial
+      const isWithinHours = this.aiService.isWithinBusinessHours(businessConfig);
+      if (!isWithinHours && businessConfig.business_hours?.enabled) {
+        logger.debug('Outside business hours, skipping AI response', { organizationId });
+        return;
+      }
+
+      // CONTEXTO ENRIQUECIDO - Buscar histórico completo
+      const conversationHistory = await this.supabaseService.getConversationMessages(
+        conversation.id,
+        10 // últimas 10 mensagens
       );
 
-      if (aiResponse && aiResponse.response) {
-        // Aguardar delay configurado
+      // Buscar pets do cliente
+      const customerPets = await this.supabaseService.getCustomerPets(contact.id);
+
+      // Buscar últimos agendamentos
+      const recentAppointments = await this.supabaseService.getCustomerAppointments(
+        contact.id,
+        3 // últimos 3 agendamentos
+      );
+
+      // Contexto completo do cliente
+      const customerContext = {
+        name: contact.name,
+        phone: contact.phone,
+        pets: customerPets?.map((pet: any) => ({
+          name: pet.name,
+          species: pet.species,
+          breed: pet.breed,
+          age: pet.age
+        })) || [],
+        lastInteraction: conversation.updated_at,
+        recentServices: recentAppointments?.map((apt: any) => ({
+          service: apt.service_type,
+          date: apt.scheduled_date
+        })) || []
+      };
+
+      // Analisar mensagem com IA
+      const analysis = await this.aiService.analyzeMessage(
+        message.content,
+        customerContext,
+        businessConfig
+      );
+
+      // Verificar se precisa escalar para humano
+      if (this.aiService.shouldEscalateToHuman(message.content, analysis, businessConfig)) {
+        logger.info('Escalating to human', {
+          conversationId: conversation.id,
+          reason: analysis.urgency
+        });
+
+        // Atualizar status da conversa
+        await this.supabaseService.updateConversationStatus(conversation.id, 'escalated');
+
+        // Notificar equipe
+        if (this.wsService) {
+          this.wsService.sendNotification(organizationId, {
+            title: '🚨 Conversa Escalada',
+            message: `Cliente ${contact.name} precisa de atendimento humano`,
+            type: 'warning'
+          });
+        }
+
+        return;
+      }
+
+      // DETECTAR OPORTUNIDADES DE VENDA
+      const opportunities = this.aiService.detectOpportunities(
+        message.content,
+        customerContext,
+        recentAppointments
+      );
+
+      const topOpportunity = opportunities.length > 0 ? opportunities[0] : undefined;
+
+      if (topOpportunity) {
+        logger.info('Sales opportunity detected', {
+          conversationId: conversation.id,
+          service: topOpportunity.service,
+          confidence: topOpportunity.confidence,
+          urgency: topOpportunity.urgency
+        });
+      }
+
+      // Gerar resposta com IA (com ou sem oportunidade)
+      const aiResponseText = await this.aiService.generateResponseWithOpportunity(
+        analysis.intent,
+        customerContext,
+        businessConfig,
+        conversationHistory.map((msg: any) => ({
+          content: msg.content,
+          direction: msg.direction
+        })),
+        topOpportunity
+      );
+
+      if (aiResponseText) {
+        // Aguardar delay configurado antes de enviar
         const delay = businessConfig.response_delay_seconds || 2;
         await new Promise(resolve => setTimeout(resolve, delay * 1000));
 
-        // Enviar resposta via Evolution API
-        // TODO: Implementar envio via Evolution API
-        logger.info('AI response generated', {
-          conversationId: conversation.id,
-          responseLength: aiResponse.response.length
-        });
+        // ENVIO REAL VIA EVOLUTION API - Fragmentar e enviar
+        const fragments = this.messageSender.fragmentMessage(aiResponseText, 120);
+
+        const sendResult = await this.messageSender.sendFragmentedMessages(
+          instance.instance_name,
+          contact.phone,
+          fragments,
+          2500 // 2.5s entre fragmentos
+        );
+
+        if (sendResult.success) {
+          // Salvar mensagens enviadas no banco
+          for (const fragment of fragments) {
+            await this.supabaseService.saveMessage({
+              conversation_id: conversation.id,
+              instance_id: instance.id,
+              content: fragment,
+              direction: 'outbound',
+              message_type: 'text',
+              external_id: `ai_${Date.now()}_${Math.random()}`,
+              organization_id: organizationId,
+              metadata: {
+                aiGenerated: true,
+                intent: analysis.intent,
+                confidence: analysis.confidence,
+                sender_type: 'ai'
+              }
+            });
+          }
+
+          logger.info('AI response sent successfully', {
+            conversationId: conversation.id,
+            fragments: fragments.length,
+            messageIds: sendResult.messageIds
+          });
+
+          // Notificar via WebSocket
+          if (this.wsService) {
+            this.wsService.notifyNewMessage(organizationId, {
+              id: `ai_${Date.now()}`,
+              conversation_id: conversation.id,
+              instance_id: instance.id,
+              content: aiResponseText,
+              direction: 'outbound',
+              message_type: 'text',
+              external_id: `ai_${Date.now()}_notification`,
+              organization_id: organizationId,
+              created_at: new Date().toISOString(),
+              customerName: contact.name || contact.phone,
+              metadata: { sender_type: 'ai' }
+            });
+          }
+        } else {
+          logger.error('Failed to send AI response', {
+            conversationId: conversation.id
+          });
+        }
       }
     } catch (error) {
       logger.error('Error processing message with AI:', error);

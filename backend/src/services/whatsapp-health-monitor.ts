@@ -155,7 +155,7 @@ export class WhatsAppHealthMonitor {
 
     try {
       // Buscar status da Evolution API
-      const evolutionStatus = await this.evolutionService.getInstanceStatus(instanceName);
+      const evolutionStatus = await this.evolutionService.getConnectionState(instanceName);
 
       // Obter ou criar registro de saúde
       let healthRecord = this.healthStatus.get(instanceName);
@@ -183,7 +183,7 @@ export class WhatsAppHealthMonitor {
         healthRecord.consecutiveFailures++;
         healthRecord.issues.push('Instance not found in Evolution API');
       } else {
-        const connectionState = evolutionStatus.connectionState || evolutionStatus.status;
+        const connectionState = evolutionStatus;
 
         if (connectionState === 'open' || connectionState === 'connected') {
           healthRecord.status = 'healthy';
@@ -202,7 +202,7 @@ export class WhatsAppHealthMonitor {
         // Atualizar status no banco
         await this.supabaseService.updateInstanceStatus(
           instanceName,
-          evolutionStatus.status,
+          connectionState,
           connectionState
         );
       }

@@ -200,19 +200,18 @@ class WhatsAppFlowTester {
       }
 
       // Verificar status na Evolution API
-      const evolutionStatus = await this.evolutionService.getInstanceStatus(
+      const evolutionStatus = await this.evolutionService.getConnectionState(
         instance.instance_name
       );
 
       this.results.push({
         step: 'Instance Connection',
         status: 'success',
-        message: `Instance status: ${evolutionStatus?.status || 'unknown'}`,
+        message: `Instance status: ${evolutionStatus || 'unknown'}`,
         duration: Date.now() - startTime,
         data: {
           instanceName: instance.instance_name,
-          status: evolutionStatus?.status,
-          connectionState: evolutionStatus?.connectionState
+          connectionState: evolutionStatus
         }
       });
 

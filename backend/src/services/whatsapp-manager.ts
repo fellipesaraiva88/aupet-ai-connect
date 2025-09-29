@@ -83,6 +83,7 @@ export class WhatsAppManager {
       }
 
       // Se não encontrou no banco, verifica na Evolution API
+      const instanceName = this.generateInstanceName(userId);
       const evolutionInstances = await this.evolutionService.fetchInstances();
       const evolutionInstance = evolutionInstances.find(inst =>
         inst.instanceName === instanceName ||
