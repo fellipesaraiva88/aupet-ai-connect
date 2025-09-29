@@ -8,27 +8,17 @@ import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { ToastContainer } from "@/components/ui/enhanced-toast";
 import { useLoading } from "@/contexts/LoadingContext";
-import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
 import { PawPrintsBackground } from "@/components/ui/paw-prints-background";
 
-// Enhanced error boundaries
+// Enhanced error boundaries and performance monitoring
 import {
   ErrorBoundary,
-  withPageErrorBoundary,
-  withChunkErrorBoundary,
   setupGlobalErrorHandling,
+  withChunkErrorBoundary
 } from "@/components/error-boundaries";
-
-// Store initialization
 import { initializeStores } from "@/stores";
-
-// Performance monitoring
-import performanceMonitor from "@/utils/performance";
-import { usePerformanceMonitoring } from "@/utils/performance";
-
-// Accessibility
+import performanceMonitor, { usePerformanceMonitoring } from "@/utils/performance";
 import { useSkipToContent } from "@/hooks/useA11y";
 
 // Core pages loaded immediately
@@ -36,7 +26,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
-// Lazy load secondary pages with chunk error boundaries
+// Lazy load secondary pages with enhanced error boundaries
 const Conversations = withChunkErrorBoundary(
   lazy(() => import("./pages/Conversations")),
   'conversations-page'
@@ -78,11 +68,19 @@ const Signup = withChunkErrorBoundary(
   'signup-page'
 );
 
+// Enhanced QueryClient with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 3,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+    mutations: {
+      retry: 1,
+      retryDelay: 1000,
     },
   },
 });
@@ -145,125 +143,127 @@ const AppRoutes = () => {
   return (
     <ErrorBoundary>
       <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={
-        <PublicRoute>
-          <Login />
-        </PublicRoute>
-      } />
-      <Route path="/signup" element={
-        <PublicRoute>
-          <Signup />
-        </PublicRoute>
-      } />
+        {/* Public Routes */}
+        <Route path="/login" element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } />
+        <Route path="/signup" element={
+          <PublicRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Signup />
+            </Suspense>
+          </PublicRoute>
+        } />
 
-      {/* Protected Routes */}
-      <Route path="/" element={
-        <ProtectedRoute>
-          <Index />
-        </ProtectedRoute>
-      } />
-      <Route path="/conversations" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Conversations />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/conversations/:id/history" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Conversations />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/ai-config" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <AIConfig />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/pets" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Pets />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/pets/new" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Pets />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/customers" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Customers />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/customers/new" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Customers />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/clients-pets" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <ClientsPets />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/appointments" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Appointments />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/appointments/new" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Appointments />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/catalog" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Catalog />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/analytics" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Analytics />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/analytics/history" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Analytics />
-          </Suspense>
-        </ProtectedRoute>
-      } />
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Suspense fallback={<PageLoadingComponent />}>
-            <Settings />
-          </Suspense>
-        </ProtectedRoute>
-      } />
+        {/* Protected Routes */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Index />
+          </ProtectedRoute>
+        } />
+        <Route path="/conversations" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Conversations />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/conversations/:id/history" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Conversations />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/ai-config" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <AIConfig />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/pets" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Pets />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/pets/new" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Pets />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/customers" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Customers />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/customers/new" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Customers />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/clients-pets" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <ClientsPets />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/appointments" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Appointments />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/appointments/new" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Appointments />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/catalog" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Catalog />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/analytics" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Analytics />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/analytics/history" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Analytics />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <Settings />
+            </Suspense>
+          </ProtectedRoute>
+        } />
 
-      {/* 404 Route */}
-      <Route path="*" element={<NotFound />} />
+        {/* 404 Route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </ErrorBoundary>
   );
@@ -271,19 +271,57 @@ const AppRoutes = () => {
 
 const AppContent = () => {
   const { isAnyLoading } = useLoading();
-  const toastInstance = useEnhancedToast();
+  const { reportMetrics } = usePerformanceMonitoring();
+  const { createSkipToContentLink } = useSkipToContent();
 
+  // Initialize stores and performance monitoring
   React.useEffect(() => {
-    setGlobalToastInstance(toastInstance);
-  }, [toastInstance]);
+    // Setup global error handling
+    setupGlobalErrorHandling();
+
+    // Initialize stores
+    initializeStores().catch(console.error);
+
+    // Report initial performance metrics
+    const reportTimer = setTimeout(() => {
+      reportMetrics();
+    }, 2000);
+
+    return () => clearTimeout(reportTimer);
+  }, [reportMetrics]);
+
+  // Add skip to content link
+  React.useEffect(() => {
+    const skipLink = createSkipToContentLink();
+    document.body.prepend(skipLink);
+
+    return () => {
+      if (document.body.contains(skipLink)) {
+        document.body.removeChild(skipLink);
+      }
+    };
+  }, [createSkipToContentLink]);
+
+  // Monitor Web Vitals
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const vitalsScore = performanceMonitor.getWebVitalsScore();
+      if (vitalsScore.rating === 'poor') {
+        console.warn('Poor Web Vitals score detected:', vitalsScore);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
       <PawPrintsBackground />
       <LoadingOverlay isVisible={isAnyLoading()} />
-      <ToastContainer toasts={toastInstance.toasts} />
       <BrowserRouter>
-        <AppRoutes />
+        <main id="main-content" role="main">
+          <AppRoutes />
+        </main>
       </BrowserRouter>
     </>
   );
