@@ -161,7 +161,7 @@ const Settings = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Carregando configurações...</p>
+          <p className="text-muted-foreground">Ajustando as configurações pet... ⚙️🐾</p>
         </div>
       </div>
     );

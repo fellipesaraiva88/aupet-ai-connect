@@ -211,7 +211,7 @@ export function EmptyState({
 
 // Loading State Component
 export function LoadingState({
-  message = "Carregando...",
+  message = "Cuidando dos pets... 🐾",
   submessage,
   progress,
   className

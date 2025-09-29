@@ -58,7 +58,7 @@ const Index = () => {
               <div className="flex items-center gap-3 flex-wrap">
                 <LoadingButton
                   variant="outline"
-                  onClick={() => handleNavigateWithLoading('/analytics', 'Carregando insights especiais...')}
+                  onClick={() => handleNavigateWithLoading('/analytics', 'Analisando dados dos pets... 📊🐾')}
                   icon={<TrendingUp className="h-4 w-4" />}
                   className="flex-1 sm:flex-none"
                 >
@@ -66,7 +66,7 @@ const Index = () => {
                 </LoadingButton>
                 <FeedbackButton
                   variant="info"
-                  onClick={() => handleNavigateWithLoading('/conversations', 'Carregando conversas cheias de amor...')}
+                  onClick={() => handleNavigateWithLoading('/conversations', 'Carregando conversas cheias de amor pet... 💬🐕')}
                   className="flex-1 sm:flex-none"
                 >
                   <div className="flex items-center gap-2">

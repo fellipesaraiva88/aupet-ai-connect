@@ -12,7 +12,7 @@ interface LoadingOverlayProps {
 
 export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   isVisible,
-  message = 'Carregando...',
+  message = 'Brincando com os pets... 🐕🐱',
   variant = 'default',
   className
 }) => {

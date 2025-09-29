@@ -44,7 +44,7 @@ export const VisualIndicatorsDemo: React.FC = () => {
       error: { title: 'Erro!', description: 'Algo deu errado. Tente novamente.' },
       warning: { title: 'Atenção!', description: 'Verifique os dados antes de continuar.' },
       info: { title: 'Informação', description: 'Nova atualização disponível.' },
-      loading: { title: 'Carregando...', description: 'Processando sua solicitação.' }
+      loading: { title: 'Passeando com os pets... 🐕', description: 'Processando sua solicitação.' }
     };
 
     toast[type](messages[type].title, messages[type].description);

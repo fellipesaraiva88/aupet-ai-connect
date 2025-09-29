@@ -318,7 +318,7 @@ export const WhatsAppSetup: React.FC<WhatsAppSetupProps> = ({ organizationId }) 
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
-        <span>Carregando instâncias WhatsApp...</span>
+        <span>Conectando com os tutores... 📱🐾</span>
       </div>
     );
   }

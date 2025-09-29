@@ -634,7 +634,7 @@ const Catalog = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {isLoadingCategories ? (
-                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                          <SelectItem value="loading" disabled>Buscando categorias... 🔍</SelectItem>
                         ) : (
                           categoriesForSelect.map((category) => (
                             <SelectItem key={category.slug} value={category.slug}>

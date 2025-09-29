@@ -457,7 +457,7 @@ export const AutoReplySettings: React.FC<AutoReplySettingsProps> = ({
         {loading ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            Carregando auto-respostas...
+            Buscando mensagens automáticas... 🐾
           </div>
         ) : filteredAutoReplies.length === 0 ? (
           <div className="text-center p-8 text-muted-foreground">

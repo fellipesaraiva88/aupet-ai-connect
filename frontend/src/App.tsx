@@ -45,7 +45,7 @@ const PageLoadingComponent = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
     <div className="text-center space-y-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-      <p className="text-muted-foreground">Carregando página...</p>
+      <p className="text-muted-foreground">Buscando patinhas... 🐾</p>
     </div>
   </div>
 );
@@ -59,7 +59,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">Preparando o ambiente pet... 🐕</p>
         </div>
       </div>
     );
@@ -81,7 +81,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">Organizando os brinquedos... 🎾</p>
         </div>
       </div>
     );
