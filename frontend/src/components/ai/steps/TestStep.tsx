@@ -9,6 +9,9 @@ import { MessageSquare, Send, Bot, User, Play, CheckCircle } from "lucide-react"
 interface TestStepProps {
   data: any;
   updateData: (updates: any) => void;
+  nextStep?: () => void;
+  prevStep?: () => void;
+  onComplete?: () => void;
 }
 
 const testScenarios = [

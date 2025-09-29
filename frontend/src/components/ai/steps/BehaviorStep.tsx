@@ -10,6 +10,9 @@ import { Clock, Zap, Brain, Shield, MessageSquare } from "lucide-react";
 interface BehaviorStepProps {
   data: any;
   updateData: (updates: any) => void;
+  nextStep?: () => void;
+  prevStep?: () => void;
+  onComplete?: () => void;
 }
 
 const services = [

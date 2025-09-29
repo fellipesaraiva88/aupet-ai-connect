@@ -95,17 +95,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-4xl bg-card rounded-2xl shadow-2xl border overflow-hidden"
+        className="w-full max-w-3xl max-h-[90vh] bg-card rounded-2xl shadow-2xl border overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="bg-gradient-primary p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Configuração da Assistente Auzap</h2>
+        <div className="bg-gradient-primary p-4 text-white flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold">Configuração da Assistente Auzap</h2>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 h-8 w-8 p-0"
             >
               ✕
             </Button>
@@ -115,12 +115,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <span>Passo {currentStep + 1} de {STEPS.length}</span>
               <span>{STEPS[currentStep].title}</span>
             </div>
-            <Progress value={progress} className="bg-white/20" />
+            <Progress value={progress} className="bg-white/20 h-2" />
           </div>
         </div>
 
         {/* Content */}
-        <div className="min-h-[500px] p-6">
+        <div className="flex-1 overflow-y-auto p-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -142,12 +142,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
         {/* Footer Navigation */}
         {currentStep > 0 && currentStep < STEPS.length - 1 && (
-          <div className="border-t p-6 flex items-center justify-between">
+          <div className="border-t p-4 flex items-center justify-between flex-shrink-0 bg-background">
             <Button
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 0}
               className="flex items-center gap-2"
+              size="sm"
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
@@ -156,6 +157,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               onClick={nextStep}
               disabled={currentStep === STEPS.length - 1}
               className="flex items-center gap-2 bg-gradient-primary text-white"
+              size="sm"
             >
               Próximo
               <ChevronRight className="h-4 w-4" />
