@@ -10,7 +10,8 @@
     "start:dev": "tsx watch src/server.ts",
     "clean": "rm -rf dist",
     "debug": "node src/debug-env.js",
-    "migrate:whatsapp": "tsx src/scripts/migrate-whatsapp-instances.ts"
+    "migrate:whatsapp": "tsx src/scripts/migrate-whatsapp-instances.ts",
+    "test:whatsapp": "tsx src/scripts/test-whatsapp-flow.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
