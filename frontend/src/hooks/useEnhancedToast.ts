@@ -97,7 +97,18 @@ let globalToastInstance: ReturnType<typeof useEnhancedToast> | null = null;
 
 export const useGlobalToast = () => {
   if (!globalToastInstance) {
-    throw new Error('Global toast instance not initialized. Make sure ToastProvider is mounted.');
+    // Fallback: return a no-op toast to prevent crashes
+    console.warn('Global toast instance not initialized. Using fallback.');
+    return {
+      success: () => '',
+      error: () => '',
+      warning: () => '',
+      info: () => '',
+      loading: () => '',
+      dismiss: () => {},
+      dismissAll: () => {},
+      update: () => {}
+    };
   }
   return globalToastInstance.toast;
 };
