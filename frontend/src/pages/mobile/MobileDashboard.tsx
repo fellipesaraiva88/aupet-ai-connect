@@ -80,7 +80,7 @@ const quickActions: QuickAction[] = [
   }
 ];
 
-export function MobileDashboard() {
+export default function MobileDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeCard, setActiveCard] = useState<number>(0);
