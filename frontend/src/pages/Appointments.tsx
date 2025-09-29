@@ -404,7 +404,7 @@ const Appointments = () => {
               </div>
 
               <AppointmentSidebar onAppointmentCreated={() => {
-                // Opcional: adicionar lógica de refresh ou callback
+                // Auto-refresh após criação
               }} />
             </div>
 
