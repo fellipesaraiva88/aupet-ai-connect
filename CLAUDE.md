@@ -217,3 +217,4 @@ Uses Supabase with the following key tables:
 - Search the internet for updated information to minimize errors
 - Never change the design
 - Always work on 4 tasks simultaneously
+- use sempre o mcp do supabase para operar no banco de dados "lytpeljmwjugsbapjkeb"
