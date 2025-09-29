@@ -23,8 +23,6 @@
     "noUncheckedIndexedAccess": false,
     "noImplicitOverride": false,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "noEmit": true,

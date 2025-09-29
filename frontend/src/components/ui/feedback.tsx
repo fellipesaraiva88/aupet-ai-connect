@@ -123,11 +123,13 @@ export function Feedback({
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
-              <IconComponent className={cn(
-                "h-5 w-5",
-                config.iconColor,
-                type === "loading" && "animate-spin"
-              )} />
+              {React.createElement(IconComponent as any, {
+                className: cn(
+                  "h-5 w-5",
+                  config.iconColor,
+                  type === "loading" && "animate-spin"
+                )
+              })}
             </div>
 
             <div className="flex-1 min-w-0">

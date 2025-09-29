@@ -120,7 +120,7 @@ export function PetModal({ open, onOpenChange, pet, customers, onClose }: PetMod
           ...formData,
           organization_id: organizationId,
           is_active: true,
-        });
+        } as any);
         toast({
           title: "Novo amiguinho! 🎉",
           description: "Pet cadastrado com muito carinho!",

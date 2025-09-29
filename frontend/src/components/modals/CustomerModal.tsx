@@ -90,7 +90,7 @@ export function CustomerModal({ open, onOpenChange, customer, onClose }: Custome
         await createCustomerMutation.mutateAsync({
           ...formData,
           organization_id: organizationId,
-        });
+        } as any);
         toast({
           title: "Nova família acolhida! 🏠",
           description: "Que alegria ter vocês conosco!",
