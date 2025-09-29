@@ -310,29 +310,52 @@ export class WebhookProcessor {
     const qrData = payload.data as QRCodeEvent;
 
     try {
+      // Atualizar QR code na instância
       await this.supabaseService.supabase
         .from('whatsapp_instances')
         .update({
-          qr_code: qrData.qrcode.base64,
+          qr_code: qrData.qrcode.base64 || qrData.qrcode.code,
+          connection_status: 'waiting_qr',
           updated_at: new Date().toISOString()
         })
         .eq('instance_name', payload.instance);
 
-      // Notificar via WebSocket
+      // Buscar informações da instância para notificar o usuário correto
       if (this.wsService) {
         const { data: instance } = await this.supabaseService.supabase
           .from('whatsapp_instances')
-          .select('organization_id')
+          .select('organization_id, business_id')
           .eq('instance_name', payload.instance)
           .single();
 
         if (instance) {
+          // Extrair userId do nome da instância (formato: user_userId)
+          const userId = payload.instance.replace('user_', '');
+
+          // Notificar usuário específico sobre QR Code disponível
+          this.wsService.notifyUserWhatsAppStatus(
+            userId,
+            instance.organization_id,
+            'waiting_qr',
+            {
+              qrCode: qrData.qrcode.base64 || qrData.qrcode.code,
+              instanceName: payload.instance
+            }
+          );
+
+          // Notificar toda a organização sobre o status da instância
           this.wsService.notifyWhatsAppStatus(
             instance.organization_id,
             payload.instance,
-            'qr_updated',
-            qrData.qrcode.base64
+            'waiting_qr',
+            qrData.qrcode.base64 || qrData.qrcode.code
           );
+
+          logger.webhook('QR_CODE_UPDATE_NOTIFIED', payload.instance, {
+            userId,
+            organizationId: instance.organization_id,
+            hasQRCode: !!(qrData.qrcode.base64 || qrData.qrcode.code)
+          });
         }
       }
 

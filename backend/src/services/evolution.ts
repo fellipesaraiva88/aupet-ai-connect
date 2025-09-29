@@ -68,25 +68,23 @@ export class EvolutionAPIService {
   }
 
   // Instance Management
-  async createInstance(businessId: string): Promise<EvolutionInstance> {
+  async createInstance(instanceName: string): Promise<EvolutionInstance> {
     try {
-      const instanceName = `auzap_${businessId}`;
-
+      // Usar o endpoint correto da Evolution API v2
       const response = await this.api.post('/instance/create', {
         instanceName,
         integration: 'WHATSAPP-BAILEYS',
-        number: '', // Will be set when connecting
         qrcode: true,
-        websocket: {
-          events: [
-            'APPLICATION_STARTUP',
-            'QRCODE_UPDATED',
-            'CONNECTION_UPDATE',
-            'MESSAGES_UPSERT',
-            'MESSAGES_UPDATE',
-            'SEND_MESSAGE'
-          ]
-        }
+        webhookUrl: `${process.env.WEBHOOK_URL}/api/webhook/whatsapp`,
+        webhookByEvents: true,
+        events: [
+          'APPLICATION_STARTUP',
+          'QRCODE_UPDATED',
+          'CONNECTION_UPDATE',
+          'MESSAGES_UPSERT',
+          'MESSAGES_UPDATE',
+          'SEND_MESSAGE'
+        ]
       });
 
       const instanceData: EvolutionInstance = {
@@ -96,7 +94,7 @@ export class EvolutionAPIService {
         integration: 'WHATSAPP-BAILEYS'
       };
 
-      logger.evolution('CREATE_INSTANCE', instanceName, { businessId });
+      logger.evolution('CREATE_INSTANCE', instanceName, response.data);
       return instanceData;
     } catch (error: any) {
       logger.error('Error creating Evolution instance:', error);
@@ -106,10 +104,19 @@ export class EvolutionAPIService {
 
   async connectInstance(instanceName: string): Promise<string> {
     try {
+      // Na Evolution API v2, o endpoint /instance/connect/{instance} retorna pairingCode e code (QR)
       const response = await this.api.get(`/instance/connect/${instanceName}`);
 
-      logger.evolution('CONNECT_INSTANCE', instanceName);
-      return response.data.qrcode || response.data.code || '';
+      logger.evolution('CONNECT_INSTANCE', instanceName, response.data);
+
+      // A Evolution API v2 retorna 'code' para QR Code e 'pairingCode' para pairing
+      const qrCode = response.data.code || response.data.qrcode || '';
+
+      if (qrCode) {
+        logger.info('QR Code generated for instance', { instanceName, hasCode: !!qrCode });
+      }
+
+      return qrCode;
     } catch (error: any) {
       logger.error('Error connecting Evolution instance:', error);
       throw new Error(`Falha ao conectar instância: ${error.response?.data?.message || error.message}`);
@@ -118,9 +125,17 @@ export class EvolutionAPIService {
 
   async getQRCode(instanceName: string): Promise<string> {
     try {
-      const response = await this.api.get(`/instance/fetchQrCode/${instanceName}`);
+      // Primeiro tenta o endpoint connect para obter QR code
+      const connectResponse = await this.api.get(`/instance/connect/${instanceName}`);
 
-      const qrCode = response.data.base64 || response.data.code || '';
+      if (connectResponse.data.code) {
+        logger.evolution('QR_CODE_FETCHED_FROM_CONNECT', instanceName);
+        return connectResponse.data.code;
+      }
+
+      // Se não encontrou, tenta o endpoint de fetchQrCode
+      const qrResponse = await this.api.get(`/instance/fetchQrCode/${instanceName}`);
+      const qrCode = qrResponse.data.base64 || qrResponse.data.code || '';
 
       if (qrCode) {
         logger.evolution('QR_CODE_FETCHED', instanceName);
@@ -129,7 +144,7 @@ export class EvolutionAPIService {
       return qrCode;
     } catch (error: any) {
       // QR code might not be available yet, this is normal
-      if (error.response?.status === 404) {
+      if (error.response?.status === 404 || error.response?.status === 400) {
         return '';
       }
 
@@ -337,7 +352,10 @@ export class EvolutionAPIService {
   async setWebhook(instanceName: string, webhookUrl: string): Promise<any> {
     try {
       const response = await this.api.post(`/webhook/set/${instanceName}`, {
+        enabled: true,
         url: webhookUrl,
+        webhookByEvents: true,
+        webhookBase64: false,
         events: [
           'APPLICATION_STARTUP',
           'QRCODE_UPDATED',
@@ -345,8 +363,7 @@ export class EvolutionAPIService {
           'MESSAGES_UPSERT',
           'MESSAGES_UPDATE',
           'SEND_MESSAGE'
-        ],
-        webhook_by_events: false
+        ]
       });
 
       logger.evolution('SET_WEBHOOK', instanceName, { webhookUrl });

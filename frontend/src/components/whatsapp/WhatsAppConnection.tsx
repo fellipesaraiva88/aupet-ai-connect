@@ -44,8 +44,17 @@ export const WhatsAppConnection: React.FC = () => {
   // Verificar status periodicamente
   useEffect(() => {
     checkWhatsAppStatus();
-    const interval = setInterval(checkWhatsAppStatus, 5000);
+    // Polling reduzido pois agora usamos WebSocket para QR Code
+    const pollingInterval = status === 'connecting' ? 3000 : 10000;
+    const interval = setInterval(checkWhatsAppStatus, pollingInterval);
     return () => clearInterval(interval);
+  }, [status]);
+
+  // Escutar eventos WebSocket para QR Code em tempo real
+  useEffect(() => {
+    // Setup WebSocket para eventos específicos do usuário
+    // Isso será integrado com o WebSocket existente no hook useSocket
+    // Por enquanto, vamos manter o polling como fallback
   }, []);
 
   const checkWhatsAppStatus = async () => {
@@ -73,15 +82,31 @@ export const WhatsAppConnection: React.FC = () => {
     }
   };
 
-  const fetchQRCode = async () => {
+  const fetchQRCode = async (attempts = 0, maxAttempts = 10) => {
     try {
       const response = await api.get('/whatsapp/qrcode');
       const { data } = response.data;
       if (data.available && data.qrCode) {
         setQrCode(data.qrCode);
+        setStatus('waiting_qr');
+        toast({
+          title: 'QR Code disponível!',
+          description: 'Escaneie o código com seu WhatsApp',
+        });
+      } else if (attempts < maxAttempts && (status === 'connecting' || status === 'waiting_qr')) {
+        // Tentar novamente após 2 segundos
+        setTimeout(() => {
+          fetchQRCode(attempts + 1, maxAttempts);
+        }, 2000);
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
+      if (attempts < maxAttempts && (status === 'connecting' || status === 'waiting_qr')) {
+        // Tentar novamente após 3 segundos em caso de erro
+        setTimeout(() => {
+          fetchQRCode(attempts + 1, maxAttempts);
+        }, 3000);
+      }
     }
   };
 
@@ -102,9 +127,15 @@ export const WhatsAppConnection: React.FC = () => {
           description: 'Escaneie o código com seu WhatsApp para conectar',
         });
       } else {
+        // Mesmo sem QR Code imediato, manter em conectando e buscar QR
+        setStatus('connecting');
+        // Tentar buscar QR Code após um momento
+        setTimeout(() => {
+          fetchQRCode();
+        }, 2000);
         toast({
           title: 'Conectando...',
-          description: data.message,
+          description: data.message || 'Preparando conexão...',
         });
       }
     } catch (error: any) {

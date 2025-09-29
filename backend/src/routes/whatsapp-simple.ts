@@ -29,6 +29,13 @@ router.get('/status', asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
+    logger.info('Getting WhatsApp status for user', { userId });
+
+    // Garantir que o usuário tenha uma instância antes de verificar status
+    const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+    const instance = await getWhatsAppManager().ensureUserInstance(userId, organizationId);
+    logger.info('Instance ensured for status check', { userId, instanceName: instance.name });
+
     const status = await getWhatsAppManager().getUserWhatsAppStatus(userId);
 
     const response: ApiResponse<typeof status> = {
@@ -41,26 +48,7 @@ router.get('/status', asyncHandler(async (req: Request, res: Response) => {
     res.json(response);
   } catch (error: any) {
     logger.error('Error getting WhatsApp status:', error);
-
-    // Fallback: Return mock status instead of throwing error
-    logger.warn('Using fallback mock response for WhatsApp status');
-
-    const mockStatus = {
-      status: 'disconnected' as const,
-      needsQR: false,
-      phoneNumber: null,
-      instanceName: null,
-      lastUpdate: new Date().toISOString()
-    };
-
-    const response: ApiResponse<typeof mockStatus> = {
-      success: true,
-      data: mockStatus,
-      message: 'WhatsApp desconectado (modo demo)',
-      timestamp: new Date().toISOString()
-    };
-
-    res.json(response);
+    throw createError(error.message || 'Erro ao obter status do WhatsApp', 500);
   }
 }));
 
@@ -77,14 +65,24 @@ router.post('/connect', asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await getWhatsAppManager().connectUserWhatsApp(userId, organizationId);
+    logger.info('Starting WhatsApp connection process', { userId, organizationId });
 
-    // Notificar via WebSocket
+    // 1. Garantir que o usuário tenha uma instância (cria se não existir)
+    const instance = await getWhatsAppManager().ensureUserInstance(userId, organizationId);
+    logger.info('Instance ensured for user', { userId, instanceName: instance.name });
+
+    // 2. Conectar na instância (existente ou recém-criada)
+    const result = await getWhatsAppManager().connectUserWhatsApp(userId, organizationId);
+    logger.info('Connection initiated', { userId, hasQRCode: !!result.qrCode });
+
+    // 3. Notificar via WebSocket sobre o início da conexão
     const wsService = req.app.get('wsService') as WebSocketService;
     if (wsService) {
       wsService.notifyUserWhatsAppStatus(userId, organizationId, 'connecting', {
-        qrCode: result.qrCode
+        qrCode: result.qrCode,
+        instanceName: instance.name
       });
+      logger.info('WebSocket notification sent', { userId, status: 'connecting' });
     }
 
     const response: ApiResponse<typeof result> = {
@@ -97,23 +95,7 @@ router.post('/connect', asyncHandler(async (req: Request, res: Response) => {
     res.json(response);
   } catch (error: any) {
     logger.error('Error connecting WhatsApp:', error);
-
-    // Fallback: Return mock response instead of throwing error
-    logger.warn('Using fallback mock response for WhatsApp connect');
-
-    const mockResult = {
-      qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-      message: 'QR Code gerado! Escaneie com seu WhatsApp para conectar (modo demo)'
-    };
-
-    const response: ApiResponse<typeof mockResult> = {
-      success: true,
-      data: mockResult,
-      message: mockResult.message,
-      timestamp: new Date().toISOString()
-    };
-
-    res.json(response);
+    throw createError(error.message || 'Erro ao conectar WhatsApp', 500);
   }
 }));
 
@@ -129,6 +111,13 @@ router.get('/qrcode', asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
+    logger.info('Getting QR code for user', { userId });
+
+    // Garantir que o usuário tenha uma instância antes de buscar QR code
+    const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+    const instance = await getWhatsAppManager().ensureUserInstance(userId, organizationId);
+    logger.info('Instance ensured for QR code fetch', { userId, instanceName: instance.name });
+
     const qrData = await getWhatsAppManager().getUserQRCode(userId);
 
     const response: ApiResponse<typeof qrData> = {

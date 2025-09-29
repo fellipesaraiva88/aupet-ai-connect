@@ -31,6 +31,7 @@ export const WhatsAppConnectionCard: React.FC = () => {
   const [checking, setChecking] = useState(true);
   const [showFullComponent, setShowFullComponent] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     checkWhatsAppStatus();
@@ -73,12 +74,19 @@ export const WhatsAppConnectionCard: React.FC = () => {
           title: 'WhatsApp Conectado! 🎉',
           description: 'Pronto para receber mensagens',
         });
-      } else if (data.status === 'disconnected') {
+        // Fechar modal quando conectar com sucesso
+        setConnecting(false);
+        setTimeout(() => {
+          setShowFullComponent(false);
+        }, 2000);
+      } else if (data.status === 'disconnected' && !connecting) {
         toast({
           title: 'WhatsApp Desconectado',
           description: 'Você pode reconectar a qualquer momento',
           variant: 'destructive'
         });
+      } else if (data.status === 'connecting' || data.status === 'waiting_qr') {
+        setConnecting(true);
       }
     });
 
@@ -186,7 +194,10 @@ export const WhatsAppConnectionCard: React.FC = () => {
             <Button
               size="sm"
               className="bg-green-600 hover:bg-green-700"
-              onClick={() => setShowFullComponent(true)}
+              onClick={() => {
+                setShowFullComponent(true);
+                setConnecting(false); // Reset connecting state
+              }}
             >
               <MessageCircle className="h-3 w-3 mr-1" />
               Conectar
@@ -223,7 +234,18 @@ export const WhatsAppConnectionCard: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowFullComponent(false)}
+              onClick={() => {
+                // Só permite fechar se não estiver conectando
+                if (!connecting && status !== 'connecting' && status !== 'waiting_qr') {
+                  setShowFullComponent(false);
+                } else {
+                  toast({
+                    title: 'Conexão em andamento',
+                    description: 'Aguarde a conexão finalizar ou seja concluída',
+                    variant: 'default'
+                  });
+                }
+              }}
             >
               ✕
             </Button>
