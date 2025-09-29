@@ -154,8 +154,8 @@ const Appointments = () => {
   // Memoize filtered appointments for performance
   const filteredAppointments = useMemo(() => {
     return appointments.filter((appointment) => {
-      const customerName = appointment.whatsapp_contacts?.name || '';
-      const petName = appointment.pets?.name || '';
+      const customerName = (appointment as any).whatsapp_contacts?.name || '';
+      const petName = (appointment as any).pets?.name || '';
       const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            petName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            appointment.service_type?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -203,7 +203,7 @@ const Appointments = () => {
     };
   }, [appointments, today]);
 
-  const customerPets = pets.filter(pet => pet.owner_id === selectedCustomer);
+  const customerPets = pets.filter(pet => (pet as any).customer_id === selectedCustomer);
 
   // Auto-fill price and duration when service is selected
   const handleServiceChange = (serviceValue: string) => {
@@ -244,13 +244,13 @@ const Appointments = () => {
         await updateAppointmentMutation.mutateAsync({
           id: editingAppointment.id,
           updates: {
-            client_id: formData.client_id,
+            customer_id: formData.client_id,
             pet_id: formData.pet_id,
             service_type: formData.service_type,
             appointment_date: appointmentDateTime.toISOString(),
             price: formData.price,
-            notes: formData.notes,
-          },
+            ...(formData.notes && { post_appointment_notes: formData.notes }),
+          } as any,
         });
         toast({
           title: "Momento de cuidado ajustado! ⏰",
@@ -258,15 +258,15 @@ const Appointments = () => {
         });
       } else {
         await createAppointmentMutation.mutateAsync({
-          client_id: formData.client_id,
+          customer_id: formData.client_id,
           pet_id: formData.pet_id,
           service_type: formData.service_type,
           appointment_date: appointmentDateTime.toISOString(),
           price: formData.price,
-          notes: formData.notes,
+          ...(formData.notes && { post_appointment_notes: formData.notes }),
           organization_id: organizationId,
-          status: 'pending',
-        });
+          status: 'scheduled',
+        } as any);
         toast({
           title: "Momento especial agendado! 💖",
           description: "Que maravilha! Este amiguinho terá um momento especial de cuidado reservado só para ele.",
@@ -848,17 +848,17 @@ const Appointments = () => {
                                         })}
                                       </div>
                                       <div className="text-xs text-muted-foreground">
-                                        {appointment.duration || 60}min
+                                         {(appointment as any).duration || 60}min
                                       </div>
                                     </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
                                         <h4 className="font-semibold text-sm">
-                                          {appointment.whatsapp_contacts?.name || 'Cliente não informado'}
+                                           {(appointment as any).whatsapp_contacts?.name || 'Cliente não informado'}
                                         </h4>
                                         <span className="text-muted-foreground">•</span>
                                         <span className="text-sm text-primary">
-                                          {appointment.pets?.name || 'Pet não informado'}
+                                           {(appointment as any).pets?.name || 'Pet não informado'}
                                         </span>
                                       </div>
                                       <p className="text-sm text-muted-foreground">{appointment.service_type}</p>
@@ -918,15 +918,15 @@ const Appointments = () => {
                           <div className="flex items-center gap-4">
                             <Avatar className="h-12 w-12">
                               <AvatarFallback className="bg-primary text-white">
-                                {appointment.whatsapp_contacts?.name?.charAt(0) || '?'}
+                                {(appointment as any).whatsapp_contacts?.name?.charAt(0) || '?'}
                               </AvatarFallback>
                             </Avatar>
 
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold">{appointment.whatsapp_contacts?.name || 'Cliente não informado'}</h3>
+                                <h3 className="font-semibold">{(appointment as any).whatsapp_contacts?.name || 'Cliente não informado'}</h3>
                                 <span className="text-muted-foreground">•</span>
-                                <span className="font-medium text-primary">{appointment.pets?.name || 'Pet não informado'}</span>
+                                <span className="font-medium text-primary">{(appointment as any).pets?.name || 'Pet não informado'}</span>
                               </div>
                               <p className="text-sm text-muted-foreground mb-2">{appointment.service_type}</p>
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -940,16 +940,16 @@ const Appointments = () => {
                                 </div>
                                 <div className="flex items-center">
                                   <Timer className="h-4 w-4 mr-1" />
-                                  {appointment.duration || 60}min
+                                  {(appointment as any).duration || 60}min
                                 </div>
                                 <div className="flex items-center font-secondary font-bold text-primary">
                                   <DollarSign className="h-4 w-4 mr-1" />
                                   {(appointment.price || 0).toFixed(2)}
                                 </div>
                               </div>
-                              {appointment.notes && (
+                              {(appointment as any).notes && (
                                 <p className="text-sm text-muted-foreground mt-2 italic">
-                                  {appointment.notes}
+                                  {(appointment as any).notes}
                                 </p>
                               )}
                             </div>
@@ -1004,7 +1004,17 @@ const Appointments = () => {
               searchTerm || filterStatus !== "all" || filterDate !== "all" ? (
                 <EmptyStates.SearchNoResults />
               ) : (
-                <EmptyStates.NoAppointments onSchedule={() => setIsDialogOpen(true)} />
+                <div className="text-center py-12 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhum agendamento encontrado</p>
+                  <Button 
+                    onClick={() => setIsDialogOpen(true)}
+                    className="mt-4"
+                    variant="outline"
+                  >
+                    Agendar Consulta
+                  </Button>
+                </div>
               )
             )}
 

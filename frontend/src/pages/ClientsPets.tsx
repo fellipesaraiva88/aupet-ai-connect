@@ -205,9 +205,9 @@ const ClientsPets = () => {
       name: pet.name,
       species: pet.species,
       breed: pet.breed,
-      owner: pet.whatsapp_contacts?.name || 'Sem dono',
-      status: pet.is_active ? 'active' : 'inactive',
-      created_at: pet.created_at || new Date().toISOString(),
+      owner: (pet as any).whatsapp_contacts?.name || 'Sem dono',
+      status: (pet as any).is_active ? 'active' : 'inactive',
+      created_at: (pet as any).created_at || new Date().toISOString(),
       data: pet,
     }));
 
@@ -263,8 +263,8 @@ const ClientsPets = () => {
     activeCustomers: customers.filter(c => c.status === 'active').length,
     vipCustomers: customers.filter(c => c.status === 'vip').length,
     totalPets: pets.length,
-    activePets: pets.filter(p => p.is_active).length,
-    vaccinatedPets: pets.filter(p => p.vaccination_status === 'up_to_date').length,
+    activePets: pets.filter(p => (p as any).is_active).length,
+    vaccinatedPets: pets.filter(p => (p as any).vaccination_status === 'up_to_date').length,
     customersWithPets: customers.filter(c => c.pets && c.pets.length > 0).length,
     totalRevenue: customers.reduce((sum, c) => sum + (c.total_spent || 0), 0),
   }), [customers, pets]);

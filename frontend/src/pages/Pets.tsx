@@ -129,11 +129,11 @@ const Pets = () => {
   // Memoize filtered pets for performance
   const filteredPets = useMemo(() => {
     return pets.filter((pet) => {
-      const ownerName = pet.whatsapp_contacts?.name || '';
+      const ownerName = (pet as any).whatsapp_contacts?.name || '';
       const matchesSearch = pet.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            ownerName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesSpecies = filterSpecies === "all" || pet.species === filterSpecies;
-      const matchesStatus = filterStatus === "all" || pet.status === filterStatus;
+      const matchesStatus = filterStatus === "all" || (pet as any).status === filterStatus;
 
       return matchesSearch && matchesSpecies && matchesStatus;
     });
@@ -142,9 +142,9 @@ const Pets = () => {
   // Memoize stats for performance
   const stats = useMemo(() => ({
     total: pets.length,
-    active: pets.filter(p => p.is_active).length,
-    needsAttention: pets.filter(p => !p.is_active).length,
-    vaccinated: pets.filter(p => p.vaccination_status === 'up_to_date').length,
+    active: pets.filter(p => (p as any).is_active).length,
+    needsAttention: pets.filter(p => !(p as any).is_active).length,
+    vaccinated: pets.filter(p => (p as any).vaccination_status === 'up_to_date').length,
   }), [pets]);
 
   // Upload photo function
@@ -215,10 +215,10 @@ const Pets = () => {
             name: formData.name,
             species: formData.species,
             breed: formData.breed,
-            age: formData.age,
+            ...(formData.age && typeof formData.age === 'number' && { birth_date: new Date(Date.now() - (formData.age * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] }),
             weight: formData.weight,
-            owner_id: formData.owner_id,
-          },
+            customer_id: formData.owner_id,
+          } as any,
         });
         toast({
           title: "Amiguinho cuidado! 🐾",
@@ -229,12 +229,12 @@ const Pets = () => {
           name: formData.name,
           species: formData.species,
           breed: formData.breed,
-          age: formData.age,
+          ...(formData.age && typeof formData.age === 'number' && { birth_date: new Date(Date.now() - (formData.age * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] }),
           weight: formData.weight,
-          owner_id: formData.owner_id,
+          customer_id: formData.owner_id,
           organization_id: organizationId,
           is_active: true,
-        });
+        } as any);
         toast({
           title: "Novo amiguinho na família! 🎉",
           description: "Que alegria conhecer este novo amiguinho! Estamos ansiosos para cuidar dele com muito amor.",
@@ -894,16 +894,10 @@ const Pets = () => {
                 {filteredPets.map((pet) => (
                   <PetCard
                     key={pet.id}
-                    pet={{
-                      ...pet,
-                      owner: pet.whatsapp_contacts?.name || 'Proprietário não informado',
-                      ownerPhone: pet.whatsapp_contacts?.phone || '',
-                      lastVisit: pet.last_visit || 'Nunca visitou',
-                    }}
+                    pet={pet as any}
                     onEdit={handleEdit}
                     onSchedule={(pet) => console.log("Schedule for pet:", pet)}
                     onContact={(pet) => console.log("Contact owner of pet:", pet)}
-                    onViewProntuario={handleViewProntuario}
                   />
                 ))}
               </ResponsiveLayouts.Cards>
@@ -913,7 +907,7 @@ const Pets = () => {
               searchTerm || filterSpecies !== "all" || filterStatus !== "all" ? (
                 <EmptyStates.SearchNoResults />
               ) : (
-                <EmptyStates.NoPets onAddPet={() => setIsDialogOpen(true)} />
+                EmptyStates.NoPets(() => setIsDialogOpen(true))
               )
             )}
           </ResponsiveContainer>

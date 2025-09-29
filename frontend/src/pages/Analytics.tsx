@@ -193,7 +193,7 @@ const Analytics = () => {
                 icon={MessageSquare}
                 trend={{
                   value: `${stats.automation.change > 0 ? '+' : ''}${stats.automation.change}%`,
-                  isPositive: stats.automation.trend === 'up'
+                  isPositive: stats.automation.change > 0
                 }}
                 variant="default"
               />

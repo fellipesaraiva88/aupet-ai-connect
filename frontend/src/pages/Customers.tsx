@@ -256,8 +256,8 @@ const Customers = () => {
           bValue = b.total_spent || 0;
           break;
         case "last_interaction":
-          aValue = a.last_interaction ? new Date(a.last_interaction) : new Date(0);
-          bValue = b.last_interaction ? new Date(b.last_interaction) : new Date(0);
+          aValue = (a as any).last_interaction ? new Date((a as any).last_interaction) : new Date(0);
+          bValue = (b as any).last_interaction ? new Date((b as any).last_interaction) : new Date(0);
           break;
         default:
           aValue = a.name?.toLowerCase() || "";
@@ -301,10 +301,10 @@ const Customers = () => {
             email: formData.email,
             phone: formData.phone,
             address: formData.address,
-            notes: formData.notes,
+            ...(formData.notes && { internal_notes: formData.notes }),
             status: formData.status,
-            preferredContact: formData.preferredContact,
-            birthDate: formData.birthDate,
+            ...(formData.preferredContact && { preferred_contact_method: formData.preferredContact }),
+            ...(formData.birthDate && { birth_date: formData.birthDate }),
           },
         });
         toast({
@@ -317,12 +317,12 @@ const Customers = () => {
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
-          notes: formData.notes,
+          ...(formData.notes && { internal_notes: formData.notes }),
           status: formData.status || "active",
-          preferredContact: formData.preferredContact,
-          birthDate: formData.birthDate,
+          ...(formData.preferredContact && { preferred_contact_method: formData.preferredContact }),
+          ...(formData.birthDate && { birth_date: formData.birthDate }),
           organization_id: organizationId,
-        });
+        } as any);
         toast({
           title: "Nova família acolhida! 🏠",
           description: "Que alegria ter vocês conosco! Estamos prontos para cuidar com muito carinho.",
