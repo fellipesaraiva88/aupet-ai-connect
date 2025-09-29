@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Rocket, Bot, Users, Zap, BarChart3, ArrowRight, Sparkles } from "lucide-react";
+import { WhatsAppQRCodeModal } from "@/components/whatsapp/WhatsAppQRCodeModal";
 
 interface ActivationStepProps {
   data: any;
@@ -16,20 +17,31 @@ export const ActivationStep: React.FC<ActivationStepProps> = ({
 }) => {
   const [isActivating, setIsActivating] = useState(false);
   const [isActivated, setIsActivated] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   const handleActivation = async () => {
     setIsActivating(true);
-    
+
     // Simulate activation process
     await new Promise(resolve => setTimeout(resolve, 3000));
-    
+
     setIsActivating(false);
     setIsActivated(true);
-    
+
     // Complete onboarding after a short delay
     setTimeout(() => {
       onComplete();
     }, 2000);
+  };
+
+  const handleWhatsAppConnect = () => {
+    setShowWhatsAppModal(true);
+  };
+
+  const handleWhatsAppSuccess = (instanceId: string) => {
+    console.log('WhatsApp conectado com sucesso:', instanceId);
+    setShowWhatsAppModal(false);
+    // Opcionalmente mostrar toast de sucesso
   };
 
   const configSummary = [
@@ -241,7 +253,11 @@ export const ActivationStep: React.FC<ActivationStepProps> = ({
                       <p className="text-sm text-muted-foreground">{step.description}</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={index === 0 ? handleWhatsAppConnect : undefined}
+                  >
                     {step.action}
                   </Button>
                 </div>
@@ -250,6 +266,13 @@ export const ActivationStep: React.FC<ActivationStepProps> = ({
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* WhatsApp Connection Modal */}
+      <WhatsAppQRCodeModal
+        open={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+        onSuccess={handleWhatsAppSuccess}
+      />
     </div>
   );
 };
