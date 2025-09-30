@@ -15,8 +15,7 @@ import { useGlobalToast } from "@/hooks/useEnhancedToast";
 import { useDashboardStats, useOrganizationId } from "@/hooks/useApiData";
 import { useRealTimeSubscriptions } from "@/hooks/useRealTime";
 import { useActiveNavigation } from "@/hooks/useActiveNavigation";
-import { MessageSquare, Calendar, TrendingUp, Users, Bot, Heart, Sparkles, Clock, Phone } from "lucide-react";
-import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
+import { MessageSquare, Calendar, TrendingUp, Users, Bot, Heart, Sparkles, Clock } from "lucide-react";
 
 const Index = () => {
   const activeMenuItem = useActiveNavigation();
@@ -124,11 +123,6 @@ const Index = () => {
                 variant="default"
               />
             </AppleStatsGrid>
-
-            {/* WhatsApp Connection Status */}
-            <div className="grid gap-6 lg:grid-cols-3">
-              <WhatsAppConnectionCard />
-            </div>
 
             {/* Quick Actions Apple-style */}
             <div className="grid gap-6 lg:grid-cols-2">
