@@ -145,7 +145,7 @@ router.get('/instance/test', asyncHandler(async (req: Request, res: Response) =>
     if (!evolutionInstance) {
       logger.info('Creating instance in Evolution API', { instanceName });
 
-      await getEvolutionService().createInstance(userId);
+      await getEvolutionService().createInstance(userId, instanceName);
 
       // Configurar webhook
       const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/whatsapp`;
@@ -204,7 +204,7 @@ router.get('/instance/me', asyncHandler(async (req: Request, res: Response) => {
     if (!evolutionInstance) {
       logger.info('Creating instance in Evolution API', { instanceName });
 
-      await getEvolutionService().createInstance(userId);
+      await getEvolutionService().createInstance(userId, instanceName);
 
       // Configurar webhook
       const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/whatsapp`;

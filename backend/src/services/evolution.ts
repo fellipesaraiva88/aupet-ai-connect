@@ -68,9 +68,9 @@ export class EvolutionAPIService {
   }
 
   // Instance Management
-  async createInstance(businessId: string): Promise<EvolutionInstance> {
+  async createInstance(businessIdOrInstanceName: string, customInstanceName?: string): Promise<EvolutionInstance> {
     try {
-      const instanceName = `auzap_${businessId}`;
+      const instanceName = customInstanceName || `auzap_${businessIdOrInstanceName}`;
 
       const response = await this.api.post('/instance/create', {
         instanceName,
