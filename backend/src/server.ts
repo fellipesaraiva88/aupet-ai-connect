@@ -46,6 +46,7 @@ import { WebSocketService } from './services/websocket';
 import { SupabaseService } from './services/supabase';
 import { MonitoringService } from './services/monitoring';
 import { startHealthMonitoring } from './services/whatsapp-health-monitor';
+import { cacheService } from './services/cache';
 import { logger } from './utils/logger';
 
 // Environment variables already loaded above
@@ -172,6 +173,17 @@ class AuzapServer {
         version: '1.0.0',
         docs: '/api/docs',
         timestamp: new Date().toISOString()
+      });
+    });
+
+    // Cache health endpoint
+    this.app.get('/api/cache/health', async (req, res) => {
+      const isHealthy = await cacheService.healthCheck();
+      const stats = cacheService.getStats();
+
+      res.status(isHealthy ? 200 : 503).json({
+        healthy: isHealthy,
+        stats
       });
     });
   }

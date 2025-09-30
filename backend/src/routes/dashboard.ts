@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
 import { AnalyticsService } from '../services/analytics';
+import { cache, orgCache } from '../middleware/cache';
 import { logger } from '../utils/logger';
 import { ApiResponse, DashboardStats, AuthenticatedRequest } from '../types';
 import { z } from 'zod';
@@ -33,8 +34,8 @@ const analyticsQuerySchema = z.object({
   end_date: z.string().datetime().optional()
 });
 
-// GET /dashboard/overview - Complete dashboard overview
-router.get('/overview', asyncHandler(async (req: Request, res: Response) => {
+// GET /dashboard/overview - Complete dashboard overview (cached for 1 minute)
+router.get('/overview', orgCache(60), asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 

@@ -32,14 +32,14 @@ router.get('/logs', async (req, res) => {
       limit: parseInt(limit as string)
     });
 
-    res.json({
+    return res.json({
       success: true,
       logs,
       count: logs.length
     });
   } catch (error) {
     logger.error('Error fetching AI logs:', error);
-    res.status(500).json({ error: 'Failed to fetch AI logs' });
+    return res.status(500).json({ error: 'Failed to fetch AI logs' });
   }
 });
 
@@ -69,7 +69,7 @@ router.get('/metrics', async (req, res) => {
       return res.status(500).json({ error: 'Failed to calculate metrics' });
     }
 
-    res.json({
+    return res.json({
       success: true,
       metrics,
       period: {
@@ -79,7 +79,7 @@ router.get('/metrics', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching AI metrics:', error);
-    res.status(500).json({ error: 'Failed to fetch AI metrics' });
+    return res.status(500).json({ error: 'Failed to fetch AI metrics' });
   }
 });
 
@@ -100,7 +100,7 @@ router.get('/conversation/:conversationId', async (req, res) => {
       conversationId
     });
 
-    res.json({
+    return res.json({
       success: true,
       conversationId,
       logs,
@@ -112,7 +112,7 @@ router.get('/conversation/:conversationId', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching conversation AI logs:', error);
-    res.status(500).json({ error: 'Failed to fetch conversation logs' });
+    return res.status(500).json({ error: 'Failed to fetch conversation logs' });
   }
 });
 

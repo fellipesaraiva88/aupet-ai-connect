@@ -91,7 +91,7 @@ function extractResourceType(path: string): string {
   // /api/admin/organizations -> 'organizations'
   // /api/admin/users -> 'users'
   if (parts.length >= 3 && parts[0] === 'api' && parts[1] === 'admin') {
-    return parts[2];
+    return parts[2] || 'unknown';
   }
 
   return 'unknown';

@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
+import { orgCache } from '../middleware/cache';
+import { extractPaginationParams, createPaginatedResponse, applyPaginationToQuery } from '../utils/pagination';
 import { logger } from '../utils/logger';
 import { ApiResponse, PaginatedResponse, AuthenticatedRequest } from '../types';
 import { z } from 'zod';
@@ -35,17 +37,19 @@ const createCustomerSchema = z.object({
 
 const updateCustomerSchema = createCustomerSchema.partial();
 
-// GET /customers - List all customers with filtering and pagination
-router.get('/', asyncHandler(async (req: Request, res: Response) => {
+// GET /customers - List all customers with filtering and pagination (cached for 5 minutes)
+router.get('/', orgCache(300), asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
 
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 20;
-  const search = req.query.search as string;
+  // Extract pagination parameters
+  const paginationParams = extractPaginationParams(req, {
+    defaultLimit: 20,
+    maxLimit: 100
+  });
+
   const tags = req.query.tags as string;
   const status = req.query.status as string;
-  const sort = req.query.sort as string || 'created_at';
 
   try {
     const supabase = getSupabaseService();
@@ -54,50 +58,43 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       .select('*, pets(id, name, species)', { count: 'exact' })
       .eq('organization_id', organizationId);
 
-    // Apply filters
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
+    // Apply search filter
+    if (paginationParams.search) {
+      query = query.or(`name.ilike.%${paginationParams.search}%,phone.ilike.%${paginationParams.search}%,email.ilike.%${paginationParams.search}%`);
     }
 
+    // Apply status filter
     if (status && status !== 'all') {
       query = query.eq('status', status);
     }
 
+    // Apply tags filter
     if (tags) {
       const tagArray = tags.split(',');
       query = query.contains('tags', tagArray);
     }
 
-    // Apply sorting
-    const ascending = sort.startsWith('-') ? false : true;
-    const sortField = sort.replace(/^-/, '');
-    query = query.order(sortField, { ascending });
-
-    // Apply pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    query = query.range(from, to);
+    // Apply pagination and sorting
+    query = applyPaginationToQuery(query, paginationParams);
 
     const { data: customers, error, count } = await query;
 
     if (error) throw error;
 
-    const totalPages = Math.ceil((count || 0) / limit);
+    // Create paginated response
+    const response = createPaginatedResponse(
+      customers || [],
+      count || 0,
+      paginationParams,
+      `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`
+    );
 
-    const response: PaginatedResponse<any> = {
+    res.json({
       success: true,
-      data: customers || [],
+      ...response,
       message: 'Customers retrieved successfully',
-      timestamp: new Date().toISOString(),
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages
-      }
-    };
-
-    res.json(response);
+      timestamp: new Date().toISOString()
+    });
   } catch (error: any) {
     logger.error('Error getting customers:', error);
     throw createError('Erro ao obter clientes', 500);

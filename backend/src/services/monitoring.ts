@@ -10,14 +10,14 @@ export class MonitoringService {
   private supabaseService: SupabaseService;
 
   // Custom metrics
-  private httpRequestDuration: client.Histogram<string>;
-  private httpRequestTotal: client.Counter<string>;
-  private activeConnections: client.Gauge<string>;
-  private databaseConnections: client.Gauge<string>;
-  private memoryUsage: client.Gauge<string>;
-  private cpuUsage: client.Gauge<string>;
-  private errorRate: client.Counter<string>;
-  private responseTime: client.Histogram<string>;
+  private httpRequestDuration!: client.Histogram<string>;
+  private httpRequestTotal!: client.Counter<string>;
+  private activeConnections!: client.Gauge<string>;
+  private databaseConnections!: client.Gauge<string>;
+  private memoryUsage!: client.Gauge<string>;
+  private cpuUsage!: client.Gauge<string>;
+  private errorRate!: client.Counter<string>;
+  private responseTime!: client.Histogram<string>;
 
   constructor() {
     this.register = new client.Registry();
