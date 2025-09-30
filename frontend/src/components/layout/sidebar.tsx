@@ -68,6 +68,13 @@ const menuItems = [
     color: "from-green-500 to-emerald-600",
   },
   {
+    id: "instances",
+    label: "Instâncias",
+    icon: Smartphone,
+    href: "/instances",
+    color: "from-emerald-500 to-green-600",
+  },
+  {
     id: "ai-config",
     label: "Inteligência Artificial",
     icon: Bot,
