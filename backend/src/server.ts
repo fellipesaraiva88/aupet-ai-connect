@@ -182,8 +182,7 @@ class AuzapServer {
     this.app.use('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
     // Protected routes (auth + tenant isolation required)
-    // TEMPORARY: Removed auth for testing - TODO: Add back in production
-    this.app.use('/api/evolution', evolutionRoutes);
+    this.app.use('/api/evolution', authMiddleware, tenantIsolationMiddleware, evolutionRoutes);
     this.app.use('/api/whatsapp', authMiddleware, tenantIsolationMiddleware, whatsappSimpleRoutes);
     this.app.use('/api/whatsapp-legacy', authMiddleware, tenantIsolationMiddleware, whatsappRoutes);
     this.app.use('/api/ai', authMiddleware, tenantIsolationMiddleware, aiRoutes);
