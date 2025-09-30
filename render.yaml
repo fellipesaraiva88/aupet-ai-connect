@@ -41,10 +41,10 @@ services:
       targetCPUPercent: 70
       targetMemoryPercent: 80
 
-  # Frontend Static Site
+  # Frontend Web Service (serves SPA with proper routing)
   - type: web
     name: auzap-frontend
-    runtime: static
+    runtime: node
     plan: starter
     region: oregon
     buildCommand: |
@@ -53,7 +53,7 @@ services:
       npm ci &&
       VITE_API_URL=https://auzap-backend-api.onrender.com/api npm run build &&
       echo '{"version":"'$(date +%s)'","timestamp":"'$(date)'"}' > dist/version.json
-    staticPublishPath: frontend/dist
+    startCommand: cd frontend && node serve.js
     envVars:
       - key: VITE_API_URL
         value: https://auzap-backend-api.onrender.com/api
