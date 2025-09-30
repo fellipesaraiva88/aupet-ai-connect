@@ -14,6 +14,7 @@ import {
   Bot,
   QrCode,
   MessageSquare,
+  Smartphone,
 } from "lucide-react";
 
 interface SidebarProps {
