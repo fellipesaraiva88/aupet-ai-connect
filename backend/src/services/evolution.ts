@@ -95,7 +95,7 @@ export class EvolutionAPIService {
         integration: 'WHATSAPP-BAILEYS'
       };
 
-      logger.evolution('CREATE_INSTANCE', instanceName, { businessId });
+      logger.evolution('CREATE_INSTANCE', instanceName, { instanceName });
       return instanceData;
     } catch (error: any) {
       logger.error('Error creating Evolution instance:', error);
