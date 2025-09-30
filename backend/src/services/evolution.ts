@@ -75,7 +75,6 @@ export class EvolutionAPIService {
       const response = await this.api.post('/instance/create', {
         instanceName,
         integration: 'WHATSAPP-BAILEYS',
-        number: '', // Will be set when connecting
         qrcode: true,
         websocket: {
           events: [
