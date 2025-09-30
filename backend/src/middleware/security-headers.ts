@@ -81,6 +81,7 @@ export const corsConfig = {
       'http://localhost:3000',
       'http://localhost:5173',
       // Production Render URLs - Frontend
+      'https://auzap-frontend-web.onrender.com',
       'https://auzap-frontend-final.onrender.com',
       'https://auzap-frontend-v3.onrender.com',
       'https://auzap-frontend-v2.onrender.com',
