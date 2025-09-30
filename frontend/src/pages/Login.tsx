@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, Lock, Eye, EyeOff, Heart, Sparkles, ArrowRight } from 'lucide-react';
 
 const Login: React.FC = () => {
@@ -70,13 +71,24 @@ const Login: React.FC = () => {
       }
 
       if (data?.user) {
+        // Fetch user profile to check role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+
         toast({
           title: 'Bem-vindo de volta! 🎉💝',
           description: 'Que alegria ter você aqui! Vamos espalhar muito amor pelos pets.',
         });
 
-        // Redirect to dashboard
-        navigate('/', { replace: true });
+        // Redirect based on role
+        if (profile?.role === 'super_admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -139,11 +151,24 @@ const Login: React.FC = () => {
       }
 
       if (data?.user) {
+        // Fetch user profile to check role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+
         toast({
           title: 'Bem-vindo de volta! 🎉💝',
           description: 'Que alegria ter você aqui! Vamos espalhar muito amor pelos pets.',
         });
-        navigate('/', { replace: true });
+
+        // Redirect based on role
+        if (profile?.role === 'super_admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       }
     } catch (error) {
       console.error('Quick login error:', error);
