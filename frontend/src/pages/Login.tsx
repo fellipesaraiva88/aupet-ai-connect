@@ -70,11 +70,17 @@ const Login: React.FC = () => {
 
       if (data?.user) {
         // Fetch user profile to check role
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('user_id', data.user.id)
           .single();
+
+        // Debug logs
+        console.log('🔐 User ID:', data.user.id);
+        console.log('👤 Profile data:', profile);
+        console.log('❌ Profile error:', profileError);
+        console.log('🎯 Role detected:', profile?.role);
 
         toast({
           title: 'Login realizado com sucesso',
@@ -82,11 +88,9 @@ const Login: React.FC = () => {
         });
 
         // Redirect based on role
-        if (profile?.role === 'super_admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
+        const redirectPath = profile?.role === 'super_admin' ? '/admin' : '/';
+        console.log('🚀 Redirecting to:', redirectPath);
+        navigate(redirectPath, { replace: true });
       }
     } catch (error) {
       console.error('Login error:', error);
