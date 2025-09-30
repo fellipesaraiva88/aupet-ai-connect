@@ -185,13 +185,14 @@ router.post('/disconnect', asyncHandler(async (req: Request, res: Response) => {
  */
 router.get('/info', asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user?.id;
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   if (!userId) {
     throw createError('Usuário não autenticado', 401);
   }
 
   try {
-    const instance = await getWhatsAppManager().findUserInstance(userId);
+    const instance = await getWhatsAppManager().findUserInstance(userId, organizationId);
     const status = await getWhatsAppManager().getUserWhatsAppStatus(userId);
 
     const info = {

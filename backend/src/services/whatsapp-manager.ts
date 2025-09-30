@@ -36,7 +36,7 @@ export class WhatsAppManager {
   async ensureUserInstance(userId: string, organizationId: string): Promise<WhatsAppInstance> {
     try {
       // Primeiro verifica se já existe uma instância para o usuário
-      const existing = await this.findUserInstance(userId);
+      const existing = await this.findUserInstance(userId, organizationId);
       if (existing) {
         logger.info('Instance found for user', { userId, instanceName: existing.name });
 
@@ -59,7 +59,7 @@ export class WhatsAppManager {
   /**
    * Busca instância existente do usuário
    */
-  async findUserInstance(userId: string): Promise<WhatsAppInstance | null> {
+  async findUserInstance(userId: string, organizationId?: string): Promise<WhatsAppInstance | null> {
     try {
       // Busca primeiro por user_id no banco
       let localInstance = await this.supabaseService.getInstanceByUserId(userId);
@@ -97,7 +97,7 @@ export class WhatsAppManager {
           name: instanceName,
           user_id: userId,
           status: evolutionInstance.status || 'created',
-          organization_id: 'default' // Será atualizado posteriormente
+          organization_id: organizationId || 'default' // Usa organizationId se disponível
         });
 
         return {
