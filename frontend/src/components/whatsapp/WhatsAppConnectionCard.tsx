@@ -17,17 +17,60 @@ export const WhatsAppConnectionCard: React.FC = () => {
   const [qrCode, setQrCode] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [instanceName, setInstanceName] = useState<string>('');
 
   useEffect(() => {
-    // Gerar QR code automaticamente ao montar
-    generateQRCode();
+    // Buscar instância do usuário automaticamente
+    loadUserInstance();
   }, []);
+
+  const loadUserInstance = async () => {
+    setLoading(true);
+    try {
+      // Buscar ou criar instância do usuário
+      const response = await api.get('/evolution/instance/me');
+
+      if (response.data.success) {
+        const { instance, qrCode: qr, connectionState } = response.data.data;
+
+        setInstanceName(instance.instance_name);
+        setConnected(connectionState === 'open');
+
+        if (qr) {
+          setQrCode(qr);
+          toast({
+            title: 'QR Code Gerado! 📱',
+            description: 'Escaneie com seu WhatsApp para conectar',
+          });
+        } else if (connectionState === 'open') {
+          toast({
+            title: 'WhatsApp Conectado! ✅',
+            description: 'Sua instância está pronta para uso!',
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar instância:', error);
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.message || 'Erro ao carregar instância',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const generateQRCode = async () => {
     setLoading(true);
     try {
-      // Usar o endpoint correto da Evolution API v2
-      const response = await api.get('/evolution/instance/auzap/qr');
+      if (!instanceName) {
+        await loadUserInstance();
+        return;
+      }
+
+      // Gerar novo QR code para a instância do usuário
+      const response = await api.get(`/evolution/instance/${instanceName}/qr`);
 
       if (response.data.success) {
         const qr = response.data.data.qrCode;
@@ -39,20 +82,13 @@ export const WhatsAppConnectionCard: React.FC = () => {
             title: 'QR Code Gerado! 📱',
             description: 'Escaneie com seu WhatsApp para conectar',
           });
-        } else {
-          // Já conectado
-          setConnected(true);
-          toast({
-            title: 'WhatsApp Conectado! ✅',
-            description: 'Sua instância está pronta para uso!',
-          });
         }
       }
     } catch (error: any) {
       console.error('Erro ao gerar QR code:', error);
       toast({
         title: 'Erro',
-        description: error.response?.data?.message || 'Erro ao conectar WhatsApp',
+        description: error.response?.data?.message || 'Erro ao gerar QR code',
         variant: 'destructive'
       });
     } finally {

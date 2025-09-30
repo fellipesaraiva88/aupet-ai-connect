@@ -132,6 +132,55 @@ export class SupabaseService {
     }
   }
 
+  async getInstanceByOrganization(organizationId: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_instances')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      return data;
+    } catch (error) {
+      logger.error('Error getting instance by organization:', error);
+      return null;
+    }
+  }
+
+  async getOrCreateUserInstance(userId: string, organizationId: string) {
+    try {
+      // Buscar instância existente
+      let instance = await this.getInstanceByOrganization(organizationId);
+
+      if (!instance) {
+        // Criar nova instância com nome único por usuário
+        const instanceName = `user_${userId.replace(/-/g, '')}`;
+
+        instance = await this.createInstance({
+          name: instanceName,
+          business_id: userId,
+          status: 'created',
+          organization_id: organizationId
+        });
+
+        logger.info('Created new WhatsApp instance for user', {
+          userId,
+          instanceName,
+          organizationId
+        });
+      }
+
+      return instance;
+    } catch (error) {
+      logger.error('Error getting or creating user instance:', error);
+      throw error;
+    }
+  }
+
   // WhatsApp Contacts
   async saveContact(contactData: {
     phone: string;

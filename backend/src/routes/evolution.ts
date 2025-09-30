@@ -126,6 +126,65 @@ router.post('/instance/:instanceName/connect', asyncHandler(async (req: Request,
   }
 }));
 
+// Get or create user's WhatsApp instance
+router.get('/instance/me', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
+
+  if (!userId) throw createError('User ID é obrigatório', 401);
+
+  try {
+    // Buscar ou criar instância do usuário no Supabase
+    const supabaseInstance = await getSupabaseService().getOrCreateUserInstance(userId, organizationId);
+
+    const instanceName = supabaseInstance.instance_name;
+
+    // Verificar se a instância existe na Evolution API
+    const evolutionInstances = await getEvolutionService().fetchInstances();
+    let evolutionInstance = evolutionInstances.find(i => i.instanceName === instanceName);
+
+    // Se não existe na Evolution API, criar
+    if (!evolutionInstance) {
+      logger.info('Creating instance in Evolution API', { instanceName });
+
+      await getEvolutionService().createInstance(userId);
+
+      // Configurar webhook
+      const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/whatsapp`;
+      await getEvolutionService().setWebhook(instanceName, webhookUrl);
+    }
+
+    // Buscar QR code se não estiver conectado
+    let qrCode = '';
+    const connectionState = await getEvolutionService().getConnectionState(instanceName);
+
+    if (connectionState !== 'open') {
+      qrCode = await getEvolutionService().getQRCode(instanceName);
+    }
+
+    const response: ApiResponse<{
+      instance: any;
+      qrCode: string;
+      connectionState: string;
+    }> = {
+      success: true,
+      data: {
+        instance: supabaseInstance,
+        qrCode,
+        connectionState
+      },
+      message: 'Instância do usuário obtida com sucesso',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(response);
+
+  } catch (error: any) {
+    logger.error('Error getting user instance:', error);
+    throw createError(error.message || 'Erro ao obter instância do usuário', 500);
+  }
+}));
+
 // Get QR code for instance
 router.get('/instance/:instanceName/qr', asyncHandler(async (req: Request, res: Response) => {
   const { instanceName } = req.params;
