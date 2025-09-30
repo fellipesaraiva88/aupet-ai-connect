@@ -26,7 +26,8 @@ export const WhatsAppConnectionCard: React.FC = () => {
   const generateQRCode = async () => {
     setLoading(true);
     try {
-      const response = await api.post('/whatsapp/connect');
+      // Usar o endpoint correto da Evolution API v2
+      const response = await api.get('/evolution/instance/auzap/qr');
 
       if (response.data.success) {
         const qr = response.data.data.qrCode;
@@ -43,7 +44,7 @@ export const WhatsAppConnectionCard: React.FC = () => {
           setConnected(true);
           toast({
             title: 'WhatsApp Conectado! ✅',
-            description: response.data.data.message || 'Já está conectado',
+            description: 'Sua instância está pronta para uso!',
           });
         }
       }
