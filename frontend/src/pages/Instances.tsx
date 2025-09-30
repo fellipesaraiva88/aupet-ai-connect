@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Trash2, QrCode, Power, PowerOff, AlertCircle, CheckCircle, Loader } from 'lucide-react';
-import { useSupabase } from '../hooks/useSupabase';
-import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Instance {
   id: string;
@@ -23,7 +23,7 @@ interface Instance {
 }
 
 const Instances: React.FC = () => {
-  const { user } = useSupabase();
+  const { user } = useAuth();
   const [instances, setInstances] = useState<Instance[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -32,15 +32,9 @@ const Instances: React.FC = () => {
   const [selectedInstance, setSelectedInstance] = useState<Instance | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
-  
+
   const [newInstanceName, setNewInstanceName] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
-
-  // Initialize Supabase client
-  const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-  );
 
   // Get auth token for API calls
   const getAuthHeaders = async () => {
