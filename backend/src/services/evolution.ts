@@ -109,7 +109,8 @@ export class EvolutionAPIService {
       const response = await this.api.get(`/instance/connect/${instanceName}`);
 
       logger.evolution('CONNECT_INSTANCE', instanceName);
-      return response.data.qrcode || response.data.code || '';
+      // Evolution API v2 retorna o QR code em base64
+      return response.data.base64 || response.data.qrcode || response.data.code || '';
     } catch (error: any) {
       logger.error('Error connecting Evolution instance:', error);
       throw new Error(`Falha ao conectar instância: ${error.response?.data?.message || error.message}`);
@@ -118,9 +119,10 @@ export class EvolutionAPIService {
 
   async getQRCode(instanceName: string): Promise<string> {
     try {
-      const response = await this.api.get(`/instance/fetchQrCode/${instanceName}`);
+      // Usar o endpoint correto da v2: /instance/connect/{instance}
+      const response = await this.api.get(`/instance/connect/${instanceName}`);
 
-      const qrCode = response.data.base64 || response.data.code || '';
+      const qrCode = response.data.base64 || response.data.qrcode || response.data.code || '';
 
       if (qrCode) {
         logger.evolution('QR_CODE_FETCHED', instanceName);
