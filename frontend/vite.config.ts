@@ -67,12 +67,14 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  publicDir: "public",
   build: {
     outDir: "dist",
     sourcemap: mode === "development",
     minify: mode === "production" ? "esbuild" : false,
     target: "esnext",
     cssCodeSplit: true,
+    copyPublicDir: true,
     rollupOptions: {
       output: {
         manualChunks: {
