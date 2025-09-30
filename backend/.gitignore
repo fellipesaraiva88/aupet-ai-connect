@@ -111,3 +111,6 @@ Thumbs.db
 # WhatsApp session files (if any)
 sessions/
 *.session
+# Baileys Auth Sessions
+auth_sessions/
+*.session

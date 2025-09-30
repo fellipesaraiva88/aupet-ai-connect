@@ -86,8 +86,8 @@ export function extractPaginationParams(
     // Parse and validate base pagination params
     const validated = paginationSchema.parse(req.query);
 
-    const page = parseInt(validated.page);
-    const limit = parseInt(validated.limit);
+    const page = parseInt(String(validated.page));
+    const limit = parseInt(String(validated.limit));
     const offset = (page - 1) * limit;
 
     // Extract filters (all query params except pagination ones)
@@ -346,7 +346,7 @@ export function applyPaginationToQuery(
  * Middleware to attach pagination params to request
  */
 export function paginationMiddleware(config?: Partial<PaginationConfig>) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: any, next: any) => {
     (req as any).pagination = extractPaginationParams(req, config);
     next();
   };

@@ -1,4 +1,4 @@
-import { EvolutionAPIService } from './evolution';
+import { BaileysService } from './baileys';
 import { SupabaseService } from './supabase';
 import { WebSocketService } from './websocket';
 import { logger } from '../utils/logger';
@@ -22,11 +22,11 @@ export interface WhatsAppInstance {
 }
 
 export class WhatsAppManager {
-  private evolutionService: EvolutionAPIService;
+  private baileysService: BaileysService;
   private supabaseService: SupabaseService;
 
   constructor() {
-    this.evolutionService = new EvolutionAPIService();
+    this.baileysService = new BaileysService();
     this.supabaseService = new SupabaseService();
   }
 
@@ -82,35 +82,8 @@ export class WhatsAppManager {
         };
       }
 
-      // Se não encontrou no banco, verifica na Evolution API
-      const instanceName = this.generateInstanceName(userId);
-      const evolutionInstances = await this.evolutionService.fetchInstances();
-      const evolutionInstance = evolutionInstances.find(inst =>
-        inst.instanceName === instanceName ||
-        inst.instanceName?.includes(userId) ||
-        inst.instanceName?.startsWith(`auzap_${userId}`)
-      );
-
-      if (evolutionInstance) {
-        // Salva no banco local para próximas consultas
-        const savedInstance = await this.supabaseService.createInstance({
-          name: instanceName,
-          user_id: userId,
-          status: evolutionInstance.status || 'created',
-          organization_id: organizationId || 'default' // Usa organizationId se disponível
-        });
-
-        return {
-          id: savedInstance.id,
-          name: instanceName,
-          userId: userId,
-          status: evolutionInstance.status || 'created',
-          phoneNumber: evolutionInstance.instanceName,
-          created_at: savedInstance.created_at,
-          updated_at: savedInstance.updated_at
-        };
-      }
-
+      // Com Baileys, não há API externa para verificar
+      // Retorna null se não encontrar no banco
       return null;
     } catch (error) {
       logger.error('Error finding user instance:', error);
@@ -127,18 +100,16 @@ export class WhatsAppManager {
 
       logger.info('Creating new instance for user', { userId, instanceName });
 
-      // Cria instância na Evolution API
-      const evolutionInstance = await this.evolutionService.createInstance(instanceName);
+      // Cria instância via Baileys
+      await this.baileysService.createInstance(userId);
 
-      // Configura webhook específico para o usuário
-      const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/user/${userId}`;
-      await this.evolutionService.setWebhook(instanceName, webhookUrl);
+      // Webhooks não são necessários - Baileys usa EventEmitter interno
 
       // Salva no banco local com user_id
       const savedInstance = await this.supabaseService.createInstance({
         name: instanceName,
         user_id: userId,
-        status: evolutionInstance.status,
+        status: 'created',
         organization_id: organizationId
       });
 
@@ -152,7 +123,7 @@ export class WhatsAppManager {
         id: savedInstance.id,
         name: instanceName,
         userId: userId,
-        status: evolutionInstance.status,
+        status: 'created',
         created_at: savedInstance.created_at,
         updated_at: savedInstance.updated_at
       };
@@ -177,21 +148,16 @@ export class WhatsAppManager {
         };
       }
 
-      // Verifica status atual na Evolution API
-      const connectionState = await this.evolutionService.getConnectionState(instance.name);
+      // Verifica status atual via Baileys
+      const connectionState = this.baileysService.getConnectionState(userId);
       const simplifiedStatus = this.simplifyStatus(connectionState);
 
       // Busca número do telefone se conectado
       let phoneNumber = instance.phoneNumber;
       if (simplifiedStatus === 'connected' && !phoneNumber) {
         try {
-          const evolutionInstances = await this.evolutionService.fetchInstances();
-          const currentInstance = evolutionInstances.find(inst =>
-            inst.instanceName === instance.name
-          );
-          if (currentInstance && currentInstance.instanceName) {
-            phoneNumber = this.extractPhoneNumber(currentInstance.instanceName);
-          }
+          const instanceInfo = await this.baileysService.getInstanceInfo(userId);
+          phoneNumber = instanceInfo.phoneNumber;
         } catch (error) {
           logger.warn('Could not fetch phone number:', error);
         }
@@ -224,8 +190,11 @@ export class WhatsAppManager {
 
       logger.info('Starting WhatsApp connection', { userId, instanceName: instance.name });
 
-      // Inicia conexão e obtém QR Code
-      const qrCode = await this.evolutionService.connectInstance(instance.name);
+      // Cria instância Baileys (que gerará QR automaticamente)
+      await this.baileysService.createInstance(userId);
+
+      // Aguarda QR Code
+      const qrCode = await this.baileysService.getQRCode(userId);
 
       // Atualiza status no banco
       await this.supabaseService.updateInstanceStatus(instance.name, 'connecting');
@@ -257,7 +226,7 @@ export class WhatsAppManager {
         return { available: false };
       }
 
-      const qrCode = await this.evolutionService.getQRCode(instance.name);
+      const qrCode = await this.baileysService.getQRCode(userId);
 
       return {
         qrCode: qrCode || undefined,
@@ -283,23 +252,16 @@ export class WhatsAppManager {
         };
       }
 
-      // Faz logout na Evolution API (mas mantém a instância)
-      const success = await this.evolutionService.deleteInstance(instance.name);
+      // Desconecta via Baileys (logout)
+      await this.baileysService.disconnectInstance(userId);
 
-      if (success) {
-        // Atualiza status no banco
-        await this.supabaseService.updateInstanceStatus(instance.name, 'disconnected');
+      // Atualiza status no banco
+      await this.supabaseService.updateInstanceStatus(instance.name, 'disconnected');
 
-        return {
-          success: true,
-          message: 'WhatsApp desconectado com sucesso'
-        };
-      } else {
-        return {
-          success: false,
-          message: 'Falha ao desconectar WhatsApp'
-        };
-      }
+      return {
+        success: true,
+        message: 'WhatsApp desconectado com sucesso'
+      };
     } catch (error) {
       logger.error('Error disconnecting user WhatsApp:', error);
       return {
@@ -361,31 +323,40 @@ export class WhatsAppManager {
     let errors = 0;
 
     try {
-      // Buscar todas as instâncias da Evolution
-      const instances = await this.evolutionService.fetchInstances();
+      // Com Baileys, não há API externa - busca instâncias do banco local
+      const { data: instances, error } = await this.supabaseService['supabase']
+        .from('whatsapp_instances')
+        .select('*');
+
+      if (error || !instances) {
+        logger.error('Error fetching instances for migration:', error);
+        return { migrated: 0, errors: 1 };
+      }
 
       for (const instance of instances) {
         try {
           // Verifica se é instância no formato antigo
-          if (instance.instanceName?.startsWith('auzap_')) {
-            const businessId = instance.instanceName.replace('auzap_', '');
+          if (instance.instance_name?.startsWith('auzap_')) {
+            const businessId = instance.instance_name.replace('auzap_', '');
 
             // Buscar usuário correspondente (implementar lógica específica)
             // Por enquanto, assumindo que businessId corresponde ao userId
             const userId = businessId;
             const newInstanceName = this.generateInstanceName(userId);
 
-            // Salvar no banco com novo formato
-            await this.supabaseService.createInstance({
-              name: newInstanceName,
-              user_id: userId,
-              status: instance.status || 'created',
-              organization_id: 'migrated'
-            });
+            // Atualizar no banco com novo formato
+            await this.supabaseService['supabase']
+              .from('whatsapp_instances')
+              .update({
+                instance_name: newInstanceName,
+                user_id: userId,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', instance.id);
 
             migrated++;
             logger.info('Instance migrated', {
-              oldName: instance.instanceName,
+              oldName: instance.instance_name,
               newName: newInstanceName
             });
           }

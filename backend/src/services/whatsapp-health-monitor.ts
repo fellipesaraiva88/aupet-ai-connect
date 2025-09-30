@@ -1,6 +1,6 @@
 import { logger } from '../utils/logger';
 import { SupabaseService } from './supabase';
-import { EvolutionAPIService } from './evolution';
+import { BaileysService } from './baileys';
 import { WebSocketService } from './websocket';
 import { WhatsAppManager } from './whatsapp-manager';
 
@@ -23,7 +23,7 @@ interface MonitorConfig {
 
 export class WhatsAppHealthMonitor {
   private supabaseService: SupabaseService;
-  private evolutionService: EvolutionAPIService;
+  private baileysService: BaileysService;
   private whatsAppManager: WhatsAppManager;
   private wsService: WebSocketService | null = null;
 
@@ -40,7 +40,7 @@ export class WhatsAppHealthMonitor {
 
   constructor() {
     this.supabaseService = new SupabaseService();
-    this.evolutionService = new EvolutionAPIService();
+    this.baileysService = new BaileysService();
     this.whatsAppManager = new WhatsAppManager();
   }
 
@@ -154,8 +154,8 @@ export class WhatsAppHealthMonitor {
     const userId = instance.user_id;
 
     try {
-      // Buscar status da Evolution API
-      const evolutionStatus = await this.evolutionService.getConnectionState(instanceName);
+      // Buscar status via Baileys (requer userId)
+      const baileysStatus = userId ? this.baileysService.getConnectionState(userId) : 'disconnected';
 
       // Obter ou criar registro de saúde
       let healthRecord = this.healthStatus.get(instanceName);
@@ -178,25 +178,25 @@ export class WhatsAppHealthMonitor {
       healthRecord.issues = [];
 
       // Analisar status
-      if (!evolutionStatus) {
+      if (!userId) {
         healthRecord.status = 'error';
         healthRecord.consecutiveFailures++;
-        healthRecord.issues.push('Instance not found in Evolution API');
+        healthRecord.issues.push('Instance has no user_id associated');
       } else {
-        const connectionState = evolutionStatus;
+        const connectionState = baileysStatus;
 
-        if (connectionState === 'open' || connectionState === 'connected') {
+        if (connectionState === 'connected') {
           healthRecord.status = 'healthy';
           healthRecord.consecutiveFailures = 0;
           healthRecord.uptime++;
-        } else if (connectionState === 'close' || connectionState === 'disconnected') {
+        } else if (connectionState === 'disconnected') {
           healthRecord.status = 'disconnected';
           healthRecord.consecutiveFailures++;
           healthRecord.issues.push('Instance is disconnected');
-        } else {
+        } else if (connectionState === 'connecting') {
           healthRecord.status = 'unhealthy';
           healthRecord.consecutiveFailures++;
-          healthRecord.issues.push(`Unknown status: ${connectionState}`);
+          healthRecord.issues.push('Instance is still connecting');
         }
 
         // Atualizar status no banco

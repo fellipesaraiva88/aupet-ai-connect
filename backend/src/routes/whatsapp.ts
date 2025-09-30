@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
-import { EvolutionAPIService } from '../services/evolution';
+import { BaileysService } from '../services/baileys';
 import { WebhookProcessor } from '../services/webhookProcessor';
 import { WebSocketService } from '../services/websocket';
 import { logger } from '../utils/logger';
@@ -12,7 +12,7 @@ const router = Router();
 
 // Lazy initialize services
 let supabaseService: SupabaseService;
-let evolutionService: EvolutionAPIService;
+let baileysService: BaileysService;
 let webhookProcessor: WebhookProcessor;
 
 const getSupabaseService = () => {
@@ -22,11 +22,11 @@ const getSupabaseService = () => {
   return supabaseService;
 };
 
-const getEvolutionService = () => {
-  if (!evolutionService) {
-    evolutionService = new EvolutionAPIService();
+const getBaileysService = () => {
+  if (!baileysService) {
+    baileysService = new BaileysService();
   }
-  return evolutionService;
+  return baileysService;
 };
 
 const getWebhookProcessor = () => {
@@ -178,23 +178,24 @@ router.post('/instance/:instanceName/sync/contacts', asyncHandler(async (req: Re
   const { instanceName } = req.params;
 
   try {
-    const evolution = getEvolutionService();
+    const baileys = getBaileysService();
     const supabase = getSupabaseService();
 
     // Buscar instância
     const { data: instance } = await supabase.supabase
       .from('whatsapp_instances')
-      .select('id')
+      .select('id, user_id')
       .eq('instance_name', instanceName)
       .eq('organization_id', organizationId)
       .single();
 
-    if (!instance) {
-      throw createError('Instância não encontrada', 404);
+    if (!instance || !instance.user_id) {
+      throw createError('Instância não encontrada ou sem user_id', 404);
     }
 
-    // Obter contatos da Evolution API
-    const contacts = await evolution.fetchContacts(instanceName);
+    // Obter contatos via Baileys
+    const contactsData = baileys.getContacts(instance.user_id);
+    const contacts = Array.from(contactsData.values());
 
     let syncedCount = 0;
     let errorCount = 0;
@@ -247,23 +248,24 @@ router.post('/instance/:instanceName/sync/chats', asyncHandler(async (req: Reque
   const { instanceName } = req.params;
 
   try {
-    const evolution = getEvolutionService();
+    const baileys = getBaileysService();
     const supabase = getSupabaseService();
 
     // Buscar instância
     const { data: instance } = await supabase.supabase
       .from('whatsapp_instances')
-      .select('id')
+      .select('id, user_id')
       .eq('instance_name', instanceName)
       .eq('organization_id', organizationId)
       .single();
 
-    if (!instance) {
-      throw createError('Instância não encontrada', 404);
+    if (!instance || !instance.user_id) {
+      throw createError('Instância não encontrada ou sem user_id', 404);
     }
 
-    // Obter conversas da Evolution API
-    const chats = await evolution.fetchChats(instanceName);
+    // Obter conversas via Baileys
+    const chatsData = baileys.getChats(instance.user_id);
+    const chats = Array.from(chatsData.values());
 
     let syncedCount = 0;
 

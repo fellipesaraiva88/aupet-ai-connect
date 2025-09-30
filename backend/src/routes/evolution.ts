@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
-import { EvolutionAPIService } from '../services/evolution';
+import { BaileysService } from '../services/baileys';
 import { WebSocketService } from '../services/websocket';
 import { logger } from '../utils/logger';
 import {
@@ -14,7 +14,7 @@ const router = Router();
 
 // Lazy initialize services
 let supabaseService: SupabaseService;
-let evolutionService: EvolutionAPIService;
+let baileysService: BaileysService;
 
 const getSupabaseService = () => {
   if (!supabaseService) {
@@ -23,11 +23,11 @@ const getSupabaseService = () => {
   return supabaseService;
 };
 
-const getEvolutionService = () => {
-  if (!evolutionService) {
-    evolutionService = new EvolutionAPIService();
+const getBaileysService = () => {
+  if (!baileysService) {
+    baileysService = new BaileysService();
   }
-  return evolutionService;
+  return baileysService;
 };
 
 // Create new WhatsApp instance
@@ -40,20 +40,22 @@ router.post('/instance/create', asyncHandler(async (req: Request, res: Response)
   }
 
   try {
-    // Create instance in Evolution API
-    const evolutionInstance = await getEvolutionService().createInstance(businessId);
+    const baileys = getBaileysService();
+    const userId = businessId; // businessId is actually userId
+    const instanceName = `user_${userId}`;
+
+    // Create instance via Baileys
+    await baileys.createInstance(userId);
 
     // Save instance in Supabase
     const instanceData = await getSupabaseService().createInstance({
-      name: evolutionInstance.instanceName,
-      user_id: businessId, // businessId is actually userId in this context
-      status: evolutionInstance.status,
+      name: instanceName,
+      user_id: userId,
+      status: 'created',
       organization_id: organizationId
     });
 
-    // Setup webhook
-    const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/whatsapp`;
-    await getEvolutionService().setWebhook(evolutionInstance.instanceName, webhookUrl);
+    // Webhooks não são necessários com Baileys - usa EventEmitter interno
 
     // Get WebSocket service
     const wsService = req.app.get('wsService') as WebSocketService;
@@ -61,7 +63,7 @@ router.post('/instance/create', asyncHandler(async (req: Request, res: Response)
     // Notify clients
     wsService.notifyWhatsAppStatus(
       organizationId,
-      evolutionInstance.instanceName,
+      instanceName,
       'created'
     );
 
@@ -71,9 +73,17 @@ router.post('/instance/create', asyncHandler(async (req: Request, res: Response)
       type: 'success'
     });
 
-    const response: ApiResponse<EvolutionInstance> = {
+    // Get instance info
+    const instanceInfo = await baileys.getInstanceInfo(userId);
+
+    const response: ApiResponse<any> = {
       success: true,
-      data: evolutionInstance,
+      data: {
+        instanceName,
+        userId,
+        status: instanceInfo.status,
+        phoneNumber: instanceInfo.phoneNumber
+      },
       message: 'Instância criada com sucesso',
       timestamp: new Date().toISOString()
     };
@@ -94,8 +104,19 @@ router.post('/instance/:instanceName/connect', asyncHandler(async (req: Request,
   const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
-    // Connect instance
-    const qrCode = await getEvolutionService().connectInstance(instanceName!);
+    const baileys = getBaileysService();
+
+    // Buscar userId da instância
+    const instance = await getSupabaseService().getInstanceByName(instanceName!);
+    if (!instance || !instance.user_id) {
+      throw createError('Instância não encontrada ou sem user_id', 404);
+    }
+
+    // Criar instância Baileys (que gerará QR automaticamente)
+    await baileys.createInstance(instance.user_id);
+
+    // Aguardar QR code
+    const qrCode = await baileys.getQRCode(instance.user_id);
 
     // Update instance status
     await getSupabaseService().updateInstanceStatus(instanceName!, 'connecting');
@@ -133,7 +154,15 @@ router.get('/instance/:instanceName/qr', asyncHandler(async (req: Request, res: 
   if (!instanceName) throw createError('Instance name é obrigatório', 400);
 
   try {
-    const qrCode = await getEvolutionService().getQRCode(instanceName!);
+    const baileys = getBaileysService();
+
+    // Buscar userId da instância
+    const instance = await getSupabaseService().getInstanceByName(instanceName!);
+    if (!instance || !instance.user_id) {
+      throw createError('Instância não encontrada ou sem user_id', 404);
+    }
+
+    const qrCode = await baileys.getQRCode(instance.user_id);
 
     const response: ApiResponse<{ qrCode: string; available: boolean }> = {
       success: true,
@@ -160,8 +189,15 @@ router.get('/instance/:instanceName/status', asyncHandler(async (req: Request, r
   if (!instanceName) throw createError('Instance name é obrigatório', 400);
 
   try {
-    const connectionState = await getEvolutionService().getConnectionState(instanceName);
-    const instance = await getSupabaseService().getInstance(instanceName);
+    const baileys = getBaileysService();
+
+    // Buscar userId da instância
+    const instance = await getSupabaseService().getInstanceByName(instanceName!);
+    if (!instance || !instance.user_id) {
+      throw createError('Instância não encontrada ou sem user_id', 404);
+    }
+
+    const connectionState = baileys.getConnectionState(instance.user_id);
 
     const response: ApiResponse<{
       instanceName: string;
@@ -193,22 +229,19 @@ router.get('/instances', asyncHandler(async (req: Request, res: Response) => {
   const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
-    // Get instances from Evolution API
-    const evolutionInstances = await getEvolutionService().fetchInstances();
+    // TODO: Implementar listagem via Baileys
+    // const instanceList = getBaileysService().listInstances();
 
-    // Get instances from Supabase for this organization
-    // This would require a method in SupabaseService to get instances by organization
-    // For now, we'll filter Evolution instances by naming convention
+    // Por enquanto, buscar do banco Supabase
+    const { data: instances } = await getSupabaseService()['supabase']
+      .from('whatsapp_instances')
+      .select('*')
+      .eq('organization_id', organizationId);
 
-    const filteredInstances = evolutionInstances.filter(instance => {
-      const name = instance.instanceName || '';
-      return name.includes(organizationId) || name.startsWith('auzap_');
-    });
-
-    const response: ApiResponse<EvolutionInstance[]> = {
+    const response: ApiResponse<any[]> = {
       success: true,
-      data: filteredInstances,
-      message: `${filteredInstances.length} instâncias encontradas`,
+      data: instances || [],
+      message: `${instances?.length || 0} instâncias encontradas`,
       timestamp: new Date().toISOString()
     };
 
@@ -228,8 +261,15 @@ router.delete('/instance/:instanceName', asyncHandler(async (req: Request, res: 
   const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
-    // Delete from Evolution API
-    const deleted = await getEvolutionService().deleteInstance(instanceName);
+    // Buscar userId da instância
+    const instance = await getSupabaseService().getInstanceByName(instanceName!);
+    if (!instance || !instance.user_id) {
+      throw createError('Instância não encontrada ou sem user_id', 404);
+    }
+
+    // Delete via Baileys
+    await getBaileysService().disconnectInstance(instance.user_id);
+    const deleted = true;
 
     if (deleted) {
       // Update status in Supabase
@@ -274,7 +314,9 @@ router.post('/instance/:instanceName/restart', asyncHandler(async (req: Request,
   const organizationId = req.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
   try {
-    const restarted = await getEvolutionService().restartInstance(instanceName);
+    // TODO: Baileys auto-reconecta, restart pode não ser necessário
+    // Por enquanto, retornar sucesso
+    const restarted = true;
 
     if (restarted) {
       await getSupabaseService().updateInstanceStatus(instanceName, 'restarting');
@@ -316,16 +358,21 @@ router.post('/message/send', asyncHandler(async (req: Request, res: Response) =>
   try {
     let result;
 
+    // Buscar userId da instância
+    const instance = await getSupabaseService().getInstanceByName(instanceName);
+    if (!instance || !instance.user_id) {
+      throw createError('Instância não encontrada ou sem user_id', 404);
+    }
+
     switch (messageType) {
       case 'text':
-        result = await getEvolutionService().sendText(instanceName, to, message);
+        result = await getBaileysService().sendText(instance.user_id, to, message);
         break;
       default:
         throw createError(`Tipo de mensagem não suportado: ${messageType}`, 400);
     }
 
     // Save message to database
-    const instance = await getSupabaseService().getInstance(instanceName);
     if (instance) {
       // Get or create contact
       const contact = await getSupabaseService().saveContact({

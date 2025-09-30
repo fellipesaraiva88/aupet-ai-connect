@@ -99,7 +99,7 @@ export function cache(config: RouteCacheConfig | string = {}): (req: Request, re
 
     try {
       // Try to get from cache
-      const cached = await cacheService.get(cacheKey);
+      const cached = await cacheService.get('org-cache', cacheKey);
 
       if (cached) {
         // Add cache headers
@@ -109,7 +109,8 @@ export function cache(config: RouteCacheConfig | string = {}): (req: Request, re
         logger.debug(`Cache HIT: ${cacheKey}`);
 
         // Send cached response
-        return res.json(cached);
+        res.json(cached);
+        return;
       }
 
       // Cache MISS - continue with request
@@ -122,7 +123,7 @@ export function cache(config: RouteCacheConfig | string = {}): (req: Request, re
       // Override json method to cache the response
       res.json = function(data: any) {
         // Cache the response
-        cacheService.set(cacheKey, data, {
+        cacheService.set('org-cache', cacheKey, data, {
           ttl: cacheConfig.ttl,
           tags: cacheConfig.tags
         }).catch(error => {

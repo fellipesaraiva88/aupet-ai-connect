@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { WhatsAppManager } from '../services/whatsapp-manager';
 import { WebSocketService } from '../services/websocket';
+import { orgCache } from '../middleware/cache';
 import { logger } from '../utils/logger';
 import { ApiResponse } from '../types';
 
@@ -19,9 +20,9 @@ const getWhatsAppManager = () => {
 
 /**
  * GET /api/whatsapp/status
- * Retorna status atual do WhatsApp do usuário
+ * Retorna status atual do WhatsApp do usuário (cached for 30 seconds)
  */
-router.get('/status', asyncHandler(async (req: Request, res: Response) => {
+router.get('/status', orgCache(30), asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user?.id;
 
   if (!userId) {

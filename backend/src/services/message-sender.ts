@@ -1,4 +1,4 @@
-import { EvolutionAPIService } from './evolution';
+import { BaileysService } from './baileys';
 import { logger } from '../utils/logger';
 
 export interface MessageToSend {
@@ -9,10 +9,10 @@ export interface MessageToSend {
 }
 
 export class MessageSender {
-  private evolutionService: EvolutionAPIService;
+  private baileysService: BaileysService;
 
   constructor() {
-    this.evolutionService = new EvolutionAPIService();
+    this.baileysService = new BaileysService();
   }
 
   /**
@@ -30,8 +30,8 @@ export class MessageSender {
         messageLength: message.length
       });
 
-      // Envia via Evolution API (sendText já formata o número internamente)
-      const response = await this.evolutionService.sendText(
+      // Envia via Baileys (sendText já formata o número internamente)
+      const response = await this.baileysService.sendText(
         instanceName,
         phoneNumber,
         message
@@ -74,13 +74,13 @@ export class MessageSender {
   ): Promise<{ success: boolean; messageId?: string }> {
     try {
       // Envia presença de digitando
-      await this.evolutionService.setPresence(instanceName, phoneNumber, 'composing');
+      await this.baileysService.sendPresence(instanceName, phoneNumber, 'composing');
 
       // Aguarda um tempo simulando digitação
       await this.sleep(typingDuration);
 
       // Volta presença para disponível
-      await this.evolutionService.setPresence(instanceName, phoneNumber, 'available');
+      await this.baileysService.sendPresence(instanceName, phoneNumber, 'available');
 
       // Envia a mensagem
       return await this.sendTextMessage(instanceName, phoneNumber, message);

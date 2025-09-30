@@ -28,6 +28,7 @@ import catalogRoutes from './routes/catalog';
 import reportsRoutes from './routes/reports';
 import monitoringRoutes from './routes/monitoring';
 import adminRoutes from './routes/admin'; // Admin area routes
+import cacheRoutes from './routes/cache'; // Cache management routes
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -74,10 +75,25 @@ class AuzapServer {
     this.supabaseService = new SupabaseService();
     this.monitoringService = new MonitoringService();
 
+    this.initializeCache();
     this.setupMiddleware();
     this.setupRoutes();
     this.setupWebSocket();
     this.setupErrorHandling();
+  }
+
+  private async initializeCache(): Promise<void> {
+    try {
+      const isHealthy = await cacheService.healthCheck();
+      if (isHealthy) {
+        this.app.set('cacheService', cacheService);
+        logger.info('✅ Redis cache service initialized successfully');
+      } else {
+        logger.warn('⚠️ Redis cache service not available - running without cache');
+      }
+    } catch (error) {
+      logger.warn('⚠️ Redis cache initialization failed - running without cache:', error);
+    }
   }
 
   private setupMiddleware(): void {
@@ -213,6 +229,9 @@ class AuzapServer {
     // AI Metrics routes
     const aiMetricsRoutes = require('./routes/ai-metrics').default;
     this.app.use('/api/ai-metrics', authMiddleware, tenantIsolationMiddleware, aiMetricsRoutes);
+
+    // Cache management routes
+    this.app.use('/api/cache', authMiddleware, cacheRoutes);
 
     // Admin routes (super_admin only, includes auth + audit)
     this.app.use('/api/admin', adminRoutes);

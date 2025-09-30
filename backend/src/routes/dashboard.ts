@@ -78,8 +78,8 @@ router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
   }
 }));
 
-// GET /dashboard/analytics/revenue - Revenue analytics
-router.get('/analytics/revenue', asyncHandler(async (req: Request, res: Response) => {
+// GET /dashboard/analytics/revenue - Revenue analytics (cached for 5 minutes)
+router.get('/analytics/revenue', orgCache(300), asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
@@ -104,8 +104,8 @@ router.get('/analytics/revenue', asyncHandler(async (req: Request, res: Response
   }
 }));
 
-// GET /dashboard/analytics/appointments - Appointment analytics
-router.get('/analytics/appointments', asyncHandler(async (req: Request, res: Response) => {
+// GET /dashboard/analytics/appointments - Appointment analytics (cached for 3 minutes)
+router.get('/analytics/appointments', orgCache(180), asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
@@ -130,8 +130,8 @@ router.get('/analytics/appointments', asyncHandler(async (req: Request, res: Res
   }
 }));
 
-// GET /dashboard/analytics/customers - Customer analytics
-router.get('/analytics/customers', asyncHandler(async (req: Request, res: Response) => {
+// GET /dashboard/analytics/customers - Customer analytics (cached for 10 minutes)
+router.get('/analytics/customers', orgCache(600), asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
@@ -152,8 +152,8 @@ router.get('/analytics/customers', asyncHandler(async (req: Request, res: Respon
   }
 }));
 
-// GET /dashboard/analytics/pets - Pet health analytics
-router.get('/analytics/pets', asyncHandler(async (req: Request, res: Response) => {
+// GET /dashboard/analytics/pets - Pet health analytics (cached for 10 minutes)
+router.get('/analytics/pets', orgCache(600), asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '51cff6e5-0bd2-47bd-8840-ec65d5df265a';
 
