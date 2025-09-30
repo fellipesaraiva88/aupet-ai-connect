@@ -180,6 +180,28 @@ export class EvolutionAPIService {
       throw error;
     }
   }
+
+  /**
+   * Set webhook configuration for instance
+   */
+  async setWebhook(instanceName: string, webhookConfig: {
+    enabled: boolean;
+    url: string;
+    webhookByEvents?: boolean;
+    events?: string[];
+  }): Promise<void> {
+    try {
+      await this.client.post(`/webhook/set/${instanceName}`, webhookConfig);
+      logger.info('Webhook configured successfully', { instanceName, url: webhookConfig.url });
+    } catch (error: any) {
+      logger.error('Error setting webhook', {
+        instanceName,
+        error: error.message,
+        response: error.response?.data
+      });
+      throw error;
+    }
+  }
 }
 
 // Singleton instance

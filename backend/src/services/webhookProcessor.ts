@@ -268,37 +268,54 @@ export class WebhookProcessor {
     const connectionData = payload.data as ConnectionEvent;
 
     try {
-      await this.supabaseService.supabase
+      // Determinar o status com base no estado da conexão
+      let status = 'disconnected';
+      let isConnected = false;
+
+      if (connectionData.state === 'open') {
+        status = 'connected';
+        isConnected = true;
+      } else if (connectionData.state === 'connecting') {
+        status = 'connecting';
+      } else if (connectionData.state === 'close') {
+        status = 'disconnected';
+      }
+
+      // Atualizar instância no banco
+      const { data: updatedInstance, error } = await this.supabaseService.supabase
         .from('whatsapp_instances')
         .update({
           connection_status: connectionData.state,
-          is_connected: connectionData.state === 'open',
+          status: status,
+          is_connected: isConnected,
           last_heartbeat: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          // Limpar QR code quando conectado
+          ...(isConnected && { qr_code: null })
         })
-        .eq('instance_name', payload.instance);
+        .eq('instance_name', payload.instance)
+        .select('id, organization_id, instance_name')
+        .single();
+
+      if (error) {
+        logger.error('Error updating instance connection status:', error);
+        return;
+      }
 
       // Notificar via WebSocket
-      if (this.wsService) {
-        // Buscar organização da instância
-        const { data: instance } = await this.supabaseService.supabase
-          .from('whatsapp_instances')
-          .select('organization_id')
-          .eq('instance_name', payload.instance)
-          .single();
-
-        if (instance) {
-          this.wsService.notifyWhatsAppStatus(
-            instance.organization_id,
-            payload.instance,
-            connectionData.state
-          );
-        }
+      if (this.wsService && updatedInstance) {
+        this.wsService.notifyWhatsAppStatus(
+          updatedInstance.organization_id,
+          payload.instance,
+          connectionData.state
+        );
       }
 
       logger.webhook('CONNECTION_UPDATE', payload.instance, {
         state: connectionData.state,
-        connected: connectionData.state === 'open'
+        status: status,
+        connected: isConnected,
+        statusReason: connectionData.statusReason
       });
 
     } catch (error) {
@@ -310,33 +327,39 @@ export class WebhookProcessor {
     const qrData = payload.data as QRCodeEvent;
 
     try {
-      await this.supabaseService.supabase
+      // Atualizar QR code e status da instância
+      const { data: updatedInstance, error } = await this.supabaseService.supabase
         .from('whatsapp_instances')
         .update({
           qr_code: qrData.qrcode.base64,
+          status: 'qr_code', // Status específico quando há QR code disponível
+          connection_status: 'qr_code',
+          is_connected: false,
           updated_at: new Date().toISOString()
         })
-        .eq('instance_name', payload.instance);
+        .eq('instance_name', payload.instance)
+        .select('id, organization_id, instance_name')
+        .single();
 
-      // Notificar via WebSocket
-      if (this.wsService) {
-        const { data: instance } = await this.supabaseService.supabase
-          .from('whatsapp_instances')
-          .select('organization_id')
-          .eq('instance_name', payload.instance)
-          .single();
-
-        if (instance) {
-          this.wsService.notifyWhatsAppStatus(
-            instance.organization_id,
-            payload.instance,
-            'qr_updated',
-            qrData.qrcode.base64
-          );
-        }
+      if (error) {
+        logger.error('Error updating QR code:', error);
+        return;
       }
 
-      logger.webhook('QR_CODE_UPDATE', payload.instance);
+      // Notificar via WebSocket com o QR code
+      if (this.wsService && updatedInstance) {
+        this.wsService.notifyWhatsAppStatus(
+          updatedInstance.organization_id,
+          payload.instance,
+          'qr_updated',
+          qrData.qrcode.base64
+        );
+      }
+
+      logger.webhook('QR_CODE_UPDATE', payload.instance, {
+        hasQRCode: !!qrData.qrcode.base64,
+        qrCodeLength: qrData.qrcode.base64?.length || 0
+      });
     } catch (error) {
       logger.error('Error updating QR code:', error);
     }

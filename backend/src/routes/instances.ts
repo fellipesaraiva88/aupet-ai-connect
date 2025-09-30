@@ -68,7 +68,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     if (validatedData.webhookUrl) {
       try {
         const webhookUrl = `${process.env.WEBHOOK_URL || 'http://localhost:3001'}/api/webhook/evolution`;
-        await evolutionService.client.post(`/webhook/set/${instanceId}`, {
+        await evolutionService.setWebhook(instanceId, {
           enabled: true,
           url: webhookUrl,
           webhookByEvents: true,
