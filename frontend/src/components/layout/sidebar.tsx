@@ -12,7 +12,6 @@ import {
   Settings,
   TrendingUp,
   Bot,
-  MessageSquare,
   QrCode,
 } from "lucide-react";
 
@@ -58,13 +57,6 @@ const menuItems = [
     icon: ShoppingBag,
     href: "/catalog",
     color: "from-cyan-500 to-blue-500",
-  },
-  {
-    id: "whatsapp",
-    label: "WhatsApp",
-    icon: MessageSquare,
-    href: "/whatsapp",
-    color: "from-green-500 to-emerald-600",
   },
   {
     id: "ai-config",
@@ -173,7 +165,7 @@ export function Sidebar({
         <Button
           variant="outline"
           className="w-full justify-start gap-2 h-9 text-sm"
-          onClick={() => handleItemClick({ ...menuItems.find(m => m.id === 'whatsapp')!, id: 'whatsapp' })}
+          onClick={() => navigate('/settings')}
         >
           <QrCode className="h-4 w-4" />
           Conectar WhatsApp
