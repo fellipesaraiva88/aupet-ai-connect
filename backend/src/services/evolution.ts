@@ -338,16 +338,19 @@ export class EvolutionAPIService {
   async setWebhook(instanceName: string, webhookUrl: string): Promise<any> {
     try {
       const response = await this.api.post(`/webhook/set/${instanceName}`, {
-        url: webhookUrl,
-        events: [
-          'APPLICATION_STARTUP',
-          'QRCODE_UPDATED',
-          'CONNECTION_UPDATE',
-          'MESSAGES_UPSERT',
-          'MESSAGES_UPDATE',
-          'SEND_MESSAGE'
-        ],
-        webhook_by_events: false
+        webhook: {
+          enabled: true,
+          url: webhookUrl,
+          webhookByEvents: false,
+          events: [
+            'APPLICATION_STARTUP',
+            'QRCODE_UPDATED',
+            'CONNECTION_UPDATE',
+            'MESSAGES_UPSERT',
+            'MESSAGES_UPDATE',
+            'SEND_MESSAGE'
+          ]
+        }
       });
 
       logger.evolution('SET_WEBHOOK', instanceName, { webhookUrl });
