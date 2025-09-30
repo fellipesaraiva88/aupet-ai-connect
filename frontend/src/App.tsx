@@ -65,6 +65,10 @@ const Settings = withChunkErrorBoundary(
   lazy(() => import("./pages/Settings")),
   'settings-page'
 );
+const WhatsApp = withChunkErrorBoundary(
+  lazy(() => import("./pages/WhatsApp")),
+  'whatsapp-page'
+);
 const Signup = withChunkErrorBoundary(
   lazy(() => import("./pages/Signup")),
   'signup-page'
@@ -367,6 +371,18 @@ const AppRoutes = () => {
                 <MobilePlaceholder pageName="Configurações" />
               ) : (
                 <Settings />
+              )}
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/whatsapp" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              {shouldUseMobileLayout ? (
+                <MobilePlaceholder pageName="WhatsApp" />
+              ) : (
+                <WhatsApp />
               )}
             </Suspense>
           </ProtectedRoute>

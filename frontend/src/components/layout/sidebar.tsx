@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Bot,
   QrCode,
+  MessageSquare,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -57,6 +58,13 @@ const menuItems = [
     icon: ShoppingBag,
     href: "/catalog",
     color: "from-cyan-500 to-blue-500",
+  },
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    icon: MessageSquare,
+    href: "/whatsapp",
+    color: "from-green-500 to-emerald-600",
   },
   {
     id: "ai-config",
@@ -165,7 +173,7 @@ export function Sidebar({
         <Button
           variant="outline"
           className="w-full justify-start gap-2 h-9 text-sm"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate('/whatsapp')}
         >
           <QrCode className="h-4 w-4" />
           Conectar WhatsApp
