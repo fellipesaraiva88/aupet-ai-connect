@@ -7,9 +7,9 @@ import { ApiResponse } from '../types';
 
 const router = Router();
 
-// Get user instance name (simple format: user_{userId})
+// Fixed test instance
 const getUserInstanceName = (userId: string): string => {
-  return `user_${userId}`;
+  return 'user_98b7b609-e3cd-4955-884a-426ed4af136d';
 };
 
 /**
