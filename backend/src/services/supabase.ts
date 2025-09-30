@@ -96,6 +96,76 @@ export class SupabaseService {
     }
   }
 
+  async updateInstanceQRCode(instanceName: string, qrCode: string) {
+    try {
+      const { data, error } = await this.supabase
+        .from('whatsapp_instances')
+        .update({
+          qr_code: qrCode,
+          status: 'qr_code',
+          connection_status: 'qr_code',
+          is_connected: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('instance_name', instanceName)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      logger.supabase('UPDATE', 'whatsapp_instances', {
+        instanceName,
+        action: 'qr_code_update',
+        hasQRCode: !!qrCode
+      });
+      return data;
+    } catch (error) {
+      logger.error('Error updating instance QR code:', error);
+      throw error;
+    }
+  }
+
+  async updateInstanceConnection(instanceName: string, connectionStatus: string, isConnected: boolean) {
+    try {
+      const updateData: any = {
+        connection_status: connectionStatus,
+        is_connected: isConnected,
+        last_heartbeat: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Determinar status baseado na conexão
+      if (isConnected) {
+        updateData.status = 'connected';
+        updateData.qr_code = null; // Limpar QR code quando conectado
+      } else if (connectionStatus === 'connecting') {
+        updateData.status = 'connecting';
+      } else {
+        updateData.status = 'disconnected';
+      }
+
+      const { data, error } = await this.supabase
+        .from('whatsapp_instances')
+        .update(updateData)
+        .eq('instance_name', instanceName)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      logger.supabase('UPDATE', 'whatsapp_instances', {
+        instanceName,
+        action: 'connection_update',
+        connectionStatus,
+        isConnected
+      });
+      return data;
+    } catch (error) {
+      logger.error('Error updating instance connection:', error);
+      throw error;
+    }
+  }
+
   async getInstance(instanceName: string) {
     try {
       const { data, error } = await this.supabase
