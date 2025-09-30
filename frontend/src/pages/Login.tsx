@@ -4,11 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Mail, Lock, Eye, EyeOff, Heart, Sparkles, ArrowRight } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +15,6 @@ const Login: React.FC = () => {
   const { signIn } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -28,15 +26,15 @@ const Login: React.FC = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!formData.email) {
-      newErrors.email = 'Precisamos do seu email para te encontrar 💌';
+      newErrors.email = 'Email é obrigatório';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Por favor, verifique se o email está correto 😊';
+      newErrors.email = 'Email inválido';
     }
 
     if (!formData.password) {
-      newErrors.password = 'Sua senha especial é necessária 🔐';
+      newErrors.password = 'Senha é obrigatória';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Para sua segurança, use pelo menos 6 caracteres 🛡️';
+      newErrors.password = 'Senha deve ter no mínimo 6 caracteres';
     }
 
     setErrors(newErrors);
@@ -48,8 +46,8 @@ const Login: React.FC = () => {
 
     if (!validateForm()) {
       toast({
-        title: 'Opa! Vamos ajudar você 🤗',
-        description: 'Por favor, verifique as informações abaixo com carinho.',
+        title: 'Erro de validação',
+        description: 'Por favor, verifique os campos abaixo.',
         variant: 'destructive'
       });
       return;
@@ -63,8 +61,8 @@ const Login: React.FC = () => {
       if (error) {
         console.error('Login error:', error);
         toast({
-          title: 'Ops! Algo não deu certo 🥺',
-          description: 'Verifique suas credenciais com carinho. Estamos aqui para ajudar!',
+          title: 'Erro ao fazer login',
+          description: 'Email ou senha incorretos.',
           variant: 'destructive'
         });
         return;
@@ -79,8 +77,8 @@ const Login: React.FC = () => {
           .single();
 
         toast({
-          title: 'Bem-vindo de volta! 🎉💝',
-          description: 'Que alegria ter você aqui! Vamos espalhar muito amor pelos pets.',
+          title: 'Login realizado com sucesso',
+          description: 'Bem-vindo ao Auzap.',
         });
 
         // Redirect based on role
@@ -93,8 +91,8 @@ const Login: React.FC = () => {
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: 'Ops! Precisamos de um minutinho 🤗',
-        description: 'Algo inesperado aconteceu, mas vamos resolver isso juntos!',
+        title: 'Erro inesperado',
+        description: 'Ocorreu um erro. Tente novamente.',
         variant: 'destructive'
       });
     } finally {
@@ -196,28 +194,15 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-pink-600/5" />
-      <div className="absolute top-16 left-8 animate-pulse">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-pink-300/20 blur-xl"></div>
-      </div>
-      <div className="absolute bottom-16 right-16 animate-pulse delay-1000">
-        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-300/20 to-primary/20 blur-xl"></div>
-      </div>
-
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-sm relative">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl border-0 bg-white">
         <CardHeader className="space-y-4 text-center pb-6">
-          <div className="mx-auto p-3 bg-gradient-to-br from-primary to-pink-600 rounded-xl shadow-lg w-fit">
-            <Heart className="h-8 w-8 text-white" />
-          </div>
-
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Que alegria ter você de volta! 💝
+          <div className="space-y-3">
+            <CardTitle className="text-4xl font-bold text-blue-600">
+              Auzap
             </CardTitle>
-            <CardDescription className="text-base text-muted-foreground">
-              Entre na sua conta e continue espalhando amor e cuidado pelos nossos amiguinhos peludos
+            <CardDescription className="text-base text-gray-600">
+              Faça login para acessar sua conta
             </CardDescription>
           </div>
         </CardHeader>
@@ -231,7 +216,7 @@ const Login: React.FC = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu-email-especial@exemplo.com"
+                  placeholder="seu@email.com"
                   value={formData.email}
                   onChange={handleInputChange('email')}
                   className={`pl-10 h-11 ${errors.email ? 'border-destructive' : ''}`}
@@ -275,72 +260,25 @@ const Login: React.FC = () => {
               )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                />
-                <Label htmlFor="remember" className="text-sm">
-                  Lembrar de mim com carinho 💕
-                </Label>
-              </div>
-              <Button
-                variant="link"
-                className="p-0 h-auto text-sm text-primary hover:text-primary/80"
-                onClick={() => navigate('/forgot-password')}
-              >
-                Esqueceu a senha? Não se preocupe! 🤗
-              </Button>
-            </div>
 
             <Button
               type="submit"
-              className="w-full h-11 bg-gradient-to-r from-primary to-pink-600 hover:from-primary/90 hover:to-pink-600/90 text-white font-medium shadow-lg"
+              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando com carinho...
+                  Entrando...
                 </>
               ) : (
                 <>
-                  Entrar com Amor 💝
+                  Entrar
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
           </form>
-
-          {/* Development Helper */}
-          {import.meta.env.DEV && (
-            <div className="pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={handleQuickLogin}
-                className="w-full text-sm"
-                disabled={isLoading}
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Acesso Carinhoso para Desenvolvedores 💖
-              </Button>
-            </div>
-          )}
-
-          <div className="text-center pt-4">
-            <p className="text-sm text-muted-foreground">
-              Ainda não faz parte da nossa família?{' '}
-              <Button
-                variant="link"
-                className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
-                onClick={() => navigate('/signup')}
-              >
-                Junte-se a nós com amor! 🐾💕
-              </Button>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
