@@ -207,7 +207,6 @@ class WhatsAppInstanceMigrator {
     try {
       await this.supabaseService.createInstance({
         name: instanceName,
-        business_id: userId,
         status: instance.status || instance.connectionStatus || 'created',
         organization_id: 'migrated' // Identificar como migrado
       });

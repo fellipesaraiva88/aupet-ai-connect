@@ -83,7 +83,6 @@ export class WhatsAppManager {
         // Salva no banco local para próximas consultas
         const savedInstance = await this.supabaseService.createInstance({
           name: instanceName,
-          business_id: userId,
           status: evolutionInstance.status || 'created',
           organization_id: 'default' // Será atualizado posteriormente
         });
@@ -125,7 +124,6 @@ export class WhatsAppManager {
       // Salva no banco local
       const savedInstance = await this.supabaseService.createInstance({
         name: instanceName,
-        business_id: userId,
         status: evolutionInstance.status,
         organization_id: organizationId
       });
@@ -354,7 +352,6 @@ export class WhatsAppManager {
             // Salvar no banco com novo formato
             await this.supabaseService.createInstance({
               name: newInstanceName,
-              business_id: userId,
               status: instance.status || 'created',
               organization_id: 'migrated'
             });
