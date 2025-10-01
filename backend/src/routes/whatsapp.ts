@@ -216,32 +216,40 @@ router.post('/connect', asyncHandler(async (req: Request, res: Response) => {
     // Conectar e obter QR code
     const connectResponse = await evolution.connect(instance.instance_name);
 
-    // Atualizar instância com QR code
-    if (connectResponse.qrcode?.base64) {
-      await supabase.supabase
-        .from('whatsapp_instances')
-        .update({
-          qr_code: connectResponse.qrcode.base64,
-          status: 'connecting',
-          connection_status: 'connecting',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', instance.id);
+    // Extrair QR code da resposta (pode vir em diferentes formatos)
+    const qrCodeData = connectResponse.qrcode?.base64 || connectResponse.code;
 
-      const response: ApiResponse<any> = {
-        success: true,
-        data: {
-          qrCode: connectResponse.qrcode.base64,
-          status: 'waiting_qr'
-        },
-        message: 'QR Code gerado com sucesso',
-        timestamp: new Date().toISOString()
-      };
-
-      res.json(response);
-    } else {
+    if (!qrCodeData) {
+      logger.warn('No QR code in connect response', {
+        instanceName: instance.instance_name,
+        response: connectResponse
+      });
       throw createError('Não foi possível gerar QR Code', 500);
     }
+
+    // Atualizar instância com QR code
+    await supabase.supabase
+      .from('whatsapp_instances')
+      .update({
+        qr_code: qrCodeData,
+        status: 'connecting',
+        connection_status: 'connecting',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', instance.id);
+
+    const response: ApiResponse<any> = {
+      success: true,
+      data: {
+        qrCode: qrCodeData,
+        pairingCode: connectResponse.pairingCode,
+        status: 'waiting_qr'
+      },
+      message: 'QR Code gerado com sucesso',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(response);
   } catch (error: any) {
     logger.error('Error connecting WhatsApp:', error);
     throw createError(error.message || 'Erro ao conectar WhatsApp', 500);

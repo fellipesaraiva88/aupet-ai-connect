@@ -27,7 +27,10 @@ export interface InstanceResponse {
 }
 
 export interface ConnectResponse {
-  qrcode: {
+  pairingCode?: string;
+  code?: string;
+  count?: number;
+  qrcode?: {
     code: string;
     base64: string;
   };
