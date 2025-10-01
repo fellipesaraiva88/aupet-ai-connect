@@ -35,6 +35,7 @@ export interface InstanceResponse {
 export interface ConnectResponse {
   pairingCode?: string;
   code?: string;
+  base64?: string; // Evolution API v2.3.0 returns base64 at top level
   count?: number;
   qrcode?: {
     code: string;
