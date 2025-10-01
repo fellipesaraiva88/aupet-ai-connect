@@ -440,8 +440,7 @@ export class EvolutionAPIUnifiedService {
             'CHATS_DELETE',
             'GROUPS_UPSERT',
             'GROUP_UPDATE',
-            'GROUP_PARTICIPANTS_UPDATE',
-            'NEW_JWT_TOKEN'
+            'GROUP_PARTICIPANTS_UPDATE'
           ]
         }
       });

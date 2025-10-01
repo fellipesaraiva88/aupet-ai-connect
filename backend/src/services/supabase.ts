@@ -1,3 +1,8 @@
+import dotenv from 'dotenv';
+
+// Ensure dotenv is loaded before anything else
+dotenv.config();
+
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
 import {
@@ -662,8 +667,18 @@ export class SupabaseService {
   }
 }
 
+// Lazy singleton initialization to ensure dotenv is loaded first
+let supabaseServiceInstance: SupabaseService | null = null;
+
+export function getSupabaseService(): SupabaseService {
+  if (!supabaseServiceInstance) {
+    supabaseServiceInstance = new SupabaseService();
+  }
+  return supabaseServiceInstance;
+}
+
 // Export singleton instance for backwards compatibility
-export const supabaseService = new SupabaseService();
+export const supabaseService = getSupabaseService();
 export const supabase = supabaseService.getClient();
 
 // Export default instance
