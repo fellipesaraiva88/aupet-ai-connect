@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credenciais de Acesso - Auzap.ai</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 3rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .credential-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .credential-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .petshop-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .credential-row {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .credential-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .credential-value {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-size: 1rem;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #f0f0f0;
+            color: #666;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .warning-icon {
+            font-size: 2rem;
+        }
+
+        .warning-text {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-weight: 700;
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-desc {
+            color: #856404;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .credential-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .copy-btn {
+                width: 100%;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .copy-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🐾 Auzap.ai</div>
+            <div class="subtitle">Credenciais de Acesso dos Petshops</div>
+        </div>
+
+        <div class="warning">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">
+                <div class="warning-title">CONFIDENCIAL</div>
+                <div class="warning-desc">
+                    Este documento contém informações sensíveis. Mantenha em local seguro e não compartilhe com terceiros.
+                    Recomendamos alterar as senhas após o primeiro acesso.
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="credential-card">
+            <div class="petshop-name">
+                Cafofo Pet
+                <span class="status-badge status-success">✓ Ativo</span>
+            </div>
+
+            <div class="credential-row">
+                <div class="credential-label">Email:</div>
+                <div class="credential-value">contato@cafofopet.com.br</div>
+                <button class="copy-btn" onclick="copyToClipboard('contato@cafofopet.com.br', this)">
+                    📋 Copiar
+                </button>
+            </div>
+
+            <div class="credential-row">
+                <div class="credential-label">Senha:</div>
+                <div class="credential-value">CafofoPet@2024#Secure</div>
+                <button class="copy-btn" onclick="copyToClipboard('CafofoPet@2024#Secure', this)">
+                    📋 Copiar
+                </button>
+            </div>
+        </div>
+        
+        <div class="credential-card">
+            <div class="petshop-name">
+                Nimitinhos Pet Hotel
+                <span class="status-badge status-success">✓ Ativo</span>
+            </div>
+
+            <div class="credential-row">
+                <div class="credential-label">Email:</div>
+                <div class="credential-value">contato@nimitinhos.com.br</div>
+                <button class="copy-btn" onclick="copyToClipboard('contato@nimitinhos.com.br', this)">
+                    📋 Copiar
+                </button>
+            </div>
+
+            <div class="credential-row">
+                <div class="credential-label">Senha:</div>
+                <div class="credential-value">Nimitinhos@2024#Hotel</div>
+                <button class="copy-btn" onclick="copyToClipboard('Nimitinhos@2024#Hotel', this)">
+                    📋 Copiar
+                </button>
+            </div>
+        </div>
+        
+        <div class="credential-card">
+            <div class="petshop-name">
+                Pet Exclusivo
+                <span class="status-badge status-success">✓ Ativo</span>
+            </div>
+
+            <div class="credential-row">
+                <div class="credential-label">Email:</div>
+                <div class="credential-value">contato@petexclusivo.com.br</div>
+                <button class="copy-btn" onclick="copyToClipboard('contato@petexclusivo.com.br', this)">
+                    📋 Copiar
+                </button>
+            </div>
+
+            <div class="credential-row">
+                <div class="credential-label">Senha:</div>
+                <div class="credential-value">PetExclusivo@2024#BA</div>
+                <button class="copy-btn" onclick="copyToClipboard('PetExclusivo@2024#BA', this)">
+                    📋 Copiar
+                </button>
+            </div>
+        </div>
+        
+
+        <div class="footer">
+            <p><strong>URL de Acesso:</strong> https://auzap-frontend-web.onrender.com</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">
+                Documento gerado em: 01 de outubro de 2025 às 11:31
+            </p>
+        </div>
+    </div>
+
+    <script>
+        async function copyToClipboard(text, button) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = button.textContent;
+                button.textContent = '✓ Copiado!';
+                button.style.background = '#28a745';
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#667eea';
+                }, 2000);
+            } catch (err) {
+                alert('Erro ao copiar. Por favor, copie manualmente.');
+            }
+        }
+
+        // Impedir screenshot em alguns navegadores
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'PrintScreen') {
+                navigator.clipboard.writeText('');
+                alert('Screenshots não são recomendados para manter a segurança das credenciais.');
+            }
+        });
+    </script>
+</body>
+</html>
