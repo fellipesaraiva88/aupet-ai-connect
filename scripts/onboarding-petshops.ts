@@ -154,25 +154,53 @@ O Pet Exclusivo busca oferecer respostas rápidas e eficientes, especialmente fo
   }
 ];
 
-async function getOrCreateOrganization(userId: string, petshopName: string) {
-  const { data: existingOrg } = await supabase
+async function getOrCreateOrganization(userId: string, petshopData: PetshopData) {
+  const slug = petshopData.name.toLowerCase().replace(/\s+/g, '-');
+
+  // Tentar buscar por slug primeiro
+  const { data: orgBySlug } = await supabase
     .from('organizations')
     .select('*')
-    .eq('owner_id', userId)
+    .eq('slug', slug)
     .single();
 
-  if (existingOrg) {
-    console.log(`✅ Organização já existe: ${existingOrg.name}`);
-    return existingOrg;
+  if (orgBySlug) {
+    console.log(`✅ Organização já existe (slug): ${orgBySlug.name}`);
+    return orgBySlug;
   }
 
-  const { data, error } = await supabase
+  // Tentar buscar por created_by
+  const { data: orgByUser } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('created_by', userId)
+    .single();
+
+  if (orgByUser) {
+    console.log(`✅ Organização já existe (user): ${orgByUser.name}`);
+    return orgByUser;
+  }
+
+  const { data, error} = await supabase
     .from('organizations')
     .insert({
-      name: petshopName,
-      owner_id: userId,
-      plan: 'premium',
-      is_active: true
+      name: petshopData.name,
+      display_name: petshopData.name,
+      slug,
+      created_by: userId,
+      email: petshopData.email,
+      phone: petshopData.phone,
+      city: petshopData.city,
+      state: petshopData.state,
+      website: petshopData.website,
+      business_type: 'petshop',
+      subscription_tier: 'premium',
+      is_active: true,
+      status: 'active',
+      timezone: 'America/Sao_Paulo',
+      currency: 'BRL',
+      language: 'pt-BR',
+      country: 'BR'
     })
     .select()
     .single();
@@ -182,7 +210,7 @@ async function getOrCreateOrganization(userId: string, petshopName: string) {
     return null;
   }
 
-  console.log(`✅ Organização criada: ${petshopName}`);
+  console.log(`✅ Organização criada: ${petshopData.name}`);
   return data;
 }
 
@@ -397,7 +425,7 @@ async function onboardPetshop(petshopData: PetshopData) {
 
   console.log(`✅ Usuário encontrado: ${petshopData.email}`);
 
-  const organization = await getOrCreateOrganization(user.id, petshopData.name);
+  const organization = await getOrCreateOrganization(user.id, petshopData);
   if (!organization) return null;
 
   const profile = await createOrUpdateProfile(user.id, petshopData, organization.id);
