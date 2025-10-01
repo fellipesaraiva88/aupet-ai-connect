@@ -28,6 +28,7 @@ import catalogRoutes from './routes/catalog';
 import reportsRoutes from './routes/reports';
 import monitoringRoutes from './routes/monitoring';
 import instancesRoutes from './routes/instances';
+import adminRoutes from './routes/admin';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -198,6 +199,7 @@ class AuzapServer {
     this.app.use('/api/reports', authMiddleware, tenantIsolationMiddleware, reportsRoutes);
     this.app.use('/api/monitoring', authMiddleware, tenantIsolationMiddleware, monitoringRoutes);
     this.app.use('/api/instances', authMiddleware, tenantIsolationMiddleware, instancesRoutes);
+    this.app.use('/api/admin', authMiddleware, tenantIsolationMiddleware, adminRoutes);
 
     // Serve static files
     this.app.use('/public', express.static('public'));

@@ -74,6 +74,20 @@ const Signup = withChunkErrorBoundary(
   'signup-page'
 );
 
+// Admin pages
+const AdminLayout = withChunkErrorBoundary(
+  lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout }))),
+  'admin-layout'
+);
+const AdminDashboard = withChunkErrorBoundary(
+  lazy(() => import("./pages/admin/AdminDashboard")),
+  'admin-dashboard'
+);
+const UserManagement = withChunkErrorBoundary(
+  lazy(() => import("./pages/admin/UserManagement")),
+  'user-management'
+);
+
 // Mobile pages
 const MobileDashboard = withChunkErrorBoundary(
   lazy(() => import("./pages/mobile/MobileDashboard")),
@@ -395,6 +409,26 @@ const AppRoutes = () => {
             <MobilePlaceholder pageName="Menu" />
           </ProtectedRoute>
         } />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingComponent />}>
+              <AdminLayout />
+            </Suspense>
+          </ProtectedRoute>
+        }>
+          <Route path="dashboard" element={
+            <Suspense fallback={<PageLoadingComponent />}>
+              <AdminDashboard />
+            </Suspense>
+          } />
+          <Route path="users" element={
+            <Suspense fallback={<PageLoadingComponent />}>
+              <UserManagement />
+            </Suspense>
+          } />
+        </Route>
 
         {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
