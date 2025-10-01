@@ -99,6 +99,10 @@ const SystemSettings = withChunkErrorBoundary(
   lazy(() => import("./pages/admin/SystemSettings")),
   'system-settings'
 );
+const Organizations = withChunkErrorBoundary(
+  lazy(() => import("./pages/admin/Organizations")),
+  'organizations'
+);
 
 // Mobile pages
 const MobileDashboard = withChunkErrorBoundary(
@@ -509,10 +513,7 @@ const AppRoutes = () => {
           } />
           <Route path="organizations" element={
             <Suspense fallback={<PageLoadingComponent />}>
-              <div className="p-6 text-center">
-                <h1 className="text-2xl font-bold mb-4">Organizações</h1>
-                <p className="text-muted-foreground">Página em desenvolvimento</p>
-              </div>
+              <Organizations />
             </Suspense>
           } />
         </Route>
