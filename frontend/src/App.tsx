@@ -163,6 +163,57 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Admin Protected Route Component
+const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuthContext();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Verificando permissões... 🔐</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Check if user has admin or super_admin role
+  const userRole = user.user_metadata?.role || 'user';
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-6xl mb-4">🚫</div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Acesso Negado
+          </h1>
+          <p className="text-gray-600 max-w-md">
+            Você não tem permissão para acessar o painel administrativo.
+            Entre em contato com o administrador do sistema.
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => window.location.href = '/'}
+              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Voltar ao Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
+
 // Public Route Component (redirects to dashboard if logged in)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuthContext();
@@ -412,11 +463,11 @@ const AppRoutes = () => {
 
         {/* Admin Routes */}
         <Route path="/admin" element={
-          <ProtectedRoute>
+          <AdminProtectedRoute>
             <Suspense fallback={<PageLoadingComponent />}>
               <AdminLayout />
             </Suspense>
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={
