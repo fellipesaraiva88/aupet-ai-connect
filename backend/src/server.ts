@@ -11,7 +11,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 // Import routes
-import evolutionRoutes from './routes/evolution';
+// import evolutionRoutes from './routes/evolution'; // DISABLED - legacy routes
 import whatsappRoutes from './routes/whatsapp';
 import whatsappSimpleRoutes from './routes/whatsapp-simple';
 import aiRoutes from './routes/ai';
@@ -183,7 +183,8 @@ class AuzapServer {
     this.app.use('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
     // Protected routes (auth + tenant isolation required)
-    this.app.use('/api/evolution', authMiddleware, tenantIsolationMiddleware, evolutionRoutes);
+    // DISABLED: Legacy evolution routes - use /api/instances instead
+    // this.app.use('/api/evolution', authMiddleware, tenantIsolationMiddleware, evolutionRoutes);
     this.app.use('/api/whatsapp', authMiddleware, tenantIsolationMiddleware, whatsappSimpleRoutes);
     this.app.use('/api/whatsapp-legacy', authMiddleware, tenantIsolationMiddleware, whatsappRoutes);
     this.app.use('/api/ai', authMiddleware, tenantIsolationMiddleware, aiRoutes);
