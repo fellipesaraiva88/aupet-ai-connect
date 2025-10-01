@@ -51,7 +51,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       .from('appointments')
       .select(`
         *,
-        customers (id, name, phone),
+        whatsapp_contacts (id, name, phone),
         pets (id, name, species, breed),
         veterinarian:veterinarian_id (id, full_name)
       `, { count: 'exact' })
@@ -184,7 +184,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
       })
       .select(`
         *,
-        customers (id, name, phone),
+        whatsapp_contacts (id, name, phone),
         pets (id, name, species, breed),
         veterinarian:veterinarian_id (id, full_name)
       `)
@@ -309,7 +309,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
       .eq('organization_id', organizationId)
       .select(`
         *,
-        customers (id, name, phone),
+        whatsapp_contacts (id, name, phone),
         pets (id, name, species, breed),
         veterinarian:veterinarian_id (id, full_name)
       `)
