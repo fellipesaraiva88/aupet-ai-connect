@@ -72,6 +72,40 @@ interface FamilySidebarProps {
   onFamilyCreated?: (family: any) => void;
 }
 
+// Popular breeds database by species
+const POPULAR_BREEDS = {
+  dog: [
+    'Akita', 'Basset Hound', 'Beagle', 'Bichon Frisé', 'Border Collie', 'Boston Terrier',
+    'Boxer', 'Buldogue Francês', 'Buldogue Inglês', 'Bull Terrier', 'Cane Corso',
+    'Chihuahua', 'Chow Chow', 'Cocker Spaniel', 'Dachshund (Salsicha)', 'Dálmata',
+    'Dobermann', 'Dogo Argentino', 'Fila Brasileiro', 'Fox Paulistinha', 'Golden Retriever',
+    'Husky Siberiano', 'Jack Russell Terrier', 'Labrador Retriever', 'Lhasa Apso',
+    'Lulu da Pomerânia', 'Maltês', 'Mastiff', 'Pastor Alemão', 'Pastor Australiano',
+    'Pastor Belga', 'Pinscher', 'Pit Bull', 'Poodle', 'Pug', 'Rottweiler',
+    'Schnauzer', 'Shar-Pei', 'Shih Tzu', 'Staffordshire', 'Teckel', 'Weimaraner',
+    'West Highland White Terrier', 'Yorkshire Terrier', 'SRD (Sem Raça Definida)'
+  ],
+  cat: [
+    'Abissínio', 'American Shorthair', 'Angorá', 'Bengal', 'Bobtail Japonês',
+    'Bombaim', 'British Shorthair', 'Burmês', 'Chartreux', 'Devon Rex',
+    'Exótico', 'Himalaia', 'Maine Coon', 'Manx', 'Munchkin',
+    'Norueguês da Floresta', 'Persa', 'Ragdoll', 'Russo Azul', 'Sagrado da Birmânia',
+    'Scottish Fold', 'Siamês', 'Siberiano', 'Singapura', 'Sphynx',
+    'Tonquinês', 'Turkish Angora', 'SRD (Sem Raça Definida)'
+  ],
+  bird: [
+    'Agapornis', 'Arara', 'Calopsita', 'Canário', 'Cacatua',
+    'Papagaio', 'Periquito Australiano', 'Periquito Inglês', 'Ring Neck'
+  ],
+  hamster: [
+    'Sírio (Dourado)', 'Anão Russo', 'Anão Campbell', 'Anão Roborovski', 'Chinês'
+  ],
+  rabbit: [
+    'Anão Holandês', 'Belier', 'Fuzzy Lop', 'Gigante de Flandres', 'Holandês',
+    'Lionhead', 'Mini Rex', 'Rex'
+  ]
+};
+
 export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated }) => {
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<'owner' | 'pets' | 'preview'>('owner');
@@ -100,6 +134,10 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
   const [showPreview, setShowPreview] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  // Breed autocomplete states
+  const [breedSuggestions, setBreedSuggestions] = useState<string[]>([]);
+  const [showBreedSuggestions, setShowBreedSuggestions] = useState(false);
 
   const organizationId = useOrganizationId();
   const createCustomerMutation = useCreateCustomer();
@@ -191,8 +229,35 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
     }));
   };
 
+  // Filter breed suggestions based on input
+  const filterBreedSuggestions = (input: string, species: string) => {
+    if (!species || !input || input.length < 2) {
+      setBreedSuggestions([]);
+      setShowBreedSuggestions(false);
+      return;
+    }
+
+    const breeds = POPULAR_BREEDS[species as keyof typeof POPULAR_BREEDS] || [];
+    const filtered = breeds.filter(breed =>
+      breed.toLowerCase().includes(input.toLowerCase())
+    );
+
+    setBreedSuggestions(filtered.slice(0, 8)); // Max 8 suggestions
+    setShowBreedSuggestions(filtered.length > 0);
+  };
+
   const handlePetChange = (field: keyof typeof currentPet, value: string) => {
     setCurrentPet(prev => ({ ...prev, [field]: value }));
+
+    // Handle breed autocomplete
+    if (field === 'breed') {
+      filterBreedSuggestions(value, currentPet.species);
+    }
+  };
+
+  const selectBreedSuggestion = (breed: string) => {
+    setCurrentPet(prev => ({ ...prev, breed }));
+    setShowBreedSuggestions(false);
   };
 
   const validatePetFields = () => {
@@ -793,15 +858,44 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
 
                     {/* Raça e Idade */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
+                      <div className="relative">
                         <Label htmlFor="pet-breed">Raça</Label>
                         <Input
                           id="pet-breed"
-                          placeholder="Ex: Golden Retriever"
+                          placeholder={
+                            !currentPet.species ? "Selecione a espécie primeiro" :
+                            currentPet.species === 'dog' ? "Ex: Golden Retriever" :
+                            currentPet.species === 'cat' ? "Ex: Persa" :
+                            "Digite a raça"
+                          }
                           value={currentPet.breed}
                           onChange={(e) => handlePetChange('breed', e.target.value)}
+                          onBlur={() => setTimeout(() => setShowBreedSuggestions(false), 200)}
+                          onFocus={() => {
+                            if (currentPet.breed.length >= 2) {
+                              filterBreedSuggestions(currentPet.breed, currentPet.species);
+                            }
+                          }}
+                          disabled={!currentPet.species}
                           className="mt-1"
                         />
+
+                        {/* Breed Suggestions Dropdown */}
+                        {showBreedSuggestions && breedSuggestions.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border-2 border-purple-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {breedSuggestions.map((breed, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => selectBreedSuggestion(breed)}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-purple-50 focus:bg-purple-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg flex items-center gap-2"
+                              >
+                                <PawPrint className="h-3 w-3 text-purple-600" />
+                                <span>{breed}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="pet-age">Idade</Label>
