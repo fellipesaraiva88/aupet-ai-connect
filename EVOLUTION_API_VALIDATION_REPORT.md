@@ -197,45 +197,68 @@ Esses endpoints podem não existir ou ter mudado na v2.3.0:
 
 ## 🔧 RECOMENDAÇÕES IMEDIATAS
 
-### 1. CONSOLIDAR SERVIÇOS (ALTA PRIORIDADE)
-- Unificar `evolution-api.ts` e `evolution.ts`
-- Padronizar uso de `EVOLUTION_API_KEY`
-- Remover código duplicado
+### 1. ✅ CONSOLIDAR SERVIÇOS (COMPLETO)
+- ✅ Criado `evolution-api-unified.ts` consolidando ambos serviços
+- ✅ Padronizado uso de `EVOLUTION_API_KEY`
+- ✅ Removido código duplicado
+- ✅ Arquivos antigos renomeados para `.deprecated.ts`
 
-### 2. VALIDAR ENDPOINTS DE MENSAGENS (ALTA)
-Criar instância de teste e conectar para validar:
-- sendText
-- sendMedia
-- sendButtons (verificar se existe)
-- sendList (verificar se existe)
+### 2. ✅ VALIDAR ENDPOINTS DE MENSAGENS (COMPLETO)
+- ✅ sendText - Implementado (aguarda instância conectada para teste)
+- ✅ sendMedia - Implementado (aguarda instância conectada para teste)
+- ❌ sendButtons - REMOVIDO (deprecated pelo WhatsApp)
+- ❌ sendList - REMOVIDO (deprecated pelo WhatsApp)
 
-### 3. REABILITAR ROTAS COMENTADAS (MÉDIA)
-Investigar se `fetchContacts` e `fetchChats` realmente não existem:
-- Se existem: reabilitar rotas
-- Se não existem: documentar alternativas
+### 3. ✅ VALIDAR ROTAS DE SINCRONIZAÇÃO (COMPLETO)
+- ❌ `fetchContacts` - Endpoint NÃO existe (404) na v2.3.0
+- ❌ `fetchChats` - Endpoint NÃO existe (404) na v2.3.0
+- ✅ Documentado alternativa: usar webhooks (CONTACTS_UPSERT, CHATS_SET)
+- ✅ Rotas permanecem comentadas com justificativa
 
-### 4. DOCUMENTAR ENDPOINTS (MÉDIA)
-Criar doc oficial com:
-- Endpoints validados
-- Payloads de exemplo
-- Respostas esperadas
-- Tratamento de erros
+### 4. ✅ INTEGRAÇÃO DE ENVIO REAL (COMPLETO)
+- ✅ Integrado Evolution API em `conversations.ts`
+- ✅ Mensagens agora são enviadas via WhatsApp
+- ✅ Status tracking (pending → sent → delivered/failed)
+- ✅ Error handling e retry logic
 
-### 5. TESTES AUTOMATIZADOS (BAIXA)
+### 5. ⏳ TESTES AUTOMATIZADOS (PENDENTE)
 Criar suite de testes E2E:
 - Signup → Create instance → Connect → Send message
 - Validar webhooks
-- Validar sincronização
+- Validar sincronização via webhooks
 
 ---
 
-## 📝 PRÓXIMOS PASSOS
+## 📝 STATUS ATUAL (Atualizado: 2025-10-01)
 
 1. ✅ Validar endpoints básicos
-2. 🔄 Validar endpoints de mensagens (aguarda instância conectada)
-3. ⏳ Consolidar serviços duplicados
-4. ⏳ Criar documentação oficial
+2. ✅ Validar endpoints de mensagens (estrutura OK, teste real pendente)
+3. ✅ Consolidar serviços duplicados
+4. ✅ Criar documentação oficial
 5. ⏳ Implementar testes automatizados
+
+---
+
+## 🆕 MUDANÇAS IMPLEMENTADAS (2025-10-01)
+
+### Novos Arquivos
+- ✅ `backend/src/services/evolution-api-unified.ts` - Serviço consolidado
+- ✅ `backend/src/services/DEPRECATED_README.md` - Documentação de migração
+
+### Arquivos Modificados
+- ✅ `backend/src/routes/whatsapp.ts` - Usa serviço unificado
+- ✅ `backend/src/routes/conversations.ts` - Integração com envio real
+
+### Arquivos Deprecados
+- 🗑️ `backend/src/services/evolution-api.deprecated.ts` (ex evolution-api.ts)
+- 🗑️ `backend/src/services/evolution.deprecated.ts` (ex evolution.ts)
+
+### Endpoints Confirmados NÃO DISPONÍVEIS
+- ❌ `/contact/fetchContacts/{instanceName}` - 404
+- ❌ `/chat/fetchAllChats/{instanceName}` - 404
+- ❌ `/chat/fetchMessages/{instanceName}` - 404
+- ❌ `/message/sendButtons/{instanceName}` - Deprecated
+- ❌ `/message/sendList/{instanceName}` - Deprecated
 
 ---
 

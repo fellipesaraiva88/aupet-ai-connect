@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
+import { getEvolutionAPIService } from '../services/evolution-api-unified';
 import { logger } from '../utils/logger';
 import { ApiResponse, PaginatedResponse, AuthenticatedRequest } from '../types';
 import { z } from 'zod';
@@ -263,7 +264,28 @@ router.post('/:id/messages', asyncHandler(async (req: Request, res: Response) =>
       throw createError('Conversa não encontrada', 404);
     }
 
-    // Save message to database
+    // Get contact phone and instance name
+    const { data: contact } = await supabase.supabase
+      .from('whatsapp_contacts')
+      .select('phone')
+      .eq('id', conversation.contact_id)
+      .single();
+
+    const { data: instance } = await supabase.supabase
+      .from('whatsapp_instances')
+      .select('instance_name, is_connected')
+      .eq('id', conversation.instance_id)
+      .single();
+
+    if (!contact || !instance) {
+      throw createError('Contato ou instância não encontrada', 404);
+    }
+
+    if (!instance.is_connected) {
+      throw createError('Instância WhatsApp não está conectada', 400);
+    }
+
+    // Save message to database (pending status)
     const { data: message, error } = await supabase.supabase
       .from('whatsapp_messages')
       .insert({
@@ -274,6 +296,7 @@ router.post('/:id/messages', asyncHandler(async (req: Request, res: Response) =>
         message_type: validatedData.message_type,
         sender_type: validatedData.sender_type,
         external_id: `manual_${Date.now()}`,
+        status: 'pending',
         organization_id: organizationId,
         metadata: validatedData.media_url ? { media_url: validatedData.media_url } : {},
         created_at: new Date().toISOString()
@@ -282,6 +305,71 @@ router.post('/:id/messages', asyncHandler(async (req: Request, res: Response) =>
       .single();
 
     if (error) throw error;
+
+    // Send actual WhatsApp message through Evolution API
+    try {
+      const evolution = getEvolutionAPIService();
+      let evolutionResponse;
+
+      if (validatedData.message_type === 'text') {
+        evolutionResponse = await evolution.sendText(
+          instance.instance_name,
+          contact.phone,
+          validatedData.content
+        );
+      } else if (validatedData.media_url) {
+        evolutionResponse = await evolution.sendMedia(
+          instance.instance_name,
+          contact.phone,
+          validatedData.media_url,
+          validatedData.content,
+          validatedData.message_type as 'image' | 'video' | 'audio' | 'document'
+        );
+      }
+
+      // Update message status to sent
+      await supabase.supabase
+        .from('whatsapp_messages')
+        .update({
+          status: 'sent',
+          external_id: evolutionResponse?.key?.id || message.external_id,
+          metadata: {
+            ...message.metadata,
+            evolution_response: evolutionResponse
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', message.id);
+
+      logger.info('WhatsApp message sent successfully', {
+        conversationId: id,
+        messageId: message.id,
+        instanceName: instance.instance_name,
+        to: contact.phone
+      });
+
+    } catch (evolutionError: any) {
+      // Update message status to failed
+      await supabase.supabase
+        .from('whatsapp_messages')
+        .update({
+          status: 'failed',
+          metadata: {
+            ...message.metadata,
+            error: evolutionError.message
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', message.id);
+
+      logger.error('Failed to send WhatsApp message', {
+        conversationId: id,
+        messageId: message.id,
+        error: evolutionError.message
+      });
+
+      throw createError(`Falha ao enviar mensagem via WhatsApp: ${evolutionError.message}`, 500);
+    }
 
     // Update conversation last_message_at
     await supabase.supabase
@@ -292,10 +380,7 @@ router.post('/:id/messages', asyncHandler(async (req: Request, res: Response) =>
       })
       .eq('id', id);
 
-    // TODO: Send actual WhatsApp message through Evolution API
-    // This would integrate with the Evolution service to send the message
-
-    logger.info('Message sent in conversation', { conversationId: id, messageId: message.id, organizationId });
+    logger.info('Message saved and sent in conversation', { conversationId: id, messageId: message.id, organizationId });
 
     const response: ApiResponse<any> = {
       success: true,

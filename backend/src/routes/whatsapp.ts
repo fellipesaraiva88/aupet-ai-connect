@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
-import { getEvolutionAPIService } from '../services/evolution-api';
+import { getEvolutionAPIService } from '../services/evolution-api-unified';
 import { WebhookProcessor } from '../services/webhookProcessor';
 import { WebSocketService } from '../services/websocket';
 import { logger } from '../utils/logger';
