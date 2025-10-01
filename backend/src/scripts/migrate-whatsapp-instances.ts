@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 // Carregar variáveis de ambiente
 dotenv.config();
 
-import { EvolutionAPIService } from '../services/evolution';
+import { EvolutionAPIUnifiedService } from '../services/evolution-api-unified';
 import { SupabaseService } from '../services/supabase';
 import { logger } from '../utils/logger';
 
@@ -22,11 +22,18 @@ interface MigrationResult {
 }
 
 class WhatsAppInstanceMigrator {
-  private evolutionService: EvolutionAPIService;
+  private evolutionService: EvolutionAPIUnifiedService;
   private supabaseService: SupabaseService;
 
   constructor() {
-    this.evolutionService = new EvolutionAPIService();
+    const baseURL = process.env.EVOLUTION_API_URL;
+    const apiKey = process.env.EVOLUTION_API_KEY;
+
+    if (!baseURL || !apiKey) {
+      throw new Error('Missing EVOLUTION_API_URL or EVOLUTION_API_KEY');
+    }
+
+    this.evolutionService = new EvolutionAPIUnifiedService({ baseURL, apiKey });
     this.supabaseService = new SupabaseService();
   }
 

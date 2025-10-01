@@ -294,7 +294,14 @@ export class AIMessageProcessor {
    * Envia mensagem de fora do horário
    */
   private async queueAwayMessage(context: MessageContext, businessConfig: BusinessConfig): Promise<void> {
-    const awayMessage = businessConfig.business_hours?.away_message ||
+    // Buscar away_message das configurações da instância
+    const { data: settings } = await this.supabaseService.supabase
+      .from('whatsapp_instance_settings')
+      .select('away_message')
+      .eq('instance_id', context.instanceId)
+      .single();
+
+    const awayMessage = settings?.away_message ||
       'Obrigado pela sua mensagem! No momento estamos fora do horário de atendimento. Retornaremos em breve! 🐾';
 
     await this.queueMessage(context, awayMessage, 'normal');

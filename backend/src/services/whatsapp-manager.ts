@@ -1,4 +1,4 @@
-import { EvolutionAPIService } from './evolution';
+import { getEvolutionAPIService } from './evolution-api-unified';
 import { SupabaseService } from './supabase';
 import { WebSocketService } from './websocket';
 import { logger } from '../utils/logger';

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
-import { getEvolutionAPIService } from '../services/evolution-api';
+import { getEvolutionAPIService } from '../services/evolution-api-unified';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
