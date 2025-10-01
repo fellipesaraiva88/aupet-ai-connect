@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 
 interface SystemSettings {
   general: {
@@ -63,7 +64,16 @@ interface SystemSettings {
 
 export default function SystemSettings() {
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
+  const {
+    settings: apiSettings,
+    isLoading,
+    updateSettings,
+    testEmail,
+    testWhatsApp,
+    isUpdating,
+    isTesting
+  } = useSystemSettings();
+
   const [settings, setSettings] = useState<SystemSettings>({
     general: {
       site_name: 'Auzap.ai',
@@ -87,7 +97,7 @@ export default function SystemSettings() {
       smtp_from_email: 'noreply@auzap.ai',
     },
     whatsapp: {
-      evolution_api_url: process.env.VITE_EVOLUTION_API_URL || '',
+      evolution_api_url: import.meta.env.VITE_EVOLUTION_API_URL || '',
       evolution_api_key: '',
       webhook_url: '',
       max_instances_per_org: 3,
@@ -105,24 +115,50 @@ export default function SystemSettings() {
     },
   });
 
+  // Load settings from API when available
+  useEffect(() => {
+    if (apiSettings) {
+      setSettings((prev) => ({
+        ...prev,
+        ...apiSettings
+      }));
+    }
+  }, [apiSettings]);
+
   const handleSave = async () => {
-    setIsSaving(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      toast({
-        title: 'Configurações salvas',
-        description: 'As configurações do sistema foram atualizadas com sucesso.',
-      });
+      await updateSettings(settings);
     } catch (error) {
+      // Error is already handled by the hook
+    }
+  };
+
+  const handleTestEmail = async () => {
+    try {
+      await testEmail(settings.email);
+    } catch (error) {
+      // Error is already handled by the hook
+    }
+  };
+
+  const handleTestWhatsApp = async () => {
+    try {
+      await testWhatsApp(settings.whatsapp);
+    } catch (error) {
+      // Error is already handled by the hook
+    }
+  };
+
+  const handleReset = () => {
+    if (apiSettings) {
+      setSettings((prev) => ({
+        ...prev,
+        ...apiSettings
+      }));
       toast({
-        title: 'Erro ao salvar',
-        description: 'Ocorreu um erro ao salvar as configurações.',
-        variant: 'destructive',
+        title: 'Configurações resetadas',
+        description: 'As configurações foram revertidas para os valores salvos.',
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -137,12 +173,12 @@ export default function SystemSettings() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleReset} disabled={isLoading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Resetar
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
+          <Button onClick={handleSave} disabled={isUpdating || isLoading}>
+            {isUpdating ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 Salvando...
@@ -463,9 +499,23 @@ export default function SystemSettings() {
                 />
               </div>
 
-              <Button variant="outline" className="w-full">
-                <Mail className="h-4 w-4 mr-2" />
-                Testar Configuração de Email
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleTestEmail}
+                disabled={isTesting}
+              >
+                {isTesting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Testando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Testar Configuração de Email
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -546,9 +596,23 @@ export default function SystemSettings() {
                 />
               </div>
 
-              <Button variant="outline" className="w-full">
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Testar Conexão com Evolution API
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={handleTestWhatsApp}
+                disabled={isTesting}
+              >
+                {isTesting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Testando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Testar Conexão com Evolution API
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -625,7 +689,7 @@ export default function SystemSettings() {
                 />
               </div>
 
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" disabled>
                 <Zap className="h-4 w-4 mr-2" />
                 Testar Integração OpenAI
               </Button>

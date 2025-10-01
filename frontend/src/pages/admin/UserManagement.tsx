@@ -1,87 +1,121 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserTable } from '@/components/admin/UserTable';
 import { Users as UsersIcon, Download, Upload } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
-
-// Mock data - Replace with real API calls
-const mockUsers = [
-  {
-    id: '1',
-    email: 'admin@auzap.ai',
-    full_name: 'Admin Principal',
-    role: { name: 'super_admin', description: 'Super Administrador' },
-    organization: { name: 'Auzap' },
-    is_active: true,
-    last_login: '2025-01-10T10:30:00Z',
-    created_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '2',
-    email: 'manager@petshop.com',
-    full_name: 'João Silva',
-    role: { name: 'admin', description: 'Administrador' },
-    organization: { name: 'Petshop VIP' },
-    is_active: true,
-    last_login: '2025-01-10T09:15:00Z',
-    created_at: '2024-06-15T00:00:00Z'
-  },
-  {
-    id: '3',
-    email: 'maria@petshop.com',
-    full_name: 'Maria Santos',
-    role: { name: 'manager', description: 'Gerente' },
-    organization: { name: 'Petshop VIP' },
-    is_active: true,
-    last_login: '2025-01-09T16:45:00Z',
-    created_at: '2024-08-20T00:00:00Z'
-  },
-  {
-    id: '4',
-    email: 'inactive@example.com',
-    full_name: 'Usuário Inativo',
-    role: { name: 'user', description: 'Usuário' },
-    organization: { name: 'Pet Care' },
-    is_active: false,
-    last_login: null,
-    created_at: '2024-03-10T00:00:00Z'
-  }
-];
+import { useAdminUsers } from '@/hooks/useAdminUsers';
 
 export default function UserManagement() {
-  const [users, setUsers] = useState(mockUsers);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    users,
+    isLoading,
+    updateUser,
+    deleteUser,
+    isUpdating,
+    isDeleting,
+  } = useAdminUsers();
 
-  const handleEdit = (user: any) => {
-    toast.info('Editar Usuário', `Editando ${user.email}`);
-    // TODO: Open edit modal
+  const handleEdit = async (user: any) => {
+    try {
+      // In a real implementation, this would open a modal with the user data
+      // For now, we'll just show a toast
+      toast.info('Editar Usuário', {
+        description: `Editando ${user.email}. Funcionalidade de edição será implementada em breve.`
+      });
+    } catch (error) {
+      toast.error('Erro', {
+        description: 'Não foi possível editar o usuário.'
+      });
+    }
   };
 
-  const handleDelete = (user: any) => {
-    const action = user.is_active ? 'desativar' : 'reativar';
-    toast.warning('Confirmar Ação', `Deseja ${action} ${user.email}?`);
-    // TODO: Implement delete/deactivate
+  const handleDelete = async (user: any) => {
+    try {
+      const action = user.is_active ? 'desativar' : 'reativar';
+
+      // Show confirmation toast
+      toast.warning('Confirmar Ação', {
+        description: `Deseja ${action} ${user.email}?`,
+        action: {
+          label: 'Confirmar',
+          onClick: async () => {
+            await deleteUser(user.id);
+          }
+        }
+      });
+    } catch (error) {
+      toast.error('Erro', {
+        description: 'Não foi possível realizar a ação.'
+      });
+    }
   };
 
-  const handleResetPassword = (user: any) => {
-    toast.success('Email Enviado', `Link de recuperação enviado para ${user.email}`);
-    // TODO: Implement password reset
+  const handleResetPassword = async (user: any) => {
+    try {
+      // This would call a password reset endpoint
+      toast.info('Recuperação de Senha', {
+        description: `Funcionalidade de reset de senha será implementada em breve para ${user.email}.`
+      });
+    } catch (error) {
+      toast.error('Erro', {
+        description: 'Não foi possível enviar o link de recuperação.'
+      });
+    }
   };
 
   const handleCreateNew = () => {
-    toast.info('Novo Usuário', 'Abrindo formulário de criação');
-    // TODO: Open create modal
+    // In a real implementation, this would open a create user modal
+    toast.info('Novo Usuário', {
+      description: 'Modal de criação de usuário será implementado em breve.'
+    });
   };
 
   const handleExport = () => {
-    toast.success('Exportando', 'Preparando arquivo CSV...');
-    // TODO: Implement export
+    try {
+      if (!users || users.length === 0) {
+        toast.warning('Sem Dados', {
+          description: 'Não há usuários para exportar.'
+        });
+        return;
+      }
+
+      // Export users to CSV
+      const csv = [
+        ['ID', 'Email', 'Nome', 'Role', 'Organização', 'Status', 'Último Login', 'Criado Em'].join(','),
+        ...users.map(u => [
+          u.id,
+          u.email,
+          u.full_name,
+          u.role?.name || '',
+          u.organization?.name || '',
+          u.is_active ? 'Ativo' : 'Inativo',
+          u.last_login || '',
+          u.created_at
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `usuarios_${new Date().toISOString()}.csv`;
+      a.click();
+
+      toast.success('Exportado', {
+        description: 'Arquivo CSV baixado com sucesso.'
+      });
+    } catch (error) {
+      toast.error('Erro', {
+        description: 'Não foi possível exportar os usuários.'
+      });
+    }
   };
 
   const handleImport = () => {
-    toast.info('Importar', 'Selecione um arquivo CSV');
-    // TODO: Implement import
+    toast.info('Importar', {
+      description: 'Funcionalidade de importação será implementada em breve.'
+    });
   };
 
   return (
@@ -105,7 +139,7 @@ export default function UserManagement() {
             <Upload className="mr-2 h-4 w-4" />
             Importar
           </Button>
-          <Button variant="outline" onClick={handleExport}>
+          <Button variant="outline" onClick={handleExport} disabled={!users || users.length === 0}>
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
@@ -117,14 +151,14 @@ export default function UserManagement() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total de Usuários</CardDescription>
-            <CardTitle className="text-3xl">{users.length}</CardTitle>
+            <CardTitle className="text-3xl">{users?.length || 0}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Usuários Ativos</CardDescription>
             <CardTitle className="text-3xl text-green-600">
-              {users.filter(u => u.is_active).length}
+              {users?.filter(u => u.is_active).length || 0}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -132,7 +166,7 @@ export default function UserManagement() {
           <CardHeader className="pb-2">
             <CardDescription>Usuários Inativos</CardDescription>
             <CardTitle className="text-3xl text-gray-600">
-              {users.filter(u => !u.is_active).length}
+              {users?.filter(u => !u.is_active).length || 0}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -140,7 +174,7 @@ export default function UserManagement() {
           <CardHeader className="pb-2">
             <CardDescription>Administradores</CardDescription>
             <CardTitle className="text-3xl text-purple-600">
-              {users.filter(u => ['super_admin', 'admin'].includes(u.role.name)).length}
+              {users?.filter(u => ['super_admin', 'admin'].includes(u.role?.name || '')).length || 0}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -156,7 +190,7 @@ export default function UserManagement() {
         </CardHeader>
         <CardContent>
           <UserTable
-            users={users}
+            users={users || []}
             isLoading={isLoading}
             onEdit={handleEdit}
             onDelete={handleDelete}

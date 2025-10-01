@@ -13,9 +13,11 @@ import {
   ArrowRight,
   AlertTriangle,
   CheckCircle,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useDashboardStats, useDashboardActivity, useSystemHealth } from '@/hooks/useDashboardStats';
 
 interface StatCardProps {
   title: string;
@@ -74,41 +76,6 @@ interface ActivityItem {
   severity: 'info' | 'warning' | 'error' | 'success';
 }
 
-const recentActivity: ActivityItem[] = [
-  {
-    id: '1',
-    user: 'admin@auzap.ai',
-    action: 'Criou novo usuário',
-    entity: 'user@example.com',
-    time: 'há 2 minutos',
-    severity: 'success'
-  },
-  {
-    id: '2',
-    user: 'manager@auzap.ai',
-    action: 'Atualizou organização',
-    entity: 'Petshop VIP',
-    time: 'há 15 minutos',
-    severity: 'info'
-  },
-  {
-    id: '3',
-    user: 'admin@auzap.ai',
-    action: 'Desativou usuário',
-    entity: 'inactive@example.com',
-    time: 'há 1 hora',
-    severity: 'warning'
-  },
-  {
-    id: '4',
-    user: 'system',
-    action: 'Falha no login',
-    entity: 'unknown@example.com',
-    time: 'há 2 horas',
-    severity: 'error'
-  }
-];
-
 const severityIcons = {
   info: Activity,
   warning: AlertTriangle,
@@ -125,6 +92,9 @@ const severityColors = {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: recentActivity, isLoading: activityLoading } = useDashboardActivity();
+  const { data: health, isLoading: healthLoading } = useSystemHealth();
 
   return (
     <div className="space-y-6">
@@ -138,36 +108,50 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total de Usuários"
-          value="1,234"
-          description="Ativos no sistema"
-          icon={Users}
-          trend={{ value: '+12%', isPositive: true }}
-          href="/admin/users"
-        />
-        <StatCard
-          title="Organizações"
-          value="42"
-          description="Contas ativas"
-          icon={Building2}
-          trend={{ value: '+3%', isPositive: true }}
-          href="/admin/organizations"
-        />
-        <StatCard
-          title="Eventos de Auditoria"
-          value="5,678"
-          description="Últimos 7 dias"
-          icon={Activity}
-          href="/admin/audit"
-        />
-        <StatCard
-          title="Roles Ativos"
-          value="8"
-          description="Configurações de acesso"
-          icon={Shield}
-          href="/admin/roles"
-        />
+        {statsLoading ? (
+          <div className="col-span-4 flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            <StatCard
+              title="Total de Usuários"
+              value={stats?.totalUsers || 0}
+              description="Ativos no sistema"
+              icon={Users}
+              trend={stats?.userGrowthPercent ? {
+                value: `${stats.userGrowthPercent > 0 ? '+' : ''}${stats.userGrowthPercent}%`,
+                isPositive: stats.userGrowthPercent > 0
+              } : undefined}
+              href="/admin/users"
+            />
+            <StatCard
+              title="Organizações"
+              value={stats?.totalOrganizations || 0}
+              description="Contas ativas"
+              icon={Building2}
+              trend={stats?.orgGrowthPercent ? {
+                value: `${stats.orgGrowthPercent > 0 ? '+' : ''}${stats.orgGrowthPercent}%`,
+                isPositive: stats.orgGrowthPercent > 0
+              } : undefined}
+              href="/admin/organizations"
+            />
+            <StatCard
+              title="Eventos de Auditoria"
+              value={stats?.auditLogsLast7Days || 0}
+              description="Últimos 7 dias"
+              icon={Activity}
+              href="/admin/audit"
+            />
+            <StatCard
+              title="Roles Ativos"
+              value={stats?.totalRoles || 0}
+              description="Configurações de acesso"
+              icon={Shield}
+              href="/admin/roles"
+            />
+          </>
+        )}
       </div>
 
       {/* Content Grid */}
@@ -191,37 +175,47 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => {
-                const SeverityIcon = severityIcons[activity.severity];
-                return (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center bg-muted',
-                      severityColors[activity.severity]
-                    )}>
-                      <SeverityIcon className="h-4 w-4" />
+            {activityLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : recentActivity && recentActivity.length > 0 ? (
+              <div className="space-y-4">
+                {recentActivity.map((activity) => {
+                  const SeverityIcon = severityIcons[activity.severity];
+                  return (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className={cn(
+                        'w-8 h-8 rounded-full flex items-center justify-center bg-muted',
+                        severityColors[activity.severity]
+                      )}>
+                        <SeverityIcon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">
+                          <span className="text-muted-foreground">{activity.user}</span>
+                          {' '}{activity.action}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {activity.entity}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+                        <Clock className="h-3 w-3" />
+                        {activity.time}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">
-                        <span className="text-muted-foreground">{activity.user}</span>
-                        {' '}{activity.action}
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {activity.entity}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
-                      <Clock className="h-3 w-3" />
-                      {activity.time}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhuma atividade recente
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -232,51 +226,58 @@ export default function AdminDashboard() {
             <CardDescription>Status dos serviços principais</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="font-medium text-green-900">API Backend</p>
-                    <p className="text-sm text-green-700">Operacional</p>
-                  </div>
-                </div>
-                <Badge className="bg-green-600">99.9%</Badge>
+            {healthLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
+            ) : health && health.services ? (
+              <div className="space-y-4">
+                {health.services.map((service: any) => {
+                  const isHealthy = service.status === 'healthy';
+                  const isWarning = service.status === 'warning';
+                  const isError = service.status === 'error';
 
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="font-medium text-green-900">Banco de Dados</p>
-                    <p className="text-sm text-green-700">Operacional</p>
-                  </div>
-                </div>
-                <Badge className="bg-green-600">100%</Badge>
-              </div>
+                  const bgColor = isHealthy ? 'bg-green-50 border-green-200' :
+                                  isWarning ? 'bg-yellow-50 border-yellow-200' :
+                                  'bg-red-50 border-red-200';
+                  const textColor = isHealthy ? 'text-green-900' :
+                                   isWarning ? 'text-yellow-900' :
+                                   'text-red-900';
+                  const iconColor = isHealthy ? 'text-green-600' :
+                                   isWarning ? 'text-yellow-600' :
+                                   'text-red-600';
+                  const badgeColor = isHealthy ? 'bg-green-600' :
+                                     isWarning ? 'border-yellow-600 text-yellow-600' :
+                                     'bg-red-600';
 
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="font-medium text-green-900">WhatsApp API</p>
-                    <p className="text-sm text-green-700">Operacional</p>
-                  </div>
-                </div>
-                <Badge className="bg-green-600">98.5%</Badge>
+                  return (
+                    <div key={service.name} className={cn('flex items-center justify-between p-3 rounded-lg border', bgColor)}>
+                      <div className="flex items-center gap-3">
+                        {isHealthy ? (
+                          <CheckCircle className={cn('h-5 w-5', iconColor)} />
+                        ) : (
+                          <AlertTriangle className={cn('h-5 w-5', iconColor)} />
+                        )}
+                        <div>
+                          <p className={cn('font-medium', textColor)}>{service.name}</p>
+                          <p className={cn('text-sm', iconColor)}>{service.message}</p>
+                        </div>
+                      </div>
+                      <Badge
+                        variant={isWarning ? 'outline' : 'default'}
+                        className={badgeColor}
+                      >
+                        {service.responseTime ? `${service.responseTime}ms` : service.status}
+                      </Badge>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                  <div>
-                    <p className="font-medium text-yellow-900">Serviço de Email</p>
-                    <p className="text-sm text-yellow-700">Lentidão detectada</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="border-yellow-600 text-yellow-600">95.2%</Badge>
-              </div>
-            </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                Não foi possível carregar informações de saúde
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
