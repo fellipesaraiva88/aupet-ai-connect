@@ -49,8 +49,8 @@ const Instances: React.FC = () => {
     try {
       setLoading(true);
       const headers = await getAuthHeaders();
-      
-      const response = await fetch('/api/instances', { headers });
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/instances`, { headers });
       const data = await response.json();
       
       if (data.success) {
@@ -75,7 +75,7 @@ const Instances: React.FC = () => {
       setCreating(true);
       const headers = await getAuthHeaders();
       
-      const response = await fetch('/api/instances', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/instances`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -112,7 +112,7 @@ const Instances: React.FC = () => {
       setQrLoading(true);
       const headers = await getAuthHeaders();
       
-      const response = await fetch(`/api/instances/${instanceId}/connect`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/instances/${instanceId}/connect`, {
         method: 'POST',
         headers
       });
@@ -144,7 +144,7 @@ const Instances: React.FC = () => {
     try {
       const headers = await getAuthHeaders();
       
-      const response = await fetch(`/api/instances/${instanceId}/disconnect`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/instances/${instanceId}/disconnect`, {
         method: 'DELETE',
         headers
       });
@@ -168,7 +168,7 @@ const Instances: React.FC = () => {
     try {
       const headers = await getAuthHeaders();
       
-      const response = await fetch(`/api/instances/${instanceId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/instances/${instanceId}`, {
         method: 'DELETE',
         headers
       });
@@ -188,7 +188,7 @@ const Instances: React.FC = () => {
     try {
       const headers = await getAuthHeaders();
       
-      const response = await fetch(`/api/instances/${instanceId}/status`, { headers });
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/instances/${instanceId}/status`, { headers });
       const data = await response.json();
       
       if (data.success) {
