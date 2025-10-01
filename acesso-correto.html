@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auzap - Acesso Correto ao Sistema</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .alert-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .alert-text {
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .success-title {
+            font-weight: bold;
+            color: #155724;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .url-box {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            text-align: center;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+
+        .url-correct {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .url-wrong {
+            color: #dc3545;
+            text-decoration: line-through;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-group {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .credentials {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .credentials h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .cred-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .cred-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .cred-value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .info-title {
+            font-weight: bold;
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+
+        .info-text {
+            color: #0c5460;
+            line-height: 1.6;
+        }
+
+        .step {
+            counter-increment: step;
+            margin: 15px 0;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .step::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .steps {
+            counter-reset: step;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .logo {
+                font-size: 36px;
+            }
+
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🐾 Auzap</div>
+            <div class="subtitle">Acesso ao Sistema</div>
+        </div>
+
+        <div class="alert">
+            <div class="alert-title">⚠️ Atenção: URL Incorreta Detectada</div>
+            <div class="alert-text">
+                Você está tentando acessar via <strong>app.auzap.com.br</strong>, mas este domínio ainda não está configurado corretamente.
+            </div>
+        </div>
+
+        <div class="success">
+            <div class="success-title">✅ Use Esta URL Para Acessar o Sistema:</div>
+            <div class="url-box">
+                <span class="url-correct">https://auzap-frontend-web.onrender.com</span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <a href="https://auzap-frontend-web.onrender.com/login" class="btn" target="_blank">
+                🚀 Acessar Sistema Agora
+            </a>
+        </div>
+
+        <div class="credentials">
+            <h3>🔑 Credenciais de Acesso</h3>
+
+            <div class="cred-item">
+                <div class="cred-label">Cafofo Pet</div>
+                <div class="cred-value">
+                    Email: cafofopet@aizuap.ai.br04<br>
+                    Senha: CafofoPet@2024#Secure
+                </div>
+            </div>
+
+            <div class="cred-item">
+                <div class="cred-label">Nimitinhos Pet Hotel</div>
+                <div class="cred-value">
+                    Email: nimitinhos@aizuap.ai.br04<br>
+                    Senha: Nimitinhos@2024#Hotel
+                </div>
+            </div>
+
+            <div class="cred-item">
+                <div class="cred-label">Pet Exclusivo</div>
+                <div class="cred-value">
+                    Email: petexclusivo@aizuap.ai.br04<br>
+                    Senha: PetExclusivo@2024#BA
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-title">ℹ️ Por Que Isso Aconteceu?</div>
+            <div class="info-text">
+                <p>O domínio <strong>app.auzap.com.br</strong> precisa ser configurado no Cloudflare para apontar para o servidor correto.</p>
+                <p style="margin-top: 10px;">Enquanto isso, use a URL direta do Render listada acima. Ela é 100% funcional e segura!</p>
+            </div>
+        </div>
+
+        <div class="info-box" style="background: #f8d7da; border-left-color: #721c24;">
+            <div class="info-title" style="color: #721c24;">🔧 Para Configurar o Domínio Personalizado (Opcional)</div>
+            <div class="info-text" style="color: #721c24;">
+                <div class="steps">
+                    <div class="step">Acesse o painel do Cloudflare</div>
+                    <div class="step">Vá em DNS settings</div>
+                    <div class="step">Adicione um registro CNAME:
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Name: app</li>
+                            <li>Target: auzap-frontend-web.onrender.com</li>
+                            <li>Proxy: Enabled (nuvem laranja)</li>
+                        </ul>
+                    </div>
+                    <div class="step">Aguarde 5-10 minutos para propagação</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <a href="credenciais-petshops.html" class="btn" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                📋 Ver Todas as Credenciais
+            </a>
+        </div>
+    </div>
+</body>
+</html>
