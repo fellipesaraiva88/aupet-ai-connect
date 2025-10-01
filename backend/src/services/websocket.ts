@@ -463,4 +463,169 @@ export class WebSocketService {
       uptime: process.uptime()
     };
   }
+
+  // ========== HANDOFF EVENTS ==========
+
+  /**
+   * Emite evento genérico de handoff
+   */
+  public emit(event: string, data: any, organizationId: string): void {
+    this.io.to(`org_${organizationId}`).emit(event, {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    logger.websocket(event.toUpperCase(), `org_${organizationId}`, data);
+  }
+
+  /**
+   * Notifica que a IA foi ativada para uma conversa
+   */
+  public notifyHandoffEnabled(organizationId: string, data: {
+    conversationId: string;
+    handler: 'ai' | 'human';
+  }): void {
+    this.io.to(`org_${organizationId}`).emit('handoff:enabled', {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    logger.websocket('HANDOFF_ENABLED', `org_${organizationId}`, {
+      conversationId: data.conversationId,
+      handler: data.handler
+    });
+  }
+
+  /**
+   * Notifica que a IA foi desativada para uma conversa
+   */
+  public notifyHandoffDisabled(organizationId: string, data: {
+    conversationId: string;
+    handler: 'ai' | 'human';
+  }): void {
+    this.io.to(`org_${organizationId}`).emit('handoff:disabled', {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    logger.websocket('HANDOFF_DISABLED', `org_${organizationId}`, {
+      conversationId: data.conversationId,
+      handler: data.handler
+    });
+  }
+
+  /**
+   * Notifica transferência de conversa entre IA e humano
+   */
+  public notifyHandoffTransferred(organizationId: string, data: {
+    conversationId: string;
+    from: 'ai' | 'human';
+    to: 'ai' | 'human';
+    reason: string;
+  }): void {
+    this.io.to(`org_${organizationId}`).emit('handoff:transferred', {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    logger.websocket('HANDOFF_TRANSFERRED', `org_${organizationId}`, {
+      conversationId: data.conversationId,
+      from: data.from,
+      to: data.to,
+      reason: data.reason
+    });
+  }
+
+  /**
+   * Notifica que uma conversa precisa de atenção humana
+   */
+  public notifyHumanRequired(organizationId: string, data: {
+    conversationId: string;
+    reason: string;
+    urgency?: 'low' | 'medium' | 'high' | 'critical';
+  }): void {
+    this.io.to(`org_${organizationId}`).emit('human:required', {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    // Enviar também como notificação visual
+    this.sendNotification(organizationId, {
+      title: '⚠️ Atenção Humana Necessária',
+      message: `Conversa precisa de atendimento: ${data.reason}`,
+      type: data.urgency === 'critical' ? 'error' : 'warning',
+      action: {
+        label: 'Ver Conversa',
+        url: `/conversations?id=${data.conversationId}`
+      }
+    });
+
+    logger.websocket('HUMAN_REQUIRED', `org_${organizationId}`, {
+      conversationId: data.conversationId,
+      reason: data.reason,
+      urgency: data.urgency
+    });
+  }
+
+  /**
+   * Notifica que a IA está digitando/respondendo
+   */
+  public notifyAIResponding(organizationId: string, data: {
+    conversationId: string;
+    status: 'analyzing' | 'generating' | 'sending' | 'done';
+  }): void {
+    this.io.to(`org_${organizationId}`).emit('ai:responding', {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Notifica mudança no status do handler de uma conversa
+   */
+  public notifyHandlerChange(organizationId: string, data: {
+    conversationId: string;
+    currentHandler: 'ai' | 'human' | 'queue';
+    previousHandler?: 'ai' | 'human' | 'queue';
+  }): void {
+    this.io.to(`org_${organizationId}`).emit('handler:changed', {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    logger.websocket('HANDLER_CHANGED', `org_${organizationId}`, {
+      conversationId: data.conversationId,
+      currentHandler: data.currentHandler,
+      previousHandler: data.previousHandler
+    });
+  }
+
+  /**
+   * Notifica atualização em massa de handoffs
+   */
+  public notifyBatchHandoffUpdate(organizationId: string, data: {
+    conversationIds: string[];
+    action: 'enabled' | 'disabled';
+    succeeded: number;
+    failed: number;
+  }): void {
+    this.io.to(`org_${organizationId}`).emit('handoff:batch_update', {
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+
+    // Enviar notificação visual
+    this.sendNotification(organizationId, {
+      title: data.action === 'enabled' ? '✅ IA Ativada' : '👤 Transferido para Humano',
+      message: `${data.succeeded} conversas atualizadas com sucesso`,
+      type: 'success'
+    });
+
+    logger.websocket('BATCH_HANDOFF_UPDATE', `org_${organizationId}`, {
+      action: data.action,
+      total: data.conversationIds.length,
+      succeeded: data.succeeded,
+      failed: data.failed
+    });
+  }
 }

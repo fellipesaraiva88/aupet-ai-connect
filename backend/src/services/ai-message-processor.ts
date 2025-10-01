@@ -1,5 +1,6 @@
 import { AIService } from './ai';
 import { SupabaseService } from './supabase';
+import { HandoffManager } from './handoff-manager';
 import { logger } from '../utils/logger';
 import { BusinessConfig } from '../types';
 
@@ -15,10 +16,12 @@ interface MessageContext {
 export class AIMessageProcessor {
   private aiService: AIService;
   private supabaseService: SupabaseService;
+  private handoffManager: HandoffManager;
 
   constructor() {
     this.aiService = new AIService();
     this.supabaseService = new SupabaseService();
+    this.handoffManager = new HandoffManager();
   }
 
   /**
@@ -31,7 +34,18 @@ export class AIMessageProcessor {
         fromNumber: context.fromNumber
       });
 
-      // 1. Buscar configurações da instância
+      // 1. Verificar status do handoff
+      const handoffStatus = await this.handoffManager.getHandoffStatus(context.conversationId);
+
+      if (handoffStatus && handoffStatus.currentHandler === 'human') {
+        logger.info('Message not processed by AI - human handler active', {
+          conversationId: context.conversationId,
+          currentHandler: handoffStatus.currentHandler
+        });
+        return;
+      }
+
+      // 2. Buscar configurações da instância
       const instanceConfig = await this.getInstanceConfig(context.instanceId);
 
       // Verificar se auto-reply está habilitado
@@ -77,26 +91,25 @@ export class AIMessageProcessor {
 
       // 6. Verificar se precisa escalar para humano
       if (this.aiService.shouldEscalateToHuman(context.messageContent, analysis, businessConfig)) {
+        const escalationReason = analysis.needsHuman
+          ? 'AI flagged - needs human attention'
+          : analysis.urgency === 'critical'
+            ? 'Critical urgency detected'
+            : `Low confidence (${analysis.confidence})`;
+
         logger.info('Message escalated to human', {
           messageId: context.messageId,
-          reason: analysis.needsHuman ? 'AI flagged' : 'Low confidence'
+          reason: escalationReason,
+          confidence: analysis.confidence,
+          urgency: analysis.urgency
         });
 
-        // Marcar conversa como precisando atendimento humano
-        await this.supabaseService.supabase
-          .from('whatsapp_conversations')
-          .update({
-            needs_human_attention: true,
-            last_human_alert: new Date().toISOString()
-          })
-          .eq('id', context.conversationId);
-
-        // Enviar mensagem de espera
-        await this.queueMessage(
-          context,
-          'Obrigado pela sua mensagem! Um atendente irá responder em breve. 💝',
-          'high'
-        );
+        // Transferir para atendimento humano usando HandoffManager
+        await this.handoffManager.transferToHuman(context.conversationId, {
+          reason: escalationReason,
+          triggeredBy: 'auto',
+          notifyCustomer: true
+        });
 
         return;
       }

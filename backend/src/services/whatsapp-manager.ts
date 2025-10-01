@@ -254,7 +254,7 @@ export class WhatsAppManager {
       // Inicia conexão e obtém QR Code
       const connectResponse = await this.getEvolutionService().connect(instance.name);
       // Prioriza base64 (imagem) sobre code (string)
-      const qrCode = connectResponse.base64 || connectResponse.qrcode?.base64 || connectResponse.code;
+      const qrCode = connectResponse.qrcode?.base64 || connectResponse.code;
 
       // Atualiza status no banco
       await this.supabaseService.updateInstanceStatus(instance.name, 'connecting');
@@ -288,7 +288,7 @@ export class WhatsAppManager {
 
       const connectResponse = await this.getEvolutionService().connect(instance.name);
       // Prioriza base64 (imagem) sobre code (string)
-      const qrCode = connectResponse.base64 || connectResponse.qrcode?.base64 || connectResponse.code;
+      const qrCode = connectResponse.qrcode?.base64 || connectResponse.code;
 
       return {
         qrCode: qrCode || undefined,
