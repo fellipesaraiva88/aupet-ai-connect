@@ -38,7 +38,7 @@ export class WhatsAppManager {
   async ensureUserInstance(userId: string, organizationId: string): Promise<WhatsAppInstance> {
     try {
       // Primeiro verifica se já existe uma instância para o usuário
-      const existing = await this.findUserInstance(userId);
+      const existing = await this.findUserInstance(userId, organizationId);
       if (existing) {
         logger.info('Instance found for user', { userId, instanceName: existing.name });
         return existing;
@@ -55,16 +55,25 @@ export class WhatsAppManager {
   /**
    * Busca instância existente do usuário
    */
-  async findUserInstance(userId: string): Promise<WhatsAppInstance | null> {
+  async findUserInstance(userId: string, organizationId?: string): Promise<WhatsAppInstance | null> {
     try {
       const instanceName = this.generateInstanceName(userId);
 
+      logger.info('Finding instance for user', { userId, instanceName });
+
       // Busca primeiro no banco local
-      const localInstance = await this.supabaseService.getInstanceByName(instanceName);
+      let localInstance;
+      try {
+        localInstance = await this.supabaseService.getInstanceByName(instanceName);
+        logger.info('Local instance query result', { found: !!localInstance });
+      } catch (dbError) {
+        logger.error('Error querying local database', { error: dbError });
+        localInstance = null;
+      }
       if (localInstance) {
         return {
           id: localInstance.id,
-          name: localInstance.name,
+          name: localInstance.instance_name, // Campo no banco é instance_name, não name
           userId: userId,
           status: localInstance.status,
           phoneNumber: localInstance.phone_number,
@@ -75,26 +84,56 @@ export class WhatsAppManager {
 
       // Se não encontrou no banco, verifica na Evolution API
       const evolutionInstances = await this.getEvolutionService().listInstances();
-      const evolutionInstance = evolutionInstances.find(inst =>
-        inst.instanceName === instanceName ||
-        inst.instanceName?.includes(userId) ||
-        inst.instanceName?.startsWith(`auzap_${userId}`)
-      );
+
+      logger.info('Searching for instance in Evolution API', {
+        instanceName,
+        userId,
+        totalInstances: evolutionInstances.length,
+        instanceNames: evolutionInstances.map(i => i.name || i.instanceName).filter(Boolean)
+      });
+
+      const evolutionInstance = evolutionInstances.find(inst => {
+        const name = inst.name || inst.instanceName;
+        return name === instanceName ||
+               name?.includes(userId) ||
+               name?.startsWith(`user_${userId}`);
+      });
 
       if (evolutionInstance) {
-        // Salva no banco local para próximas consultas
+        logger.info('Found instance in Evolution API', {
+          instanceName,
+          evolutionInstanceName: evolutionInstance.name || evolutionInstance.instanceName,
+          connectionStatus: evolutionInstance.connectionStatus,
+          status: evolutionInstance.status
+        });
+
+        // Salva no banco local para próximas consultas (se organizationId foi fornecido)
+        if (!organizationId) {
+          logger.warn('Cannot save instance to database without organizationId', { instanceName });
+          // Retorna a instância sem salvar no banco
+          return {
+            id: '', // Temporário - instância existe na Evolution mas não no banco local
+            name: instanceName,
+            userId: userId,
+            status: evolutionInstance.connectionStatus || evolutionInstance.status || 'created',
+            phoneNumber: evolutionInstance.number || evolutionInstance.ownerJid,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+        }
+
         const savedInstance = await this.supabaseService.createInstance({
           name: instanceName,
-          status: evolutionInstance.status || 'created',
-          organization_id: 'default' // Será atualizado posteriormente
+          status: evolutionInstance.connectionStatus || evolutionInstance.status || 'created',
+          organization_id: organizationId
         });
 
         return {
           id: savedInstance.id,
           name: instanceName,
           userId: userId,
-          status: evolutionInstance.status || 'created',
-          phoneNumber: evolutionInstance.instanceName,
+          status: evolutionInstance.connectionStatus || evolutionInstance.status || 'created',
+          phoneNumber: evolutionInstance.number || evolutionInstance.ownerJid,
           created_at: savedInstance.created_at,
           updated_at: savedInstance.updated_at
         };
@@ -214,7 +253,8 @@ export class WhatsAppManager {
 
       // Inicia conexão e obtém QR Code
       const connectResponse = await this.getEvolutionService().connect(instance.name);
-      const qrCode = connectResponse.qrcode?.base64 || connectResponse.code;
+      // Prioriza base64 (imagem) sobre code (string)
+      const qrCode = connectResponse.base64 || connectResponse.qrcode?.base64 || connectResponse.code;
 
       // Atualiza status no banco
       await this.supabaseService.updateInstanceStatus(instance.name, 'connecting');
@@ -247,7 +287,8 @@ export class WhatsAppManager {
       }
 
       const connectResponse = await this.getEvolutionService().connect(instance.name);
-      const qrCode = connectResponse.qrcode?.base64 || connectResponse.code;
+      // Prioriza base64 (imagem) sobre code (string)
+      const qrCode = connectResponse.base64 || connectResponse.qrcode?.base64 || connectResponse.code;
 
       return {
         qrCode: qrCode || undefined,

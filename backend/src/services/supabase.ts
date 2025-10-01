@@ -1,8 +1,3 @@
-import dotenv from 'dotenv';
-
-// Ensure dotenv is loaded before anything else
-dotenv.config();
-
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
 import {
@@ -677,9 +672,10 @@ export function getSupabaseService(): SupabaseService {
   return supabaseServiceInstance;
 }
 
-// Export singleton instance for backwards compatibility
-export const supabaseService = getSupabaseService();
-export const supabase = supabaseService.getClient();
+// Export getters for backwards compatibility
+export function getSupabase() {
+  return getSupabaseService().getClient();
+}
 
-// Export default instance
-export default supabaseService;
+// Export default getter
+export default getSupabaseService;
