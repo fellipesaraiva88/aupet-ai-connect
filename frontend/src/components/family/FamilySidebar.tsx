@@ -9,9 +9,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { useCreateCustomer, useCreatePet, useOrganizationId } from "@/hooks/useSupabaseData";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import confetti from "canvas-confetti";
 import {
   UserPlus,
   Heart,
@@ -35,7 +36,10 @@ import {
   Info,
   ArrowRight,
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  FileText,
+  Users
 } from "lucide-react";
 
 interface Pet {
@@ -70,7 +74,7 @@ interface FamilySidebarProps {
 
 export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated }) => {
   const [open, setOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'owner' | 'pets'>('owner');
+  const [currentStep, setCurrentStep] = useState<'owner' | 'pets' | 'preview'>('owner');
   const [familyData, setFamilyData] = useState<FamilyData>({
     owner: {
       name: '',
@@ -100,6 +104,51 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
   const organizationId = useOrganizationId();
   const createCustomerMutation = useCreateCustomer();
   const createPetMutation = useCreatePet();
+
+  // Função de confetti
+  const fireConfetti = () => {
+    const count = 200;
+    const defaults = {
+      origin: { y: 0.7 }
+    };
+
+    function fire(particleRatio: number, opts: any) {
+      confetti({
+        ...defaults,
+        ...opts,
+        particleCount: Math.floor(count * particleRatio),
+        spread: 26,
+        startVelocity: 55,
+      });
+    }
+
+    fire(0.25, {
+      spread: 26,
+      startVelocity: 55,
+    });
+
+    fire(0.2, {
+      spread: 60,
+    });
+
+    fire(0.35, {
+      spread: 100,
+      decay: 0.91,
+      scalar: 0.8
+    });
+
+    fire(0.1, {
+      spread: 120,
+      startVelocity: 25,
+      decay: 0.92,
+      scalar: 1.2
+    });
+
+    fire(0.1, {
+      spread: 120,
+      startVelocity: 45,
+    });
+  };
 
   // Máscara para telefone brasileira
   const formatPhone = (value: string) => {
@@ -271,6 +320,9 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
 
       await Promise.all(petsPromises);
 
+      // Dispara confetti de comemoração!
+      fireConfetti();
+
       toast({
         title: "Família cadastrada com sucesso! 🎉",
         description: `${familyData.owner.name} e ${familyData.pets.length} pets foram cadastrados`,
@@ -353,12 +405,12 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {/* Step Indicator - PREMIUM */}
+          {/* Step Indicator - PREMIUM COM 3 ETAPAS */}
           <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 {/* Step 1 */}
-                <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-2 flex-1">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
                     currentStep === 'owner'
                       ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg scale-110'
@@ -369,22 +421,19 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                     {familyData.owner.name ? <CheckCircle2 className="h-5 w-5" /> : '1'}
                   </div>
                   <div className="flex-1">
-                    <div className={`font-semibold text-sm ${currentStep === 'owner' ? 'text-blue-900' : 'text-gray-600'}`}>
-                      Dados da Família
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {familyData.owner.name || 'Nome e contato'}
+                    <div className={`font-semibold text-xs ${currentStep === 'owner' ? 'text-blue-900' : 'text-gray-600'}`}>
+                      Família
                     </div>
                   </div>
                 </div>
 
-                {/* Connector */}
-                <div className={`h-1 w-16 mx-4 rounded-full transition-all ${
+                {/* Connector 1 */}
+                <div className={`h-1 w-8 mx-2 rounded-full transition-all ${
                   familyData.owner.name ? 'bg-gradient-to-r from-green-500 to-blue-500' : 'bg-gray-200'
                 }`}></div>
 
                 {/* Step 2 */}
-                <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-2 flex-1">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
                     currentStep === 'pets'
                       ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg scale-110'
@@ -395,11 +444,31 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                     {familyData.pets.length > 0 ? familyData.pets.length : '2'}
                   </div>
                   <div className="flex-1">
-                    <div className={`font-semibold text-sm ${currentStep === 'pets' ? 'text-blue-900' : 'text-gray-600'}`}>
-                      Pets da Família
+                    <div className={`font-semibold text-xs ${currentStep === 'pets' ? 'text-blue-900' : 'text-gray-600'}`}>
+                      Pets
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {familyData.pets.length > 0 ? `${familyData.pets.length} pet(s) adicionado(s)` : 'Adicione os pets'}
+                  </div>
+                </div>
+
+                {/* Connector 2 */}
+                <div className={`h-1 w-8 mx-2 rounded-full transition-all ${
+                  familyData.pets.length > 0 ? 'bg-gradient-to-r from-green-500 to-blue-500' : 'bg-gray-200'
+                }`}></div>
+
+                {/* Step 3 - PREVIEW */}
+                <div className="flex items-center gap-2 flex-1">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
+                    currentStep === 'preview'
+                      ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg scale-110'
+                      : currentStep === 'preview'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {currentStep === 'preview' ? <CheckCircle2 className="h-5 w-5" /> : '3'}
+                  </div>
+                  <div className="flex-1">
+                    <div className={`font-semibold text-xs ${currentStep === 'preview' ? 'text-blue-900' : 'text-gray-600'}`}>
+                      Confirmar
                     </div>
                   </div>
                 </div>
@@ -411,10 +480,10 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                   className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500"
                   style={{
                     width: currentStep === 'owner'
-                      ? '50%'
-                      : familyData.pets.length > 0
-                        ? '100%'
-                        : '75%'
+                      ? '33%'
+                      : currentStep === 'pets'
+                        ? '66%'
+                        : '100%'
                   }}
                 ></div>
               </div>
@@ -907,9 +976,223 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <Button 
+                <Button
+                  onClick={() => setCurrentStep('preview')}
+                  disabled={familyData.pets.length === 0}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                  size="lg"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Revisar e Confirmar
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep('owner')}
+                  className="w-full"
+                >
+                  Voltar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Preview */}
+          {currentStep === 'preview' && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="text-center space-y-2">
+                <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white mb-2">
+                  <Eye className="h-8 w-8" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Revisar Cadastro
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Confira todos os dados antes de salvar
+                </p>
+              </div>
+
+              {/* Owner Information Card */}
+              <Card className="border-2 border-blue-200 bg-blue-50/50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-blue-600" />
+                      <CardTitle className="text-lg">Informações da Família</CardTitle>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentStep('owner')}
+                      className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Editar
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Nome</Label>
+                      <p className="text-sm font-medium">{familyData.owner.name}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Telefone</Label>
+                      <p className="text-sm font-medium">{familyData.owner.phone}</p>
+                    </div>
+                  </div>
+                  {familyData.owner.email && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">E-mail</Label>
+                      <p className="text-sm font-medium">{familyData.owner.email}</p>
+                    </div>
+                  )}
+                  {familyData.owner.address && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Endereço</Label>
+                      <p className="text-sm font-medium">{familyData.owner.address}</p>
+                    </div>
+                  )}
+                  {familyData.owner.notes && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Observações</Label>
+                      <p className="text-sm">{familyData.owner.notes}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Pets Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PawPrint className="h-5 w-5 text-purple-600" />
+                    <h4 className="font-semibold text-lg">
+                      Pets da Família ({familyData.pets.length})
+                    </h4>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentStep('pets')}
+                    className="h-8 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-100"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Editar
+                  </Button>
+                </div>
+
+                {/* Preview Pet Cards */}
+                <div className="space-y-3">
+                  {familyData.pets.map((pet, index) => (
+                    <Card key={pet.id} className="border-2 border-purple-200 bg-purple-50/50">
+                      <CardContent className="p-4">
+                        {/* Pet Header */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                              {pet.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h5 className="font-semibold text-base">{pet.name}</h5>
+                              <p className="text-xs text-muted-foreground">
+                                {pet.species === 'dog' ? '🐕 Cachorro' :
+                                 pet.species === 'cat' ? '🐈 Gato' :
+                                 pet.species === 'bird' ? '🦜 Pássaro' :
+                                 pet.species === 'fish' ? '🐠 Peixe' :
+                                 pet.species === 'hamster' ? '🐹 Hamster' :
+                                 pet.species === 'rabbit' ? '🐰 Coelho' :
+                                 pet.species === 'turtle' ? '🐢 Tartaruga' :
+                                 '🐾 Outro'}
+                                {pet.breed && ` • ${pet.breed}`}
+                                {pet.age && ` • ${pet.age} anos`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Pet Details Grid */}
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          {pet.size && (
+                            <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                              <Activity className="h-4 w-4 text-purple-600" />
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Porte</Label>
+                                <p className="text-xs font-medium">
+                                  {pet.size === 'small' ? 'Pequeno' :
+                                   pet.size === 'medium' ? 'Médio' :
+                                   pet.size === 'large' ? 'Grande' : 'Gigante'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {pet.temperament && (
+                            <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
+                              <Heart className="h-4 w-4 text-pink-600" />
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Temperamento</Label>
+                                <p className="text-xs font-medium capitalize">{pet.temperament}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Status Badges */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {pet.is_neutered && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Castrado
+                            </Badge>
+                          )}
+                          {pet.is_vaccinated && (
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                              <Syringe className="h-3 w-3 mr-1" />
+                              Vacinado
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Allergies Alert */}
+                        {pet.allergies && (
+                          <div className="mb-2 p-2 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <Label className="text-xs font-semibold text-orange-700">Alergias</Label>
+                                <p className="text-xs text-orange-700">{pet.allergies}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Medical Notes */}
+                        {pet.medical_notes && (
+                          <div className="p-2 bg-white border border-gray-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <FileText className="h-4 w-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <Label className="text-xs font-semibold text-gray-700">Observações Médicas</Label>
+                                <p className="text-xs text-gray-600">{pet.medical_notes}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <Button
                   onClick={handleSaveFamily}
-                  disabled={loading || familyData.pets.length === 0}
+                  disabled={loading}
                   className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                   size="lg"
                 >
@@ -921,17 +1204,18 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Salvar Família
+                      Confirmar e Salvar Família
                     </>
                   )}
                 </Button>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={() => setCurrentStep('owner')}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep('pets')}
                   className="w-full"
+                  disabled={loading}
                 >
-                  Voltar
+                  Voltar para Pets
                 </Button>
               </div>
             </div>
