@@ -12,6 +12,7 @@ import { useLoading } from "@/contexts/LoadingContext";
 import { PawPrintsBackground } from "@/components/ui/paw-prints-background";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useBreakpoint } from "@/components/ui/responsive-grid";
+import { useEnhancedToast, setGlobalToastInstance } from "@/hooks/useEnhancedToast";
 
 // Enhanced error boundaries and performance monitoring
 import {
@@ -529,6 +530,12 @@ const AppContent = () => {
   const { isAnyLoading } = useLoading();
   const { reportMetrics } = usePerformanceMonitoring();
   const { createSkipToContentLink } = useSkipToContent();
+  const toast = useEnhancedToast();
+
+  // Initialize global toast instance
+  React.useEffect(() => {
+    setGlobalToastInstance(toast);
+  }, [toast]);
 
   // Initialize stores and performance monitoring
   React.useEffect(() => {
