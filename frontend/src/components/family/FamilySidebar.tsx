@@ -39,7 +39,10 @@ import {
   CheckCircle2,
   Eye,
   FileText,
-  Users
+  Users,
+  Image,
+  X,
+  Upload
 } from "lucide-react";
 
 interface Pet {
@@ -54,6 +57,7 @@ interface Pet {
   is_vaccinated: boolean; // NOVO: Vacinado
   allergies: string; // NOVO: Alergias
   medical_notes: string; // NOVO: Observações médicas
+  photo_url?: string; // NOVO: URL da foto do pet
   temp?: boolean;
 }
 
@@ -129,7 +133,8 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
     is_neutered: false,
     is_vaccinated: false,
     allergies: '',
-    medical_notes: ''
+    medical_notes: '',
+    photo_url: ''
   });
   const [showPreview, setShowPreview] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -138,6 +143,9 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
   // Breed autocomplete states
   const [breedSuggestions, setBreedSuggestions] = useState<string[]>([]);
   const [showBreedSuggestions, setShowBreedSuggestions] = useState(false);
+
+  // Photo upload state
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const organizationId = useOrganizationId();
   const createCustomerMutation = useCreateCustomer();
@@ -260,6 +268,46 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
     setShowBreedSuggestions(false);
   };
 
+  // Handle photo upload
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione apenas arquivos de imagem",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Convert to base64 for preview and storage
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setPhotoPreview(base64String);
+      setCurrentPet(prev => ({ ...prev, photo_url: base64String }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removePhoto = () => {
+    setPhotoPreview(null);
+    setCurrentPet(prev => ({ ...prev, photo_url: '' }));
+  };
+
   const validatePetFields = () => {
     const errors: Record<string, string> = {};
 
@@ -308,9 +356,11 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
       is_neutered: false,
       is_vaccinated: false,
       allergies: '',
-      medical_notes: ''
+      medical_notes: '',
+      photo_url: ''
     });
 
+    setPhotoPreview(null);
     setValidationErrors({});
 
     toast({
@@ -684,9 +734,17 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
-                                {pet.species === 'dog' ? '🐕' : pet.species === 'cat' ? '🐱' : pet.species === 'bird' ? '🐦' : pet.species === 'rabbit' ? '🐰' : pet.species === 'hamster' ? '🐹' : '🐠'}
-                              </div>
+                              {pet.photo_url ? (
+                                <img
+                                  src={pet.photo_url}
+                                  alt={pet.name}
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-purple-300"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                                  {pet.species === 'dog' ? '🐕' : pet.species === 'cat' ? '🐱' : pet.species === 'bird' ? '🐦' : pet.species === 'rabbit' ? '🐰' : pet.species === 'hamster' ? '🐹' : '🐠'}
+                                </div>
+                              )}
                               <div>
                                 <div className="font-semibold text-lg">{pet.name}</div>
                                 <div className="text-sm text-muted-foreground">
@@ -812,6 +870,49 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                           <AlertCircle className="h-3 w-3" />
                           {validationErrors.name}
                         </p>
+                      )}
+                    </div>
+
+                    {/* Foto do Pet */}
+                    <div>
+                      <Label className="flex items-center gap-2 mb-2">
+                        <Image className="h-4 w-4" />
+                        Foto do Pet (Opcional)
+                      </Label>
+
+                      {!photoPreview ? (
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-purple-300 rounded-lg cursor-pointer bg-purple-50 hover:bg-purple-100 transition-colors">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <Upload className="h-8 w-8 text-purple-500 mb-2" />
+                            <p className="text-sm text-purple-600 font-medium">
+                              Clique para fazer upload
+                            </p>
+                            <p className="text-xs text-purple-500 mt-1">
+                              PNG, JPG ou GIF (Máx. 5MB)
+                            </p>
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                          />
+                        </label>
+                      ) : (
+                        <div className="relative">
+                          <img
+                            src={photoPreview}
+                            alt="Preview"
+                            className="w-full h-32 object-cover rounded-lg border-2 border-purple-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={removePhoto}
+                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors shadow-lg"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
 
@@ -1186,9 +1287,17 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                         {/* Pet Header */}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
-                              {pet.name.charAt(0).toUpperCase()}
-                            </div>
+                            {pet.photo_url ? (
+                              <img
+                                src={pet.photo_url}
+                                alt={pet.name}
+                                className="h-16 w-16 rounded-full object-cover border-2 border-purple-400"
+                              />
+                            ) : (
+                              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                                {pet.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
                             <div>
                               <h5 className="font-semibold text-base">{pet.name}</h5>
                               <p className="text-xs text-muted-foreground">
