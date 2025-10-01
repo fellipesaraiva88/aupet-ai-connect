@@ -63,22 +63,23 @@ const getOrCreateUserInstance = async (userId: string, organizationId: string) =
   const evolution = getEvolutionService();
 
   try {
-    // Criar no Evolution API
-    const evolutionResponse = await evolution.createInstance(instanceName, true);
-
-    // Configurar webhook automaticamente
-    await evolution.setWebhook(instanceName, {
-      enabled: true,
-      url: AUZAP_WEBHOOK_URL,
-      webhookByEvents: true,
-      events: [
-        'QRCODE_UPDATED',
-        'CONNECTION_UPDATE',
-        'MESSAGES_UPSERT',
-        'MESSAGES_UPDATE',
-        'MESSAGES_DELETE',
-        'SEND_MESSAGE'
-      ]
+    // Criar no Evolution API com webhook já configurado
+    const evolutionResponse = await evolution.createInstance({
+      instanceName,
+      qrcode: true,
+      webhook: {
+        url: AUZAP_WEBHOOK_URL,
+        byEvents: true,
+        events: [
+          'QRCODE_UPDATED',
+          'CONNECTION_UPDATE',
+          'MESSAGES_SET',
+          'MESSAGES_UPSERT',
+          'CONTACTS_UPSERT',
+          'PRESENCE_UPDATE',
+          'CHATS_SET'
+        ]
+      }
     });
 
     // Salvar no Supabase

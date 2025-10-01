@@ -62,32 +62,74 @@ export class EvolutionAPIService {
   }
 
   /**
-   * Create a new WhatsApp instance
+   * Create a new WhatsApp instance with full configuration
    */
-  async createInstance(instanceName: string, qrcode: boolean = true): Promise<InstanceResponse> {
+  async createInstance(config: {
+    instanceName: string;
+    qrcode?: boolean;
+    webhook?: {
+      url: string;
+      byEvents?: boolean;
+      events?: string[];
+      headers?: Record<string, string>;
+    };
+  }): Promise<InstanceResponse> {
     try {
-      logger.info('Creating Evolution API instance', { instanceName, qrcode });
-
-      const response = await this.client.post<InstanceResponse>('/instance/create', {
-        instanceName,
-        qrcode,
-        integration: 'WHATSAPP-BAILEYS'
+      logger.info('Creating Evolution API instance', {
+        instanceName: config.instanceName,
+        qrcode: config.qrcode ?? true
       });
 
+      const requestBody: any = {
+        instanceName: config.instanceName,
+        integration: 'WHATSAPP-BAILEYS',
+        // Configurações conforme solicitado
+        rejectCall: false,
+        groupsIgnore: true,
+        alwaysOnline: false,
+        syncFullHistory: true
+      };
+
+      // Add webhook if provided
+      if (config.webhook) {
+        requestBody.webhook = {
+          url: config.webhook.url,
+          byEvents: config.webhook.byEvents ?? true,
+          base64: true,
+          events: config.webhook.events ?? [
+            'QRCODE_UPDATED',
+            'MESSAGES_SET',
+            'MESSAGES_UPSERT',
+            'CONTACTS_UPSERT',
+            'PRESENCE_UPDATE',
+            'CHATS_SET'
+          ]
+        };
+      }
+
+      const response = await this.client.post<InstanceResponse>('/instance/create', requestBody);
+
       logger.info('Instance created successfully', {
-        instanceName,
+        instanceName: config.instanceName,
         status: response.data.instance.status
       });
 
       return response.data;
     } catch (error: any) {
       logger.error('Error creating instance', {
-        instanceName,
+        instanceName: config.instanceName,
         error: error.message,
         response: error.response?.data
       });
       throw error;
     }
+  }
+
+  /**
+   * Create instance (legacy - backward compatibility)
+   */
+  async createInstanceBasic(instanceName: string, qrcode: boolean = true): Promise<InstanceResponse> {
+    return this.createInstance({ instanceName, qrcode });
   }
 
   /**
@@ -116,9 +158,9 @@ export class EvolutionAPIService {
   }
 
   /**
-   * Get instance status
+   * Get instance connection state
    */
-  async getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
+  async getConnectionState(instanceName: string): Promise<InstanceStatusResponse> {
     try {
       const response = await this.client.get<InstanceStatusResponse>(
         `/instance/connectionState/${instanceName}`
@@ -126,12 +168,19 @@ export class EvolutionAPIService {
 
       return response.data;
     } catch (error: any) {
-      logger.error('Error getting instance status', {
+      logger.error('Error getting connection state', {
         instanceName,
         error: error.message
       });
       throw error;
     }
+  }
+
+  /**
+   * Get instance status (legacy - backward compatibility)
+   */
+  async getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
+    return this.getConnectionState(instanceName);
   }
 
   /**
