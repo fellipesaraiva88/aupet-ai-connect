@@ -481,6 +481,8 @@ router.put('/instance/:instanceName/settings', asyncHandler(async (req: Request,
 }));
 
 // Sincronização de contatos
+// TEMPORARIAMENTE DESABILITADO - fetchContacts não implementado na Evolution API v2
+/*
 router.post('/instance/:instanceName/sync/contacts', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
@@ -548,8 +550,11 @@ router.post('/instance/:instanceName/sync/contacts', asyncHandler(async (req: Re
     throw createError('Erro ao sincronizar contatos', 500);
   }
 }));
+*/
 
 // Sincronização de conversas
+// TEMPORARIAMENTE DESABILITADO - fetchChats não implementado na Evolution API v2
+/*
 router.post('/instance/:instanceName/sync/chats', asyncHandler(async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
@@ -628,6 +633,7 @@ router.post('/instance/:instanceName/sync/chats', asyncHandler(async (req: Reque
     throw createError('Erro ao sincronizar conversas', 500);
   }
 }));
+*/
 
 // Templates de mensagens
 router.get('/templates', asyncHandler(async (req: Request, res: Response) => {
