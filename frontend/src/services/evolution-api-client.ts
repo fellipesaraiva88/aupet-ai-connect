@@ -55,36 +55,21 @@ class EvolutionAPIClient {
   }
 
   /**
-   * Busca informações de uma instância específica
+   * @deprecated Não usar - Frontend não deve chamar Evolution API diretamente
+   * Use os endpoints do backend em /api/whatsapp/*
    */
   async fetchInstance(instanceName: string): Promise<InstanceInfo | null> {
-    try {
-      const response = await this.client.get('/instance/fetchInstances', {
-        params: { instanceName }
-      });
-
-      const instances = response.data;
-      if (Array.isArray(instances) && instances.length > 0) {
-        return instances[0];
-      }
-      return null;
-    } catch (error: any) {
-      console.error('Evolution API Fetch Error:', error.response?.data || error.message);
-      return null;
-    }
+    console.warn('⚠️  fetchInstance is deprecated - use backend API instead');
+    return null;
   }
 
   /**
-   * Lista todas as instâncias
+   * @deprecated Não usar - Frontend não deve chamar Evolution API diretamente
+   * Use os endpoints do backend em /api/whatsapp/*
    */
   async listInstances(): Promise<InstanceInfo[]> {
-    try {
-      const response = await this.client.get('/instance/fetchInstances');
-      return response.data || [];
-    } catch (error: any) {
-      console.error('Evolution API List Error:', error.response?.data || error.message);
-      return [];
-    }
+    console.warn('⚠️  listInstances is deprecated - use backend API instead');
+    return [];
   }
 
   /**

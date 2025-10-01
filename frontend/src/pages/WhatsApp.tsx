@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, QrCode, CheckCircle, WifiOff, RefreshCw, MessageSquare } from "lucide-react";
 import { useGlobalToast } from "@/hooks/useEnhancedToast";
-import { supabase } from "@/integrations/supabase/client";
-import { getEvolutionAPIClient } from "@/services/evolution-api-client";
 import { api } from "@/hooks/useApiData";
 
 interface WhatsAppStatus {
@@ -26,41 +24,16 @@ const WhatsApp = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Gerar nome da instância baseado no usuário
-  const getInstanceName = async (): Promise<string> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return `user_${user?.id}`;
-  };
-
-  // Buscar status inicial
+  // Buscar status inicial via backend
   const fetchStatus = async () => {
     try {
-      const evolutionAPI = getEvolutionAPIClient();
-      const instanceName = await getInstanceName();
+      const response = await api.get('/whatsapp/status');
+      const data = response.data.data;
 
-      // Buscar instância do Evolution API
-      const instance = await evolutionAPI.fetchInstance(instanceName);
-
-      if (!instance) {
-        setStatus({
-          status: 'disconnected',
-          needsQR: false,
-          lastUpdate: new Date().toISOString()
-        });
-        return;
-      }
-
-      const connectionStatus = instance.connectionStatus || instance.status || 'disconnected';
-
-      setStatus({
-        status: connectionStatus === 'open' ? 'connected' :
-                connectionStatus === 'close' ? 'disconnected' : 'waiting_qr',
-        needsQR: connectionStatus === 'close',
-        lastUpdate: new Date().toISOString()
-      });
+      setStatus(data);
 
       // Se precisa de QR, buscar
-      if (connectionStatus === 'close') {
+      if (data.needsQR) {
         await fetchQRCode();
       }
     } catch (error: any) {
@@ -75,21 +48,14 @@ const WhatsApp = () => {
     }
   };
 
-  // Buscar QR code
+  // Buscar QR code via backend
   const fetchQRCode = async () => {
     try {
-      const evolutionAPI = getEvolutionAPIClient();
-      const instanceName = await getInstanceName();
+      const response = await api.get('/whatsapp/qrcode');
+      const data = response.data.data;
 
-      const connectResponse = await evolutionAPI.connectInstance(instanceName);
-
-      // Priorizar base64 image
-      const qrCodeData = connectResponse.base64 ||
-                         connectResponse.qrcode?.base64 ||
-                         connectResponse.code;
-
-      if (qrCodeData) {
-        setQrCode(qrCodeData);
+      if (data.available && data.qrCode) {
+        setQrCode(data.qrCode);
         setStatus({
           status: 'waiting_qr',
           needsQR: true,
@@ -102,15 +68,25 @@ const WhatsApp = () => {
     }
   };
 
-  // Conectar WhatsApp
+  // Conectar WhatsApp via backend
   const handleConnect = async () => {
     try {
       setConnecting(true);
       console.log('Iniciando conexão WhatsApp...');
 
-      await fetchQRCode();
+      const response = await api.post('/whatsapp/connect');
+      const data = response.data.data;
 
-      console.log('QR Code gerado com sucesso!');
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+        console.log('QR Code gerado com sucesso!');
+      }
+
+      setStatus({
+        status: data.qrCode ? 'waiting_qr' : 'connecting',
+        needsQR: !!data.qrCode,
+        lastUpdate: new Date().toISOString()
+      });
 
       // Iniciar polling para verificar conexão
       startPolling();
