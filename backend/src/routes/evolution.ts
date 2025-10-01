@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
-import { EvolutionAPIService } from '../services/evolution';
+import { getEvolutionAPIService } from '../services/evolution-api';
 import { WebSocketService } from '../services/websocket';
 import { logger } from '../utils/logger';
 import {
@@ -14,7 +14,6 @@ const router = Router();
 
 // Lazy initialize services
 let supabaseService: SupabaseService;
-let evolutionService: EvolutionAPIService;
 
 const getSupabaseService = () => {
   if (!supabaseService) {
@@ -24,10 +23,7 @@ const getSupabaseService = () => {
 };
 
 const getEvolutionService = () => {
-  if (!evolutionService) {
-    evolutionService = new EvolutionAPIService();
-  }
-  return evolutionService;
+  return getEvolutionAPIService();
 };
 
 // Create new WhatsApp instance

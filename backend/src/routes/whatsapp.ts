@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { SupabaseService } from '../services/supabase';
-import { EvolutionAPIService } from '../services/evolution';
+import { getEvolutionAPIService } from '../services/evolution-api';
 import { WebhookProcessor } from '../services/webhookProcessor';
 import { WebSocketService } from '../services/websocket';
 import { logger } from '../utils/logger';
@@ -15,7 +15,6 @@ const AUZAP_WEBHOOK_URL = 'https://webhook.auzap.com.br';
 
 // Lazy initialize services
 let supabaseService: SupabaseService;
-let evolutionService: EvolutionAPIService;
 let webhookProcessor: WebhookProcessor;
 
 const getSupabaseService = () => {
@@ -26,10 +25,7 @@ const getSupabaseService = () => {
 };
 
 const getEvolutionService = () => {
-  if (!evolutionService) {
-    evolutionService = new EvolutionAPIService();
-  }
-  return evolutionService;
+  return getEvolutionAPIService();
 };
 
 const getWebhookProcessor = () => {
@@ -162,7 +158,7 @@ router.get('/status', asyncHandler(async (req: Request, res: Response) => {
     // Buscar status atual da Evolution API
     let connectionState = 'close';
     try {
-      const statusResponse = await evolution.getInstanceStatus(instance.instance_name);
+      const statusResponse = await evolution.getConnectionState(instance.instance_name);
       connectionState = statusResponse.instance.state;
     } catch (error) {
       logger.warn('Could not get instance status from Evolution API', {
