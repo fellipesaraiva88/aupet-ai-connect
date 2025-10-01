@@ -98,10 +98,26 @@ const WhatsApp = () => {
   const handleConnect = async () => {
     try {
       setConnecting(true);
+      console.log('Iniciando conexão WhatsApp...');
+
       const response = await api.post('/whatsapp/connect');
       const data = response.data.data;
 
+      console.log('Resposta do servidor:', {
+        hasQrCode: !!data.qrCode,
+        qrCodeLength: data.qrCode?.length,
+        qrCodePrefix: data.qrCode?.substring(0, 30),
+        status: data.status
+      });
+
       if (data.qrCode) {
+        // Validar se QR Code está em formato correto
+        if (!data.qrCode.startsWith('data:image')) {
+          console.error('QR Code em formato inválido:', data.qrCode.substring(0, 50));
+          toast.error('Erro no QR Code', 'QR Code em formato inválido. Contate o suporte.');
+          return;
+        }
+
         setQrCode(data.qrCode);
         setStatus({
           status: 'waiting_qr',
@@ -120,9 +136,17 @@ const WhatsApp = () => {
           lastUpdate: new Date().toISOString()
         });
         toast.success('WhatsApp conectado!', 'Sua conta está sincronizada');
+      } else {
+        console.warn('Resposta inesperada do servidor:', data);
+        toast.error('Erro ao gerar QR Code', 'Nenhum QR Code foi retornado pelo servidor');
       }
     } catch (error: any) {
       console.error('Error connecting:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       toast.error('Erro ao conectar', error.response?.data?.message || 'Tente novamente');
     } finally {
       setConnecting(false);
@@ -305,7 +329,7 @@ const WhatsApp = () => {
                   </div>
                 )}
 
-                {(status?.status === 'waiting_qr' || status?.status === 'connecting') && qrCode && (
+                {(status?.status === 'waiting_qr' || status?.status === 'connecting') && (
                   <div className="text-center py-8 space-y-4">
                     <div>
                       <h3 className="font-semibold text-lg mb-2">Escaneie o QR Code</h3>
@@ -314,15 +338,32 @@ const WhatsApp = () => {
                       </p>
                     </div>
 
-                    <div className="flex justify-center">
-                      <div className="bg-white p-4 rounded-lg border-2 border-border inline-block">
-                        <img
-                          src={qrCode}
-                          alt="QR Code WhatsApp"
-                          className="w-64 h-64"
-                        />
+                    {qrCode ? (
+                      <div className="flex justify-center">
+                        <div className="bg-white p-4 rounded-lg border-2 border-border inline-block">
+                          <img
+                            src={qrCode}
+                            alt="QR Code WhatsApp"
+                            className="w-64 h-64"
+                            onError={(e) => {
+                              console.error('Erro ao carregar imagem do QR Code');
+                              toast.error('Erro ao exibir QR Code', 'Tente gerar um novo código');
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex justify-center">
+                        <div className="bg-gray-100 p-4 rounded-lg border-2 border-gray-300 inline-block">
+                          <div className="w-64 h-64 flex items-center justify-center">
+                            <div className="text-center space-y-2">
+                              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                              <p className="text-sm text-muted-foreground">Gerando QR Code...</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">

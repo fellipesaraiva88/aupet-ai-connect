@@ -212,16 +212,37 @@ router.post('/connect', asyncHandler(async (req: Request, res: Response) => {
     // Conectar e obter QR code
     const connectResponse = await evolution.connect(instance.instance_name);
 
+    // Log completo da resposta para diagnóstico
+    logger.info('Evolution API connect response', {
+      instanceName: instance.instance_name,
+      hasQrcode: !!connectResponse.qrcode,
+      hasCode: !!connectResponse.code,
+      hasPairingCode: !!connectResponse.pairingCode,
+      responseKeys: Object.keys(connectResponse)
+    });
+
     // Extrair QR code da resposta (pode vir em diferentes formatos)
-    const qrCodeData = connectResponse.qrcode?.base64 || connectResponse.code;
+    // Evolution API v2 retorna em connectResponse.code diretamente
+    let qrCodeData = connectResponse.qrcode?.base64 || connectResponse.code;
+
+    // Se não for data URI, adicionar o prefixo
+    if (qrCodeData && !qrCodeData.startsWith('data:')) {
+      qrCodeData = `data:image/png;base64,${qrCodeData}`;
+    }
 
     if (!qrCodeData) {
-      logger.warn('No QR code in connect response', {
+      logger.error('No QR code in connect response', {
         instanceName: instance.instance_name,
-        response: connectResponse
+        fullResponse: JSON.stringify(connectResponse)
       });
-      throw createError('Não foi possível gerar QR Code', 500);
+      throw createError('Não foi possível gerar QR Code. Verifique se a instância está configurada corretamente.', 500);
     }
+
+    logger.info('QR Code extracted successfully', {
+      instanceName: instance.instance_name,
+      qrCodeLength: qrCodeData.length,
+      isDataUri: qrCodeData.startsWith('data:')
+    });
 
     // Atualizar instância com QR code
     await supabase.supabase
@@ -338,6 +359,7 @@ router.get('/qrcode', asyncHandler(async (req: Request, res: Response) => {
       .single();
 
     if (!instance) {
+      logger.warn('No instance found for QR code request', { userId, organizationId });
       const response: ApiResponse<any> = {
         success: true,
         data: {
@@ -349,6 +371,13 @@ router.get('/qrcode', asyncHandler(async (req: Request, res: Response) => {
       };
       return res.json(response);
     }
+
+    logger.info('QR Code request', {
+      userId,
+      instanceName: instance.instance_name,
+      hasQrCode: !!instance.qr_code,
+      qrCodeLength: instance.qr_code?.length || 0
+    });
 
     const response: ApiResponse<any> = {
       success: true,
