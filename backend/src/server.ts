@@ -46,6 +46,7 @@ import { tenantIsolationMiddleware } from './middleware/tenant-isolation';
 import { WebSocketService } from './services/websocket';
 import { SupabaseService } from './services/supabase';
 import { MonitoringService } from './services/monitoring';
+import { getMessageQueueWorker } from './services/message-queue-worker';
 import { logger } from './utils/logger';
 
 // Environment variables already loaded above
@@ -77,6 +78,7 @@ class AuzapServer {
     this.setupRoutes();
     this.setupWebSocket();
     this.setupErrorHandling();
+    this.startBackgroundWorkers();
   }
 
   private setupMiddleware(): void {
@@ -272,6 +274,22 @@ class AuzapServer {
       logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
       process.exit(1);
     });
+  }
+
+  private startBackgroundWorkers(): void {
+    logger.info('Starting background workers...');
+
+    // Start message queue worker
+    const messageQueueWorker = getMessageQueueWorker();
+    messageQueueWorker.start();
+    logger.info('✅ Message queue worker started');
+
+    // Cleanup old messages daily
+    setInterval(() => {
+      messageQueueWorker.cleanupOldMessages().catch((error) => {
+        logger.error('Error in cleanup task:', error);
+      });
+    }, 24 * 60 * 60 * 1000); // 24 hours
   }
 
   public start(): void {

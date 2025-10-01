@@ -1,5 +1,6 @@
 import { SupabaseService } from './supabase';
 import { WebSocketService } from './websocket';
+import { AIMessageProcessor } from './ai-message-processor';
 import { logger } from '../utils/logger';
 
 interface WebhookEvent {
@@ -59,10 +60,12 @@ interface QRCodeEvent {
 export class WebhookProcessor {
   private supabaseService: SupabaseService;
   private wsService?: WebSocketService;
+  private aiProcessor: AIMessageProcessor;
 
   constructor(wsService?: WebSocketService) {
     this.supabaseService = new SupabaseService();
     this.wsService = wsService;
+    this.aiProcessor = new AIMessageProcessor();
   }
 
   async processWebhook(payload: WebhookEvent): Promise<void> {
@@ -216,16 +219,25 @@ export class WebhookProcessor {
         });
       }
 
-      // Processar auto-respostas
+      // Processar com IA (somente mensagens recebidas, não enviadas pelo bot)
       if (!isFromMe && content.text) {
-        await this.processAutoReplies(instance.data.id, phoneNumber, content.text, conversation.id);
+        // Processar mensagem com IA automaticamente
+        await this.aiProcessor.processIncomingMessage({
+          messageId: savedMessage.id,
+          messageContent: content.text,
+          fromNumber: phoneNumber,
+          instanceId: instance.data.id,
+          organizationId: instance.data.organization_id,
+          conversationId: conversation.id
+        });
       }
 
       logger.webhook('MESSAGE_PROCESSED', instanceName, {
         messageId: messageData.key.id,
         direction,
         type: messageType,
-        conversationId: conversation.id
+        conversationId: conversation.id,
+        processedByAI: !isFromMe && !!content.text
       });
 
     } catch (error) {
@@ -300,6 +312,11 @@ export class WebhookProcessor {
       if (error) {
         logger.error('Error updating instance connection status:', error);
         return;
+      }
+
+      // Se conectado pela primeira vez, criar configuração padrão de auto-reply
+      if (isConnected && updatedInstance) {
+        await this.createDefaultAutoReplyConfig(updatedInstance.id);
       }
 
       // Notificar via WebSocket
@@ -594,6 +611,58 @@ export class WebhookProcessor {
       }
     } catch (error) {
       logger.error('Error processing auto-replies:', error);
+    }
+  }
+
+  /**
+   * Cria configuração padrão de auto-reply quando WhatsApp conecta pela primeira vez
+   */
+  private async createDefaultAutoReplyConfig(instanceId: string): Promise<void> {
+    try {
+      // Verificar se já existe configuração
+      const { data: existingConfig } = await this.supabaseService.supabase
+        .from('whatsapp_instance_settings')
+        .select('id')
+        .eq('instance_id', instanceId)
+        .single();
+
+      if (existingConfig) {
+        logger.info('Auto-reply config already exists', { instanceId });
+        return;
+      }
+
+      // Criar configuração padrão
+      const { error } = await this.supabaseService.supabase
+        .from('whatsapp_instance_settings')
+        .insert({
+          instance_id: instanceId,
+          auto_reply: true,
+          ai_enabled: true,
+          business_hours: {
+            start: '08:00',
+            end: '18:00',
+            days: [1, 2, 3, 4, 5],
+            enabled: true
+          },
+          welcome_message: 'Olá! 🐾 Bem-vindo ao nosso atendimento. Como posso ajudar você e seu pet hoje?',
+          away_message: 'Obrigado pela sua mensagem! No momento estamos fora do horário de atendimento. Retornaremos em breve! 🐾',
+          max_daily_messages: 1000,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        logger.error('Error creating default auto-reply config:', error);
+        return;
+      }
+
+      logger.info('Default auto-reply config created successfully', {
+        instanceId,
+        autoReply: true,
+        aiEnabled: true
+      });
+
+    } catch (error) {
+      logger.error('Error in createDefaultAutoReplyConfig:', error);
     }
   }
 }
