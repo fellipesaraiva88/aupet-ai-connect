@@ -87,6 +87,18 @@ const UserManagement = withChunkErrorBoundary(
   lazy(() => import("./pages/admin/UserManagement")),
   'user-management'
 );
+const AuditLogs = withChunkErrorBoundary(
+  lazy(() => import("./pages/admin/AuditLogs")),
+  'audit-logs'
+);
+const Permissions = withChunkErrorBoundary(
+  lazy(() => import("./pages/admin/Permissions")),
+  'permissions'
+);
+const SystemSettings = withChunkErrorBoundary(
+  lazy(() => import("./pages/admin/SystemSettings")),
+  'system-settings'
+);
 
 // Mobile pages
 const MobileDashboard = withChunkErrorBoundary(
@@ -480,20 +492,27 @@ const AppRoutes = () => {
               <UserManagement />
             </Suspense>
           } />
-          <Route path="audit-logs" element={
+          <Route path="audit" element={
             <Suspense fallback={<PageLoadingComponent />}>
-              {withChunkErrorBoundary(
-                lazy(() => import("./pages/admin/AuditLogs")),
-                'audit-logs-page'
-              )}
+              <AuditLogs />
             </Suspense>
           } />
-          <Route path="permissions" element={
+          <Route path="roles" element={
             <Suspense fallback={<PageLoadingComponent />}>
-              {withChunkErrorBoundary(
-                lazy(() => import("./pages/admin/Permissions")),
-                'permissions-page'
-              )}
+              <Permissions />
+            </Suspense>
+          } />
+          <Route path="settings" element={
+            <Suspense fallback={<PageLoadingComponent />}>
+              <SystemSettings />
+            </Suspense>
+          } />
+          <Route path="organizations" element={
+            <Suspense fallback={<PageLoadingComponent />}>
+              <div className="p-6 text-center">
+                <h1 className="text-2xl font-bold mb-4">Organizações</h1>
+                <p className="text-muted-foreground">Página em desenvolvimento</p>
+              </div>
             </Suspense>
           } />
         </Route>
