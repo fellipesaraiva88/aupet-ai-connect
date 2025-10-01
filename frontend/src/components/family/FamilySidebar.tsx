@@ -744,7 +744,7 @@ export const FamilySidebar: React.FC<FamilySidebarProps> = ({ onFamilyCreated })
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="0">Filhote (< 1 ano)</SelectItem>
+                            <SelectItem value="0">Filhote (&lt; 1 ano)</SelectItem>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((year) => (
                               <SelectItem key={year} value={String(year)}>
                                 {year} {year === 1 ? 'ano' : 'anos'}
