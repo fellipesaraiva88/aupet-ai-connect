@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { AppointmentSidebar } from "@/components/appointments/AppointmentSidebar";
+import { AppointmentEditDialog } from "@/components/appointments/AppointmentEditDialog";
 import {
   Select,
   SelectContent,
@@ -123,6 +124,7 @@ const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
@@ -301,18 +303,7 @@ const Appointments = () => {
 
   const handleEdit = (appointment: any) => {
     setEditingAppointment(appointment);
-    const appointmentDate = new Date(appointment.appointment_date);
-    setFormData({
-      client_id: appointment.client_id || "",
-      pet_id: appointment.pet_id || "",
-      service_type: appointment.service_type || "",
-      appointment_date: appointmentDate.toISOString().split('T')[0],
-      appointment_time: appointmentDate.toTimeString().slice(0, 5),
-      price: appointment.price || 0,
-      notes: appointment.notes || "",
-    });
-    setSelectedCustomer(appointment.client_id || "");
-    setIsDialogOpen(true);
+    setIsEditDialogOpen(true);
   };
 
   const handleCancel = () => {
@@ -819,6 +810,17 @@ const Appointments = () => {
                 </div>
               )
             )}
+
+            {/* Dialog de Edição do Agendamento */}
+            <AppointmentEditDialog
+              appointment={editingAppointment}
+              open={isEditDialogOpen}
+              onOpenChange={setIsEditDialogOpen}
+              onSuccess={() => {
+                // Refresh appointments list
+                setEditingAppointment(null);
+              }}
+            />
 
             {/* Dialog de Detalhes do Agendamento */}
             <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
