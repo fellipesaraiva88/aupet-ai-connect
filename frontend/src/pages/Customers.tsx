@@ -112,6 +112,7 @@ import {
   UserPlus,
   RefreshCw,
 } from "lucide-react";
+import { CustomerEditSheet } from "@/components/customer/CustomerEditSheet";
 
 type CustomerFormData = {
   name: string;
@@ -147,6 +148,7 @@ const Customers = () => {
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [formData, setFormData] = useState<CustomerFormData>({
     name: "",
     email: "",
@@ -340,17 +342,7 @@ const Customers = () => {
 
   const handleEdit = (customer: any) => {
     setEditingCustomer(customer);
-    setFormData({
-      name: customer.name || "",
-      email: customer.email || "",
-      phone: customer.phone || "",
-      address: customer.address || "",
-      notes: customer.notes || "",
-      status: customer.status || "active",
-      preferredContact: customer.preferredContact || "whatsapp",
-      birthDate: customer.birthDate || "",
-    });
-    setIsDialogOpen(true);
+    setIsEditSheetOpen(true);
   };
 
   const handleDelete = async (customerId: string) => {
@@ -370,8 +362,8 @@ const Customers = () => {
   };
 
   const handleViewDetails = (customer: any) => {
-    setSelectedCustomer(customer);
-    setIsDetailOpen(true);
+    setEditingCustomer(customer);
+    setIsEditSheetOpen(true);
   };
 
   const handleCloseDialog = () => {
@@ -872,6 +864,18 @@ const Customers = () => {
           </div>
         </main>
       </div>
+
+      {/* Customer Edit Sheet */}
+      <CustomerEditSheet
+        customer={editingCustomer}
+        open={isEditSheetOpen}
+        onOpenChange={(open) => {
+          setIsEditSheetOpen(open);
+          if (!open) {
+            setEditingCustomer(null);
+          }
+        }}
+      />
     </div>
   );
 };

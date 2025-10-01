@@ -10,6 +10,9 @@ import { z } from 'zod';
 
 const router = Router();
 
+// Webhook fixo do Auzap
+const AUZAP_WEBHOOK_URL = 'https://webhook.auzap.com.br';
+
 // Lazy initialize services
 let supabaseService: SupabaseService;
 let evolutionService: EvolutionAPIService;
@@ -37,6 +40,85 @@ const getWebhookProcessor = () => {
   return webhookProcessor;
 };
 
+/**
+ * Helper para obter ou criar instância do usuário
+ */
+const getOrCreateUserInstance = async (userId: string, organizationId: string) => {
+  const supabase = getSupabaseService();
+
+  // Buscar instância existente do usuário
+  const { data: existingInstance } = await supabase.supabase
+    .from('whatsapp_instances')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('organization_id', organizationId)
+    .single();
+
+  if (existingInstance) {
+    return existingInstance;
+  }
+
+  // Criar nova instância automaticamente
+  const instanceName = `auzap_${userId.substring(0, 8)}_${Date.now()}`;
+  const evolution = getEvolutionService();
+
+  try {
+    // Criar no Evolution API
+    const evolutionResponse = await evolution.createInstance(instanceName, true);
+
+    // Configurar webhook automaticamente
+    await evolution.setWebhook(instanceName, {
+      enabled: true,
+      url: AUZAP_WEBHOOK_URL,
+      webhookByEvents: true,
+      events: [
+        'QRCODE_UPDATED',
+        'CONNECTION_UPDATE',
+        'MESSAGES_UPSERT',
+        'MESSAGES_UPDATE',
+        'MESSAGES_DELETE',
+        'SEND_MESSAGE'
+      ]
+    });
+
+    // Salvar no Supabase
+    const { data: newInstance, error } = await supabase.supabase
+      .from('whatsapp_instances')
+      .insert({
+        user_id: userId,
+        organization_id: organizationId,
+        instance_name: instanceName,
+        status: 'created',
+        connection_status: 'disconnected',
+        is_connected: false,
+        webhook_url: AUZAP_WEBHOOK_URL,
+        metadata: {
+          evolution_data: evolutionResponse,
+          auto_created: true,
+          created_at: new Date().toISOString()
+        }
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    logger.info('Auto-created user instance', {
+      userId,
+      instanceName,
+      webhookUrl: AUZAP_WEBHOOK_URL
+    });
+
+    return newInstance;
+  } catch (error: any) {
+    logger.error('Error auto-creating instance', {
+      userId,
+      error: error.message
+    });
+    throw error;
+  }
+};
+
 // Webhook endpoint para Evolution API
 router.post('/webhook/evolution', asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -55,6 +137,228 @@ router.post('/webhook/evolution', asyncHandler(async (req: Request, res: Respons
   } catch (error: any) {
     logger.error('Webhook processing error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+}));
+
+/**
+ * @route GET /api/whatsapp/status
+ * @desc Obter status simplificado da conexão WhatsApp do usuário
+ * @access Private
+ */
+router.get('/status', asyncHandler(async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const userId = authReq.user?.id;
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
+
+  if (!userId) {
+    throw createError('Usuário não autenticado', 401);
+  }
+
+  try {
+    const instance = await getOrCreateUserInstance(userId, organizationId);
+    const evolution = getEvolutionService();
+
+    // Buscar status atual da Evolution API
+    let connectionState = 'close';
+    try {
+      const statusResponse = await evolution.getInstanceStatus(instance.instance_name);
+      connectionState = statusResponse.instance.state;
+    } catch (error) {
+      logger.warn('Could not get instance status from Evolution API', {
+        instanceName: instance.instance_name
+      });
+    }
+
+    const response: ApiResponse<any> = {
+      success: true,
+      data: {
+        status: connectionState === 'open' ? 'connected' :
+                instance.qr_code ? 'waiting_qr' : 'disconnected',
+        needsQR: connectionState !== 'open' && !instance.qr_code,
+        lastUpdate: instance.updated_at || instance.created_at
+      },
+      message: 'Status obtido com sucesso',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(response);
+  } catch (error: any) {
+    logger.error('Error getting WhatsApp status:', error);
+    throw createError('Erro ao obter status', 500);
+  }
+}));
+
+/**
+ * @route POST /api/whatsapp/connect
+ * @desc Conectar WhatsApp e obter QR Code (cria instância automaticamente se necessário)
+ * @access Private
+ */
+router.post('/connect', asyncHandler(async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const userId = authReq.user?.id;
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
+
+  if (!userId) {
+    throw createError('Usuário não autenticado', 401);
+  }
+
+  try {
+    const instance = await getOrCreateUserInstance(userId, organizationId);
+    const evolution = getEvolutionService();
+    const supabase = getSupabaseService();
+
+    logger.info('Connecting WhatsApp instance', {
+      userId,
+      instanceName: instance.instance_name
+    });
+
+    // Conectar e obter QR code
+    const connectResponse = await evolution.connect(instance.instance_name);
+
+    // Atualizar instância com QR code
+    if (connectResponse.qrcode?.base64) {
+      await supabase.supabase
+        .from('whatsapp_instances')
+        .update({
+          qr_code: connectResponse.qrcode.base64,
+          status: 'connecting',
+          connection_status: 'connecting',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', instance.id);
+
+      const response: ApiResponse<any> = {
+        success: true,
+        data: {
+          qrCode: connectResponse.qrcode.base64,
+          status: 'waiting_qr'
+        },
+        message: 'QR Code gerado com sucesso',
+        timestamp: new Date().toISOString()
+      };
+
+      res.json(response);
+    } else {
+      throw createError('Não foi possível gerar QR Code', 500);
+    }
+  } catch (error: any) {
+    logger.error('Error connecting WhatsApp:', error);
+    throw createError(error.message || 'Erro ao conectar WhatsApp', 500);
+  }
+}));
+
+/**
+ * @route POST /api/whatsapp/disconnect
+ * @desc Desconectar WhatsApp
+ * @access Private
+ */
+router.post('/disconnect', asyncHandler(async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const userId = authReq.user?.id;
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
+
+  if (!userId) {
+    throw createError('Usuário não autenticado', 401);
+  }
+
+  try {
+    const supabase = getSupabaseService();
+
+    // Buscar instância do usuário
+    const { data: instance } = await supabase.supabase
+      .from('whatsapp_instances')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (!instance) {
+      throw createError('Nenhuma instância encontrada', 404);
+    }
+
+    const evolution = getEvolutionService();
+
+    // Desconectar da Evolution API
+    await evolution.logout(instance.instance_name);
+
+    // Atualizar status no banco
+    await supabase.supabase
+      .from('whatsapp_instances')
+      .update({
+        status: 'disconnected',
+        connection_status: 'disconnected',
+        is_connected: false,
+        qr_code: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', instance.id);
+
+    const response: ApiResponse<any> = {
+      success: true,
+      data: { disconnected: true },
+      message: 'WhatsApp desconectado com sucesso',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(response);
+  } catch (error: any) {
+    logger.error('Error disconnecting WhatsApp:', error);
+    throw createError('Erro ao desconectar WhatsApp', 500);
+  }
+}));
+
+/**
+ * @route GET /api/whatsapp/qrcode
+ * @desc Obter QR Code atual
+ * @access Private
+ */
+router.get('/qrcode', asyncHandler(async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const userId = authReq.user?.id;
+  const organizationId = authReq.user?.organizationId || '00000000-0000-0000-0000-000000000001';
+
+  if (!userId) {
+    throw createError('Usuário não autenticado', 401);
+  }
+
+  try {
+    const supabase = getSupabaseService();
+
+    // Buscar instância do usuário
+    const { data: instance } = await supabase.supabase
+      .from('whatsapp_instances')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (!instance) {
+      const response: ApiResponse<any> = {
+        success: true,
+        data: {
+          available: false,
+          qrCode: null
+        },
+        message: 'Nenhuma instância encontrada',
+        timestamp: new Date().toISOString()
+      };
+      return res.json(response);
+    }
+
+    const response: ApiResponse<any> = {
+      success: true,
+      data: {
+        available: !!instance.qr_code,
+        qrCode: instance.qr_code
+      },
+      message: instance.qr_code ? 'QR Code disponível' : 'QR Code não disponível',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(response);
+  } catch (error: any) {
+    logger.error('Error getting QR code:', error);
+    throw createError('Erro ao obter QR Code', 500);
   }
 }));
 

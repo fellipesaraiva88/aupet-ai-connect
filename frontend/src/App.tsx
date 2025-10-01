@@ -73,10 +73,6 @@ const Signup = withChunkErrorBoundary(
   lazy(() => import("./pages/Signup")),
   'signup-page'
 );
-const Instances = withChunkErrorBoundary(
-  lazy(() => import("./pages/Instances")),
-  'instances-page'
-);
 
 // Mobile pages
 const MobileDashboard = withChunkErrorBoundary(
@@ -392,17 +388,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } />
 
-        <Route path="/instances" element={
-          <ProtectedRoute>
-            <Suspense fallback={<PageLoadingComponent />}>
-              {shouldUseMobileLayout ? (
-                <MobilePlaceholder pageName="Instâncias" />
-              ) : (
-                <Instances />
-              )}
-            </Suspense>
-          </ProtectedRoute>
-        } />
 
         {/* Special mobile routes */}
         <Route path="/menu" element={
