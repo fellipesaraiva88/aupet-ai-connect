@@ -7,11 +7,20 @@ import { z } from 'zod';
 
 const router = Router();
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+// Lazy initialize Supabase client
+let supabase: ReturnType<typeof createClient> | null = null;
+const getSupabase = () => {
+  if (!supabase) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+      throw new Error('Supabase environment variables are not configured');
+    }
+    supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY
+    );
+  }
+  return supabase;
+};
 
 // Validation schemas
 const createInstanceSchema = z.object({
@@ -60,7 +69,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     });
 
     // Save to Supabase whatsapp_instances table
-    const { data: instance, error } = await supabase
+    const { data: instance, error } = await getSupabase()
       .from('whatsapp_instances')
       .insert({
         user_id: userId,
@@ -113,7 +122,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const { data: instances, error } = await supabase
+    const { data: instances, error } = await getSupabase()
       .from('whatsapp_instances')
       .select('*')
       .eq('organization_id', organizationId)
@@ -148,7 +157,7 @@ router.post('/:instanceId/connect', asyncHandler(async (req: Request, res: Respo
 
   try {
     // Verify instance ownership
-    const { data: instance, error } = await supabase
+    const { data: instance, error } = await getSupabase()
       .from('whatsapp_instances')
       .select('*')
       .eq('instance_id', instanceId)
@@ -164,7 +173,7 @@ router.post('/:instanceId/connect', asyncHandler(async (req: Request, res: Respo
     const connectResponse = await evolutionService.connect(instanceId);
 
     // Update instance with QR code
-    const { error: updateError } = await supabase
+    const { error: updateError } = await getSupabase()
       .from('whatsapp_instances')
       .update({
         status: 'connecting',
@@ -205,7 +214,7 @@ router.get('/:instanceId/status', asyncHandler(async (req: Request, res: Respons
 
   try {
     // Verify instance ownership
-    const { data: instance, error } = await supabase
+    const { data: instance, error } = await getSupabase()
       .from('whatsapp_instances')
       .select('*')
       .eq('instance_id', instanceId)
@@ -245,7 +254,7 @@ router.get('/:instanceId/status', asyncHandler(async (req: Request, res: Respons
       updates.status = 'connecting';
     }
 
-    await supabase
+    await getSupabase()
       .from('whatsapp_instances')
       .update(updates)
       .eq('instance_id', instanceId);
@@ -281,7 +290,7 @@ router.delete('/:instanceId/disconnect', asyncHandler(async (req: Request, res: 
 
   try {
     // Verify instance ownership
-    const { data: instance, error } = await supabase
+    const { data: instance, error } = await getSupabase()
       .from('whatsapp_instances')
       .select('*')
       .eq('instance_id', instanceId)
@@ -297,7 +306,7 @@ router.delete('/:instanceId/disconnect', asyncHandler(async (req: Request, res: 
     await evolutionService.logout(instanceId);
 
     // Update instance status
-    await supabase
+    await getSupabase()
       .from('whatsapp_instances')
       .update({
         status: 'disconnected',
@@ -335,7 +344,7 @@ router.delete('/:instanceId', asyncHandler(async (req: Request, res: Response) =
 
   try {
     // Verify instance ownership
-    const { data: instance, error } = await supabase
+    const { data: instance, error } = await getSupabase()
       .from('whatsapp_instances')
       .select('*')
       .eq('instance_id', instanceId)
@@ -356,7 +365,7 @@ router.delete('/:instanceId', asyncHandler(async (req: Request, res: Response) =
     }
 
     // Delete from database
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await getSupabase()
       .from('whatsapp_instances')
       .delete()
       .eq('instance_id', instanceId)
