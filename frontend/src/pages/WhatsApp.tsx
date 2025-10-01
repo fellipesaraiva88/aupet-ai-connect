@@ -9,6 +9,7 @@ import { Loader2, QrCode, CheckCircle, WifiOff, RefreshCw, MessageSquare } from 
 import { useGlobalToast } from "@/hooks/useEnhancedToast";
 import { supabase } from "@/integrations/supabase/client";
 import { getEvolutionAPIClient } from "@/services/evolution-api-client";
+import { api } from "@/hooks/useApiData";
 
 interface WhatsAppStatus {
   status: 'connected' | 'disconnected' | 'waiting_qr' | 'connecting';
