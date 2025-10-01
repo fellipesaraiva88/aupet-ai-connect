@@ -13,8 +13,6 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "compression": "^1.7.4",
-    "express": "^4.21.2",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -47,10 +45,13 @@
     "@tanstack/react-query": "^5.61.0",
     "@vitejs/plugin-react-swc": "^4.1.0",
     "axios": "^1.12.2",
+    "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
+    "compression": "^1.7.4",
     "date-fns": "^4.1.0",
+    "express": "^4.21.2",
     "framer-motion": "^12.23.22",
     "immer": "^10.1.3",
     "lucide-react": "^0.468.0",

@@ -4,17 +4,31 @@ import { getEvolutionAPIService } from '../services/evolution-api-unified';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
+import { WhatsAppInstance, WhatsAppInstanceInsert, WhatsAppInstanceUpdate } from '../types/database';
 
 const router = Router();
 
-// Lazy initialize Supabase client
-let supabase: ReturnType<typeof createClient> | null = null;
+// Define database schema type
+type Database = {
+  public: {
+    Tables: {
+      whatsapp_instances: {
+        Row: WhatsAppInstance;
+        Insert: WhatsAppInstanceInsert;
+        Update: WhatsAppInstanceUpdate;
+      };
+    };
+  };
+};
+
+// Lazy initialize Supabase client with types
+let supabase: ReturnType<typeof createClient<Database>> | null = null;
 const getSupabase = () => {
   if (!supabase) {
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
       throw new Error('Supabase environment variables are not configured');
     }
-    supabase = createClient(
+    supabase = createClient<Database>(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_KEY
     );
@@ -69,26 +83,32 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     });
 
     // Save to Supabase whatsapp_instances table
+    const insertData: WhatsAppInstanceInsert = {
+      user_id: userId,
+      organization_id: organizationId,
+      instance_name: instanceName,
+      instance_id: instanceName,
+      status: 'created',
+      webhook_url: evolutionWebhookUrl,
+      api_key: evolutionResponse.hash?.apikey,
+      metadata: {
+        evolution_data: evolutionResponse
+      }
+    };
+
     const { data: instance, error } = await getSupabase()
       .from('whatsapp_instances')
-      .insert({
-        user_id: userId,
-        organization_id: organizationId,
-        instance_name: instanceName,
-        instance_id: instanceName,
-        status: 'created',
-        webhook_url: evolutionWebhookUrl,
-        api_key: evolutionResponse.hash?.apikey,
-        metadata: {
-          evolution_data: evolutionResponse
-        }
-      })
+      .insert(insertData as any)
       .select()
-      .single();
+      .single() as { data: WhatsAppInstance | null; error: any };
 
     if (error) {
       logger.error('Error saving instance to Supabase:', error);
       throw error;
+    }
+
+    if (!instance) {
+      throw createError('Falha ao criar instância', 500);
     }
 
     logger.info('Instance created successfully', {
@@ -173,13 +193,15 @@ router.post('/:instanceId/connect', asyncHandler(async (req: Request, res: Respo
     const connectResponse = await evolutionService.connect(instanceId);
 
     // Update instance with QR code
-    const { error: updateError } = await getSupabase()
-      .from('whatsapp_instances')
-      .update({
-        status: 'connecting',
-        qr_code: connectResponse.qrcode?.base64 || null,
-        updated_at: new Date().toISOString()
-      })
+    const updateData: WhatsAppInstanceUpdate = {
+      status: 'connecting',
+      qr_code: connectResponse.qrcode?.base64 || null,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: updateError } = await (getSupabase()
+      .from('whatsapp_instances') as any)
+      .update(updateData)
       .eq('instance_id', instanceId);
 
     if (updateError) throw updateError;
@@ -232,7 +254,7 @@ router.get('/:instanceId/status', asyncHandler(async (req: Request, res: Respons
     const connectionState = statusResponse.instance.state;
 
     // Update database
-    const updates: any = {
+    const updates: WhatsAppInstanceUpdate = {
       connection_status: connectionState,
       last_heartbeat: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -242,7 +264,7 @@ router.get('/:instanceId/status', asyncHandler(async (req: Request, res: Respons
     if (connectionState === 'open') {
       updates.status = 'connected';
       updates.is_connected = true;
-      if (!instance.connected_at) {
+      if (instance && !('connected_at' in instance)) {
         updates.connected_at = new Date().toISOString();
       }
       // Clear QR code when connected
@@ -254,8 +276,8 @@ router.get('/:instanceId/status', asyncHandler(async (req: Request, res: Respons
       updates.status = 'connecting';
     }
 
-    await getSupabase()
-      .from('whatsapp_instances')
+    await (getSupabase()
+      .from('whatsapp_instances') as any)
       .update(updates)
       .eq('instance_id', instanceId);
 
@@ -306,15 +328,17 @@ router.delete('/:instanceId/disconnect', asyncHandler(async (req: Request, res: 
     await evolutionService.logout(instanceId);
 
     // Update instance status
-    await getSupabase()
-      .from('whatsapp_instances')
-      .update({
-        status: 'disconnected',
-        connection_status: 'close',
-        is_connected: false,
-        qr_code: null,
-        updated_at: new Date().toISOString()
-      })
+    const disconnectUpdate: WhatsAppInstanceUpdate = {
+      status: 'disconnected',
+      connection_status: 'close',
+      is_connected: false,
+      qr_code: null,
+      updated_at: new Date().toISOString()
+    };
+
+    await (getSupabase()
+      .from('whatsapp_instances') as any)
+      .update(disconnectUpdate)
       .eq('instance_id', instanceId);
 
     res.json({

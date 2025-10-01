@@ -661,3 +661,10 @@ export class SupabaseService {
     }
   }
 }
+
+// Export singleton instance for backwards compatibility
+export const supabaseService = new SupabaseService();
+export const supabase = supabaseService.getClient();
+
+// Export default instance
+export default supabaseService;
