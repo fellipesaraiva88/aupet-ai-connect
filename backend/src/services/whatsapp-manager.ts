@@ -22,12 +22,14 @@ export interface WhatsAppInstance {
 }
 
 export class WhatsAppManager {
-  private evolutionService: EvolutionAPIService;
   private supabaseService: SupabaseService;
 
   constructor() {
-    this.evolutionService = new EvolutionAPIService();
     this.supabaseService = new SupabaseService();
+  }
+
+  private getEvolutionService() {
+    return getEvolutionAPIService();
   }
 
   /**
@@ -72,7 +74,7 @@ export class WhatsAppManager {
       }
 
       // Se não encontrou no banco, verifica na Evolution API
-      const evolutionInstances = await this.evolutionService.fetchInstances();
+      const evolutionInstances = await this.getEvolutionService().listInstances();
       const evolutionInstance = evolutionInstances.find(inst =>
         inst.instanceName === instanceName ||
         inst.instanceName?.includes(userId) ||
@@ -115,16 +117,16 @@ export class WhatsAppManager {
       logger.info('Creating new instance for user', { userId, instanceName });
 
       // Cria instância na Evolution API
-      const evolutionInstance = await this.evolutionService.createInstance(instanceName);
+      const evolutionInstance = await this.getEvolutionService().createInstance({ instanceName, qrcode: true });
 
       // Configura webhook específico para o usuário
       const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/user/${userId}`;
-      await this.evolutionService.setWebhook(instanceName, webhookUrl);
+      await this.getEvolutionService().setWebhook(instanceName, { enabled: true, url: webhookUrl, webhookByEvents: true });
 
       // Salva no banco local
       const savedInstance = await this.supabaseService.createInstance({
         name: instanceName,
-        status: evolutionInstance.status,
+        status: evolutionInstance.instance.status,
         organization_id: organizationId
       });
 
@@ -138,7 +140,7 @@ export class WhatsAppManager {
         id: savedInstance.id,
         name: instanceName,
         userId: userId,
-        status: evolutionInstance.status,
+        status: evolutionInstance.instance.status,
         created_at: savedInstance.created_at,
         updated_at: savedInstance.updated_at
       };
@@ -164,14 +166,14 @@ export class WhatsAppManager {
       }
 
       // Verifica status atual na Evolution API
-      const connectionState = await this.evolutionService.getConnectionState(instance.name);
-      const simplifiedStatus = this.simplifyStatus(connectionState);
+      const connectionState = await this.getEvolutionService().getConnectionState(instance.name);
+      const simplifiedStatus = this.simplifyStatus(connectionState.instance.state);
 
       // Busca número do telefone se conectado
       let phoneNumber = instance.phoneNumber;
       if (simplifiedStatus === 'connected' && !phoneNumber) {
         try {
-          const evolutionInstances = await this.evolutionService.fetchInstances();
+          const evolutionInstances = await this.getEvolutionService().listInstances();
           const currentInstance = evolutionInstances.find(inst =>
             inst.instanceName === instance.name
           );
@@ -211,7 +213,8 @@ export class WhatsAppManager {
       logger.info('Starting WhatsApp connection', { userId, instanceName: instance.name });
 
       // Inicia conexão e obtém QR Code
-      const qrCode = await this.evolutionService.connectInstance(instance.name);
+      const connectResponse = await this.getEvolutionService().connect(instance.name);
+      const qrCode = connectResponse.qrcode?.base64 || connectResponse.code;
 
       // Atualiza status no banco
       await this.supabaseService.updateInstanceStatus(instance.name, 'connecting');
@@ -243,7 +246,8 @@ export class WhatsAppManager {
         return { available: false };
       }
 
-      const qrCode = await this.evolutionService.getQRCode(instance.name);
+      const connectResponse = await this.getEvolutionService().connect(instance.name);
+      const qrCode = connectResponse.qrcode?.base64 || connectResponse.code;
 
       return {
         qrCode: qrCode || undefined,
@@ -270,7 +274,8 @@ export class WhatsAppManager {
       }
 
       // Faz logout na Evolution API (mas mantém a instância)
-      const success = await this.evolutionService.deleteInstance(instance.name);
+      await this.getEvolutionService().deleteInstance(instance.name);
+      const success = true;
 
       if (success) {
         // Atualiza status no banco
@@ -336,7 +341,7 @@ export class WhatsAppManager {
 
     try {
       // Buscar todas as instâncias da Evolution
-      const instances = await this.evolutionService.fetchInstances();
+      const instances = await this.getEvolutionService().listInstances();
 
       for (const instance of instances) {
         try {

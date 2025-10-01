@@ -53,7 +53,7 @@ class WhatsAppInstanceMigrator {
       logger.info('Starting WhatsApp instances migration...');
 
       // 1. Buscar todas as instâncias da Evolution API
-      const evolutionInstances = await this.evolutionService.fetchInstances();
+      const evolutionInstances = await this.evolutionService.listInstances();
       result.totalProcessed = evolutionInstances.length;
 
       logger.info(`Found ${evolutionInstances.length} instances to process`);
@@ -185,7 +185,11 @@ class WhatsAppInstanceMigrator {
     // Atualizar webhook para o novo formato (opcional)
     try {
       const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhook/user/${userId}`;
-      await this.evolutionService.setWebhook(instanceName, webhookUrl);
+      await this.evolutionService.setWebhook(instanceName, {
+        enabled: true,
+        url: webhookUrl,
+        webhookByEvents: true
+      });
       logger.info(`Updated webhook for ${instanceName} -> ${newInstanceName}`);
     } catch (error) {
       logger.warn(`Could not update webhook for ${instanceName}:`, error);
