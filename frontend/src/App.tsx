@@ -418,6 +418,7 @@ const AppRoutes = () => {
             </Suspense>
           </ProtectedRoute>
         }>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={
             <Suspense fallback={<PageLoadingComponent />}>
               <AdminDashboard />
@@ -426,6 +427,22 @@ const AppRoutes = () => {
           <Route path="users" element={
             <Suspense fallback={<PageLoadingComponent />}>
               <UserManagement />
+            </Suspense>
+          } />
+          <Route path="audit-logs" element={
+            <Suspense fallback={<PageLoadingComponent />}>
+              {withChunkErrorBoundary(
+                lazy(() => import("./pages/admin/AuditLogs")),
+                'audit-logs-page'
+              )}
+            </Suspense>
+          } />
+          <Route path="permissions" element={
+            <Suspense fallback={<PageLoadingComponent />}>
+              {withChunkErrorBoundary(
+                lazy(() => import("./pages/admin/Permissions")),
+                'permissions-page'
+              )}
             </Suspense>
           } />
         </Route>
