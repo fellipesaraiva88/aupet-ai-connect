@@ -433,11 +433,20 @@ export class HandoffManager {
       // Buscar número do cliente
       const { data: conversation } = await this.supabaseService.supabase
         .from('whatsapp_conversations')
-        .select('contact_id, whatsapp_contacts(phone), organization_id')
+        .select('contact_id, whatsapp_contacts!inner(phone), organization_id')
         .eq('id', conversationId)
         .single();
 
       if (!conversation || !conversation.whatsapp_contacts) {
+        return;
+      }
+
+      // Type assertion para corrigir tipo retornado pelo Supabase
+      const contacts = conversation.whatsapp_contacts as any;
+      const phoneNumber = Array.isArray(contacts) ? contacts[0]?.phone : contacts?.phone;
+
+      if (!phoneNumber) {
+        logger.warn('No phone number found for handoff message', { conversationId });
         return;
       }
 
@@ -451,7 +460,7 @@ export class HandoffManager {
         .insert({
           instance_id: instanceId,
           conversation_id: conversationId,
-          to_number: conversation.whatsapp_contacts.phone,
+          to_number: phoneNumber,
           message_content: message,
           message_type: 'text',
           status: 'pending',
