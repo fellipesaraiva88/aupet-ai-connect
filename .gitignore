@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 worker-config.json
+
+# Credentials and sensitive files
+ADMIN-USERS-CREDENTIALS.md
+*-credentials.md
+*.env.local
+.env.*.local
+reset-passwords.sql
