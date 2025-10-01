@@ -737,7 +737,7 @@ router.post('/:id/reschedule', asyncHandler(async (req: Request, res: Response) 
       .eq('organization_id', organizationId)
       .select(`
         *,
-        customers (id, name, phone),
+        whatsapp_contacts (id, name, phone),
         pets (id, name, species),
         veterinarian:veterinarian_id (id, full_name)
       `)
